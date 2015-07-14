@@ -1,0 +1,8 @@
+# Avoid editor temp files
+*.swp
+*.swo
+# Avoid utility files
+.build
+_build
+# Avoid archives of this distribution
+/PA*
