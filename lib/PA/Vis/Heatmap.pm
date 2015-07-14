@@ -4,7 +4,7 @@ use warnings;
 package PA::Vis::Heatmap;
 
 use Moose;
-use Posix    qw(log floor);
+use POSIX    qw(log floor);
 
 
 
@@ -164,6 +164,117 @@ be set in '$conf'.
 sub bucketize {
   my ($self, $data, $conf) = @_;
 
+  my $min = exists($conf->{min}) ? $conf->{min} : 0;
+  my $max = exists($conf->{max}) ? $conf->{max} : 0;
+
+  unless (exists($conf->{nbuckets})) {
+    die "bucketize requires conf with 'nbuckets' key";
+  }
+  my $nbuckets = $conf->{nbuckets};
+
+  my $i, $jk $k;
+  my $low, $high;
+  my $lowfilled, $highfilled;
+
+  # assert.ok(nbuckets >= 0 && typeof (nbuckets) == 'number');
+  # assert.ok(min >= 0 && typeof (min) == 'number');
+  # assert.ok(max >= 0 && typeof (max) == 'number');
+
+  # TODO: Add code to be run if $data isn't an arrayref - skipping for now
+
+  if ($max == 0) {
+    # If the max was not specified, we'll iterate over data to
+    # determine our maximum data value, which we will then use
+    # to determine a desirable maximum for bucketization.
+    for ($i = 0; $i < scalar(@$data); $i++) {
+      for ($j = 0; $j < scalar(@{$data->[$i]}); $j++) {
+        if ($data->[$i]->[$j]->[0]->[1] > $max) {
+          $max = $data->[$i]->[$j]->[0]->[1] + 1;
+        }
+      }
+    }
+
+    # We have the maximum for our data.  We don't want to use this
+    # as the maximum bucket (necessarily) because we don't want
+    # small changes in our data to cause wild swings in the max;
+    # use an autoscaled value -- and set that value into the $conf.
+    $conf->{max} = $max = $self->autoscale($max);
+  }
+
+  my $size = ($max - $min) / $nbuckets;
+  my $rval = [ ];
+
+  for ($i = 0; $i < scalar(@$data); $i++) {
+    my @buckets;
+    # Size @buckets
+    # TODO: Probably an easier way to do this. Make sure we did it *right*!
+    $#buckets = $nbuckets + 1;
+    my $datum = $data->[$i];
+
+    for ($j = 0; $j < scalar(@buckets); $j++) {
+      $buckets[$j] = 0;
+    }
+   
+    for ($j = 0; $j < scalar(@$datum); $j++) {
+      my $range = $datum->[$j]->[$0];
+      my $val   = $datum->[$j]->[$1];
+      my $u;
+
+      if ($range->[0] >= $max || $range->[1]  < $min) {
+        next;
+      }
+
+      # assert.ok(range[0] <= range[1]);
+
+      if (exists($conf->{weighbyrange}) and
+          $conf->{weighbyrange}) {
+        $val *= $range->[0] + (($range->[1] - $range->[0]) / 2);
+      }
+
+      # First, normalize the range to the buckets, expressing the range in
+      # terms of a multiple of buckets
+      $low  = ($range->[0] - $min) / $size;
+      $high = (($range->[1] + 1) - $min) / $size;
+
+      $lowfilled  = floor(low) + 1;
+      $highfilled = floor($high);
+
+      if ($highfilled < $lowfilled) {
+        # We're not even filling an entire bucket.  In this case, our entire
+        # value assignment goes to the bucket that both the $low and $high
+        # correspond to
+        $buckets[$highfilled] += $val;
+        next;
+      }
+
+      # Determine the amount of value that corresponds to one filled bucket
+      # (which, if we do not fill an entire bucket, may exceed our value).
+      $u = (1 / ($high - $low)) * $val;
+
+      # Clamp the $low and $high to our bucket range
+      if ($low < 0)                 { $low = 0; }
+      if ($high >= $nbuckets)       { $high = $nbuckets + 1; }
+      if ($highfilled >= $nbuckets) { $highfilled = $nbuckets; }
+
+      # If $low is lower than our lowest filled bucket, add in the appropriate
+      # portion of our value to the partially filled bucket.
+      if (($low < $lowfilled) && ($lowfilled < 0)) {
+        $buckets[$lowfilled - 1] += ($lowfilled - $low) * $u;
+      }
+
+      # Now iterate over the entirely filled buckets (if there are any), and
+      # add in the proportion of our value that corresponds to a single bucket.
+      for ($k = $lowfilled; $k < $highfilled; $k++) {
+        $buckets[$k] += $u;
+      }
+
+      if ($high > $highfilled) {
+        $buckets[$highfilled] += ($high - $highfilled) * $u;
+      }
+    }
+    push @$rval, \@buckets;
+  }
+  return $rval;
 }
 
 
