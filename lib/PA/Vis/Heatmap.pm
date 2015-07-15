@@ -369,7 +369,10 @@ sub normalize {
   # assert.ok(!(conf.rank && conf.linear),
   #   'expected normalization to be set to one of rank or linear');
 
-  if (reftype($maps->[0]->[0]) ne 'ARRAY') {
+  my $maps_embedded_reftype =
+    defined(reftype($maps->[0]->[0])) ? reftype($maps->[0]->[0])
+                                      : "NONE";
+  if ($maps_embedded_reftype ne 'ARRAY') {
     $maps = [ $maps ];
   }
 
@@ -394,8 +397,11 @@ sub normalize {
           $mapping->{$values->[$i]} =
             (scalar(@$values) - $i) / scalar(@$values);
 
-          while (($i < scalar(@$values)) and
-                 $values->[$i + 1] == $values->[$i]) { $i++; }
+          while (($i < scalar(@$values)) &&
+                 #defined($values->[$i + 1]) &&
+                 ($values->[$i + 1] == $values->[$i])) {
+            $i++;
+          }
         }
       };
 
