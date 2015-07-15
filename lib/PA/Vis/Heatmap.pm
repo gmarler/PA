@@ -4,8 +4,11 @@ use warnings;
 package PA::Vis::Heatmap;
 
 use Moose;
-use POSIX    qw(log floor);
+use POSIX        qw(log floor);
+use Scalar::Util qw(reftype);
 
+# TODO: Instead of passing $conf object around as a hashref, use it
+#       internally to the object, like so
 has conf => ( isa => 'ArrayRef',
               default => sub { []; },
             );
@@ -334,7 +337,117 @@ normalize() will operate as if '$conf' were set to { rank => true }.
 
 =cut
 
+sub normalize {
+  my ($self, $maps, $conf) = @_;
 
+  my $values  = [ ];
+  my $mapping = { };
+  my ($i, $j, $m);
+  my $max = 1;
+  my $data;
+  # TODO: Are these coderefs really necessary?
+  my $preprocess  = sub { };
+  my $postprocess = sub { };
+  my $normalized  = sub { my ($value) = shift; return ($value); };
+  
+  if ((not defined($conf)) or
+      (((not exists($conf->{rank})) or
+        (exists($conf->{rank}) and !$conf->{rank})) and
+       ((not exists($conf->{linear})) or
+        (exists($conf->{linear}) and !$conf->{linear})))
+     ) {
+    $conf->{rank} = 1;
+    # Store this change back in the object
+    $self->conf($conf);
+  }
+
+  # assert.ok(maps instanceof Array);
+  # assert.ok(maps[0] instanceof Array);
+  # assert.ok(conf.rank || conf.linear,
+  #   'expected normalization to be set to rank or linear');
+  # assert.ok(!(conf.rank && conf.linear),
+  #   'expected normalization to be set to one of rank or linear');
+
+  if (reftype($maps->[0]->[0]) ne 'ARRAY') {
+    $maps = [ $maps ];
+  }
+
+  # assert.ok(maps[0][0] instanceof Array);
+
+  if ($conf->{rank}) {
+    $preprocess =
+      sub {
+        my ($value) = shift;
+        # For rank normalization, we will only consider non-zero values
+        # in the ranking (assuring that values that are zero will remain
+        # as zero.
+        if ($value != 0) { push @$values, $value; }
+      };
+
+    $process =
+      sub {
+        my @tmpa;
+        @tmpa = sort { $a <=> $b } @$values;
+        $values = \@tmpa;
+        for ($i = 0; $i < scalar(@$values); $i++) {
+          $mapping->{$values->[$i]} =
+            (scalar(@$values) - $i) / scalar(@$values);
+
+          while (($i < scalar(@$values)) and
+                 $values->[$i + 1] == $values->[$i]) { $i++; }
+        }
+      };
+
+    $normalized =
+      sub {
+        my ($value) = shift;
+        if ($value) { return $mapping->{$value}; }
+        return 0;
+      };
+  }
+
+  if ($conf->{linear}) {
+    $preprocess =
+      sub {
+        my ($value) = shift;
+        if ($value > $max) { $max = value; }
+      };
+
+    $normalized = 
+      sub {
+        my ($value) = shift;
+        return ($value / $max);
+      };
+  }
+
+  # Make a preprocessing pass over all data, across all maps
+  for ($m = 0; $m < scalar(@$maps); $m++) {
+    $data = $maps->[$m];
+
+    # assert.ok(maps[0][0] instanceof Array);
+
+    for ($i = 0; $i < scalar(@$data); $i++) {
+      # assert.ok(data[i].length == data[0].length);
+      # assert.ok(data[0].length == maps[0][0].length);
+      for ($j = 0; $j < scalar(@{$data->[$i]}); $j++) {
+        $preprocess->($data->[$i]->[$j]);
+      }
+    }
+  }
+
+  $process->();
+
+  for ($m = 0; $m < scalar(@$maps); $m++) {
+    $data = $maps->[$m];
+
+    for ($i = 0; $i < scalar(@$data); $i++) {
+      for ($j = 0; $j < scalar(@{$data->[i]}); $j++) {
+        $data->[$i]->[$j] = $normalized->($data->[$i]->[$j]);
+      }
+    }
+  }
+
+}
 
 
 1;
