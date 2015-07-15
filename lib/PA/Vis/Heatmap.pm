@@ -3,13 +3,16 @@ use warnings;
 
 package PA::Vis::Heatmap;
 
+# VERSION
+
 use Moose;
 use POSIX        qw(log floor);
 use Scalar::Util qw(reftype);
 
 # TODO: Instead of passing $conf object around as a hashref, use it
 #       internally to the object, like so
-has conf => ( isa => 'ArrayRef',
+has conf => ( isa     => 'ArrayRef',
+              is      => 'rw',
               default => sub { []; },
             );
 
@@ -46,7 +49,7 @@ sub autoscale {
   }
 
   for ($i = 0; $i < scalar(@$divisors); $i++) {
-    my $scaled = (floor($max / $round) + 1) * $round;
+    my ($scaled) = (floor($max / $round) + 1) * $round;
 
     if ($scaled < $ceiling) {
       return $scaled;
@@ -166,9 +169,9 @@ sub bucketize {
   }
   my $nbuckets = $conf->{nbuckets};
 
-  my $i, $jk $k;
-  my $low, $high;
-  my $lowfilled, $highfilled;
+  my ($i, $j, $k);
+  my ($low, $high);
+  my ($lowfilled, $highfilled);
 
   # assert.ok(nbuckets >= 0 && typeof (nbuckets) == 'number');
   # assert.ok(min >= 0 && typeof (min) == 'number');
@@ -212,8 +215,8 @@ sub bucketize {
     }
    
     for ($j = 0; $j < scalar(@$datum); $j++) {
-      my $range = $datum->[$j]->[$0];
-      my $val   = $datum->[$j]->[$1];
+      my $range = $datum->[$j]->[0];
+      my $val   = $datum->[$j]->[1];
       my $u;
 
       if ($range->[0] >= $max || $range->[1]  < $min) {
@@ -232,7 +235,7 @@ sub bucketize {
       $low  = ($range->[0] - $min) / $size;
       $high = (($range->[1] + 1) - $min) / $size;
 
-      $lowfilled  = floor(low) + 1;
+      $lowfilled  = floor($low) + 1;
       $highfilled = floor($high);
 
       if ($highfilled < $lowfilled) {
@@ -345,9 +348,8 @@ sub normalize {
   my ($i, $j, $m);
   my $max = 1;
   my $data;
-  # TODO: Are these coderefs really necessary?
   my $preprocess  = sub { };
-  my $postprocess = sub { };
+  my $process     = sub { };
   my $normalized  = sub { my ($value) = shift; return ($value); };
   
   if ((not defined($conf)) or
@@ -410,7 +412,7 @@ sub normalize {
     $preprocess =
       sub {
         my ($value) = shift;
-        if ($value > $max) { $max = value; }
+        if ($value > $max) { $max = $value; }
       };
 
     $normalized = 
@@ -441,7 +443,7 @@ sub normalize {
     $data = $maps->[$m];
 
     for ($i = 0; $i < scalar(@$data); $i++) {
-      for ($j = 0; $j < scalar(@{$data->[i]}); $j++) {
+      for ($j = 0; $j < scalar(@{$data->[$i]}); $j++) {
         $data->[$i]->[$j] = $normalized->($data->[$i]->[$j]);
       }
     }
