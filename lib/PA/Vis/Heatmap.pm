@@ -6,7 +6,9 @@ package PA::Vis::Heatmap;
 use Moose;
 use POSIX    qw(log floor);
 
-
+has conf => ( isa => 'ArrayRef',
+              default => sub { []; },
+            );
 
 
 =method autoscale
@@ -80,9 +82,6 @@ the bucketized data for that sample.
 two-tuples where each consists of a two-tuple range aref and a value.  This
 series may be expressed as an arrayref of arrayrefs, e.g.:
 
-=begin text
-
-     
     [
         [
             [ [ 0, 9 ], 20 ],
@@ -94,15 +93,9 @@ series may be expressed as an arrayref of arrayrefs, e.g.:
         ]
     ]
 
-=end text
-
-
 Alternatively, the series may also be expressed as a hashref in which each
 key is the number of samples:
 
-=begin text
-
-    
     {
         20 => [
             [ [ 0, 9 ], 20 ],
@@ -114,8 +107,6 @@ key is the number of samples:
             ...
         ]
     }
-
-=end text
 
 In this representation, '$conf' must have 'base' and 'nsamples'
 keys to denote the desired range, and may also have 'step' to denote the
@@ -199,6 +190,8 @@ sub bucketize {
     # small changes in our data to cause wild swings in the max;
     # use an autoscaled value -- and set that value into the $conf.
     $conf->{max} = $max = $self->autoscale($max);
+    # Push this back into this object's conf
+    $self->conf($conf);
   }
 
   my $size = ($max - $min) / $nbuckets;
@@ -276,6 +269,71 @@ sub bucketize {
   }
   return $rval;
 }
+
+=method $self->deduct($total, $deduct);
+
+deduct() subtracts the values of one map ('$deduct') from another ('$total').
+(See bucketize() for the definition of a map.)  It is expected (and is
+asserted) that both maps have been bucketized the same way, and that
+deducting '$deduct' from '$total' will result in no negative values.
+
+=cut
+
+sub deduct {
+  my ($self, $total, $deduct) = @_;
+
+  my ($i, $j);
+
+  # assert.ok(total instanceof Array, 'expected a map to deduct from');
+  # assert.ok(deduct instanceof Array, 'expected a map to deduct');
+  # assert.ok(total.length == deduct.length, 'maps are not same length');
+
+  for ($i = 0; $i < scalar(@$total); $i++) {
+    # assert.ok(total[i] instanceof Array);
+    # assert.ok(deduct[i] instanceof Array);
+    # assert.ok(total[i].length == deduct[i].length);
+    for ($j = 0; $j < scalar(@{$total->[$i]}); $j++) {
+      # Logically, $total->[$i]->[$j] should be greater than what
+      # we're trying to deduct, however error can
+      # accumulate to the point that this is not exactly
+      # true; assert that these errors have not added up
+      # to a significant degree.
+      #
+      # assert.ok(total[i][j] - deduct[i][j] > -0.5, 'at [' +
+      #   i + ', ' + j + '], deduction value (' +
+      #   deduct[i][j] + ') ' + 'exceeds total (' +
+      #   total[i][j] + ') by more than accumulated ' +
+      #   'error tolerance');
+      $total->[$i]->[$j] -= $deduct->[$i]->[$j];
+
+      if ($total->[$i]->[$j] < 0.001) {
+        $total->[$i]->[$j] = 0;
+      }
+    }
+  }
+}
+
+=method $self->normalize($maps, $conf);
+
+normalize() takes a map or an array of maps (see bucketize() for the
+definition of a map), and modifies the data such that the values range from
+0 to 1.  The mechanism for normalization is specified via the '$conf'
+parameter, which may have the following optional members:
+
+=for :list
+* rank
+Boolean that denotes that normalization should be based on a values rank
+among all values in the map:  values will be sorted and then assigned
+the value of their rank divided by the number of values.
+* linear
+Boolean that denotes that normalization should be linear with respect
+to value:  values will be normalized by dividing by the maximum value.
+
+If '$conf' is not present or does not have a normalization mechanism set,
+normalize() will operate as if '$conf' were set to { rank => true }.
+
+=cut
+
 
 
 
