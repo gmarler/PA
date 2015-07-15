@@ -11,9 +11,9 @@ use Scalar::Util qw(reftype);
 
 # TODO: Instead of passing $conf object around as a hashref, use it
 #       internally to the object, like so
-has conf => ( isa     => 'ArrayRef',
+has conf => ( isa     => 'HashRef',
               is      => 'rw',
-              default => sub { []; },
+              default => sub { {}; },
             );
 
 
@@ -206,8 +206,7 @@ sub bucketize {
   for ($i = 0; $i < scalar(@$data); $i++) {
     my @buckets;
     # Size @buckets
-    # TODO: Probably an easier way to do this. Make sure we did it *right*!
-    $#buckets = $nbuckets + 1;
+    $#buckets = $nbuckets - 1;
     my $datum = $data->[$i];
 
     for ($j = 0; $j < scalar(@buckets); $j++) {
@@ -252,12 +251,12 @@ sub bucketize {
 
       # Clamp the $low and $high to our bucket range
       if ($low < 0)                 { $low = 0; }
-      if ($high >= $nbuckets)       { $high = $nbuckets + 1; }
-      if ($highfilled >= $nbuckets) { $highfilled = $nbuckets; }
+      if ($high >= $nbuckets)       { $high = $nbuckets - 1; }
+      if ($highfilled > $nbuckets)  { $highfilled = $nbuckets; }
 
       # If $low is lower than our lowest filled bucket, add in the appropriate
       # portion of our value to the partially filled bucket.
-      if (($low < $lowfilled) && ($lowfilled < 0)) {
+      if (($low < $lowfilled) && ($lowfilled > 0)) {
         $buckets[$lowfilled - 1] += ($lowfilled - $low) * $u;
       }
 
