@@ -20,15 +20,15 @@ my $rval = $hm->bucketize(
     [ [ 20, 29 ], 60 ]
 ] ], { nbuckets => 10 });
 
-diag Dumper( $rval );
-diag Dumper( $conf );
+#diag Dumper( $rval );
+#diag Dumper( $conf );
 
 $hm->normalize($rval);
 
-diag Dumper( $rval );
-diag Dumper( $conf );
+#diag Dumper( $rval );
+#diag Dumper( $conf );
 
-#cmp_deeply( $rval, [ [ 1, 1, 1 ] ],
-# 'nbuckets == max');
+cmp_deeply( $rval, [ [ 0.3, 0.3, 0.3, 0.4, 0.6, 0.6, 0.8, 1, 1, 0.7 ] ],
+ 'normalization correct');
 
 done_testing();
