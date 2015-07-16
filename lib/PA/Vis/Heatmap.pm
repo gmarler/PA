@@ -391,14 +391,13 @@ sub normalize {
     $process =
       sub {
         my @tmpa;
-        @tmpa = sort { $a <=> $b } @$values;
+        @tmpa = sort { $b <=> $a } @$values;
         $values = \@tmpa;
         for ($i = 0; $i < scalar(@$values); $i++) {
           $mapping->{$values->[$i]} =
             (scalar(@$values) - $i) / scalar(@$values);
 
-          while (($i < scalar(@$values)) &&
-                 #defined($values->[$i + 1]) &&
+          while (($i + 1 < scalar(@$values)) &&
                  ($values->[$i + 1] == $values->[$i])) {
             $i++;
           }
