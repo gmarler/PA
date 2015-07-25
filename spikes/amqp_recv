@@ -17,11 +17,10 @@ $mq->exchange_declare(1, "amq.direct",
   durable       => 1
 });
 
-$mq->queue_declare(1,'test1');
+$mq->queue_declare(1, 'test1');
 
-my $val = 0;
+$mq->consume(1,'test1');
 
-while (1) {
-  $mq->publish(1, "test1", $val++);
-  sleep(1);
+while (my $dhref = $mq->recv(10000)) {
+  say $dhref->{body};
 }
