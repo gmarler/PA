@@ -1,9 +1,12 @@
 # NOTE: TF stands for TestsFor::...
 package TF::PA::MetadataManager;
 
-use Time::Moment      qw();
-use File::Temp        qw();
-use Data::Dumper      qw();
+use Time::Moment        qw();
+use File::Temp          qw();
+use Data::Dumper        qw();
+use Assert::Conditional qw();
+# Possible alternative assertion methodology
+# use Devel::Assert     qw();
 
 use Test::Class::Moose;
 with 'Test::Class::Moose::Role::AutoUse';
