@@ -7,6 +7,7 @@ package PA::MetricSet;
 #
 # ABSTRACT: Encapsulates a set of PA::Metric's
 
+use List::Util qw( any );
 use namespace::autoclean;
 use Moose;
 
@@ -72,6 +73,25 @@ sub base_metric {
   return Metric->new($module, $stat, $self->modules->{$module}->{$stat});
 }
 
+=method base_metrics
+
+Returns an arrayref of all base metrics in this metric set.
+
+=cut
+
+sub base_metrics {
+  my ($self) = shift;
+
+  my @result;
+
+  foreach my $module (keys %{$self->modules}) {
+    foreach my $stat (keys %{$self->modules->{$module}}) {
+      push @result, $self->base_metric($module, $stat);
+    }
+  }
+
+  return \@result;
+}
 
 
 __PACKAGE__->meta->make_immutable;
