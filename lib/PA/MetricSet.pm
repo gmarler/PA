@@ -93,6 +93,48 @@ sub base_metrics {
   return \@result;
 }
 
+=method intersection
+
+Returns the intersectoin of this metric set with the specified other
+metric set.  The host information is not preserved in the new set.
+
+=cut
+
+sub intersection {
+  my ($self, $rhs) = @_;
+
+  my $res = MetricSet->new();
+
+  $res->add_partial_intersection($self, $rhs);
+  $res->add_partial_intersection($rhs,  $self);
+
+  return $res;
+}
+
+=method add_partial_intersection
+
+Private Method
+
+Adds the metrics from "lhs" that also exist in "rhs" to "self"
+
+=cut
+
+sub add_partial_intersection {
+  my ($self, $lhs, $rhs) = @_;
+
+  my ($lstats, $rstats);
+
+  foreach my $modname (keys %{$lhs->modules}) {
+    if (not any { /^ $modname $/x } keys %{$rhs->modules}) {
+      next;
+    }
+
+    $lstats = $lhs->modules->{$modname};
+    $rstats = $rhs->modules->{$modname};
+
+    # TODO: Finish this...
+  }
+}
 
 __PACKAGE__->meta->make_immutable;
 
