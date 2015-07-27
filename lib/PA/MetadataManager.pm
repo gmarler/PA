@@ -30,5 +30,26 @@ has 'directory'  => ( is       => 'ro',
                     );
 
 
+sub get {
+  my ($self, $type, $instance) = @_;
+
+  return $self->metadata->{$type}->{$instance};
+}
+
+sub list {
+  my ($self, $type) = @_;
+
+  my @list = keys %{$self->metadata->{$type}};
+
+  return \@list;
+}
+
+sub list_types {
+  my ($self) = shift;
+
+  my @types = keys %{$self->metadata};
+
+  return \@types;
+}
 
 1;
