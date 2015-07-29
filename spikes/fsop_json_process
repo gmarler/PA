@@ -1,0 +1,142 @@
+#!/usr/perl5/5.22.0/bin/perl
+
+use v5.22.0;
+
+use warnings;
+use strict;
+
+use Carp                       qw(croak);
+use Getopt::Long;
+use File::MMagic               qw();
+use IO::Uncompress::Bunzip2    qw();
+use IO::File                   qw();
+use JSON::MaybeXS              qw(decode_json encode_json);
+use DateTime::TimeZone         qw();
+use DateTime::Format::Duration qw();
+
+my ($json_file,$output_file,$tz,$tz_obj_local,$tz_obj_utc,$json_fh);
+# time range we've extracted
+my (@extracted);
+
+GetOptions("file=s"    => \$json_file,
+           "outfile=s" => \$output_file,
+           "tz:s"      => \$tz,
+          ) or die "Error in command line args";
+
+unless (defined($json_file)) {
+  die "JSON file name required";
+}
+
+unless (defined($output_file)) {
+  die "OUTPUT file name required";
+}
+
+unless (-r $json_file) {
+  die "JSON file $json_file does not exist";
+}
+
+# say join "\n", DateTime::TimeZone->all_names;
+
+if ($tz) {
+  $tz_obj_local =
+    DateTime::TimeZone->new( name => $tz ) or
+      die "Unable to create a TimeZone object for $tz";
+} else {
+  $tz_obj_local =
+    DateTime::TimeZone->new( name => 'America/New_York' ) or
+      die "Unable to create a TimeZone object for America/New_York";
+}
+# The captured start_time for each interval comes to us in UTC
+$tz_obj_utc   = DateTime::TimeZone->new( name => 'UTC' ) or
+  die "Unable to create a TimeZone object for UTC";
+
+my $mm        = File::MMagic->new();
+my $mime_type = $mm->checktype_filename($json_file);
+
+# Handle bzip2 compressed files
+if ($mime_type eq 'application/x-bzip2') {
+  $json_fh = IO::Uncompress::Bunzip2->new($json_file) or
+    croak "Unable to open bzip2 file: $json_file";
+} else {
+  $json_fh = IO::File->new($json_file,"<") or
+    croak "Unable to open file: $json_file";
+}
+
+my ($begin_dt,$begin_epoch,$end_dt,$end_epoch,$time_initialized,
+    $record_count);
+
+while (my $record = $json_fh->getline) {
+  $record_count++;
+  chomp($record);
+  my $h = decode_json($record);
+  if (not defined($time_initialized)) {
+    say "EPOCH UTC Midnight: " . $h->{start_time};
+    my $dt = DateTime->from_epoch( epoch     => $h->{start_time},
+                                   time_zone => $tz_obj_local );
+    say "In Local Time Zone, midnight shows up as: $dt";
+    say "EPOCH Local TimeZone Midnight: " . $dt->epoch;
+
+    my $tomorrow = $dt->clone->add( days => 1 );
+    my $midnight = $tomorrow->clone()->set( hour   => 0,
+                                            minute => 0,
+                                            second => 0,
+                                          );
+
+    # Get the duration from now till midnight
+    my $dur = $midnight->subtract_datetime_absolute($dt);
+  
+    # Print the Duration in seconds
+    my $fmt_secs = DateTime::Format::Duration->new( pattern => '%S' );
+    my $fmt_full = DateTime::Format::Duration->new( pattern   => '%e days, %r',
+                                                    normalize => 1,
+                                                  );
+
+    my $secs_till_midnight = $fmt_secs->format_duration( $dur );
+    my $time_till_midnight = $fmt_full->format_duration( $dur );
+
+
+    say("SECONDS till midnight: $secs_till_midnight");
+    say("NORMALIZED TIME till midnight: $time_till_midnight");
+
+    # recording may begin slightly before midnight, if so, bump to the next day
+    my $dt_of_interest = $dt->clone();
+    if ($secs_till_midnight < 3600) {
+      $dt_of_interest->add( days => 1 );
+    }
+
+    $begin_dt    = $dt_of_interest->clone();
+    $begin_dt->set( hour   => 9,
+                    minute => 0,
+                    second => 0,
+                  );
+    say "BEGIN: $begin_dt";
+    $begin_epoch = $begin_dt->epoch;
+    $end_dt      = $dt_of_interest->clone();
+    $end_dt->set( hour   => 10,
+                  minute =>  0,
+                  second =>  0,
+                );
+    say "END:   $end_dt";
+    $end_epoch   = $end_dt->epoch;
+    $time_initialized++;
+    say "BEGIN EPOCH: $begin_epoch   =>   END EPOCH: $end_epoch";
+  }
+
+  if (($record_count % 3600) == 0) {
+    say "EPOCH: $h->{start_time}";
+  }
+  last if $h->{start_time} >= $end_epoch;
+  next unless ( ($h->{start_time} >= $begin_epoch) &&
+                ($h->{start_time} <  $end_epoch) );
+
+  push @extracted, $h;
+}
+
+my $output_file_fh = IO::File->new($output_file, ">") or
+  die "Unable to open $output_file for writing";
+
+$output_file_fh->print( encode_json( \@extracted ) );
+
+$output_file_fh->close;
+
+
