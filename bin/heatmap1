@@ -1,0 +1,117 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+use v5.18;
+
+use DTrace::Consumer;
+use Time::HiRes   qw(gettimeofday);
+use IO::Async;
+use IO::Async::Loop;
+use IO::Async::Timer::Periodic;
+use Data::Dumper;
+use Carp;
+
+my $prog = '
+sched:::on-cpu
+{
+	self->on = timestamp;
+}
+
+sched:::off-cpu
+/self->on/
+{
+	this->us = (timestamp - self->on) / 1000;
+	@ = lquantize(this->us, 0, 100000, 100);
+	@decomp[execname] = lquantize(this->us, 0, 100000, 100);
+}
+';
+
+my $dtc = DTrace::Consumer->new();
+$dtc->strcompile($prog);
+$dtc->go;
+
+my $interval   = 5000;
+my $sample     =    0;
+my $keep       = 3600;
+my $total      = { };
+my $decomposed = { };
+my $present    = { };
+my $data       = { };
+
+my $loop = IO::Async::Loop->new;
+
+my $timer = IO::Async::Timer::Periodic->new(
+  interval => 5,
+
+  on_tick => sub {
+    my $when;
+    my $max = $dtc->aggmax();
+
+    $when = int(Time::HiRes::gettimeofday * 1000);
+
+    $sample = ($when - ($when % $interval)) / 1000;
+
+    if ($total->{$sample}) {
+      if (not $total->{$sample + 1}) {
+        $sample++;
+      } else {
+        carp "Dropping duplicate sample: $sample";
+        return;
+      }
+    }
+
+    say "SAMPLE: $sample";
+
+    $dtc->aggwalk(
+      sub {
+        #say Data::Dumper::Dumper( \@_ );
+        my ($varid, $key, $val) = @_;
+
+        #say "VARID: $varid";
+        #say "KEY:   " . Data::Dumper::Dump( $key );
+        if ($varid == 1) {
+          if (scalar(@$key) != 0) {
+            die "First aggregations must be unkeyed";
+          }
+          $data = $total;
+        } elsif ($varid == 2) {
+          if (scalar(@$key) != 1) {
+            die "Second aggregation must have one key";
+          }
+          if (!$decomposed->{$key->[0]}) {
+            $decomposed->{$key->[0]} = {};
+          }
+          if (!$present->{$key->[0]}) {
+            $present->{$key->[0]} = 0;
+          }
+          $data = $decomposed->{$key->[0]};
+          $present->{$key->[0]}++;
+        } else {
+          die "expected at most two aggregations";
+        }
+
+        $data->{$sample} = $val;
+      }
+    );
+
+    if ($sample < $keep) { return; }
+
+    if ($total->{$sample - $keep}) {
+      delete $total->{$sample - $keep};
+    }
+
+    foreach my $elem (keys %$decomposed) {
+      if ($decomposed->{$elem}->{$sample - $keep}) {
+        delete $decomposed->{$elem}->{$sample - $keep};
+        $present->{$elem}--;
+      }
+    }
+  },
+);
+
+$timer->start;
+
+$loop->add( $timer );
+
+$loop->run;
