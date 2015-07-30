@@ -13,13 +13,21 @@ use IO::File                   qw();
 use JSON::MaybeXS              qw(decode_json encode_json);
 use DateTime::TimeZone         qw();
 use DateTime::Format::Duration qw();
+use DateTime::Format::Strptime qw();
 
-my ($json_file,$output_file,$tz,$tz_obj_local,$tz_obj_utc,$json_fh);
+my ($json_file,$output_file,
+    $begin_time, $end_time,
+    $tz,$tz_obj_local,$tz_obj_utc,
+    $json_fh,$output_file_fh,
+    $begin_suffix, $end_suffix);
+
 # time range we've extracted
 my (@extracted);
 
 GetOptions("file=s"    => \$json_file,
            "outfile=s" => \$output_file,
+           "begin=s"   => \$begin_time,
+           "end=s"     => \$end_time,
            "tz:s"      => \$tz,
           ) or die "Error in command line args";
 
@@ -33,6 +41,14 @@ unless (defined($output_file)) {
 
 unless (-r $json_file) {
   die "JSON file $json_file does not exist";
+}
+
+unless (defined($begin_time)) {
+  $begin_time = "09:00:00";
+}
+
+unless (defined($end_time)) {
+  $end_time = "10:00:00";
 }
 
 # say join "\n", DateTime::TimeZone->all_names;
@@ -64,6 +80,10 @@ if ($mime_type eq 'application/x-bzip2') {
 
 my ($begin_dt,$begin_epoch,$end_dt,$end_epoch,$time_initialized,
     $record_count);
+
+my $strp = DateTime::Format::Strptime->new( pattern   => '%T',
+                                            time_zone => $tz_obj_local,
+                                          );
 
 while (my $record = $json_fh->getline) {
   $record_count++;
@@ -104,17 +124,22 @@ while (my $record = $json_fh->getline) {
       $dt_of_interest->add( days => 1 );
     }
 
+    my $begin_HMS   = $strp->parse_datetime( $begin_time );
+    $begin_suffix   = $begin_HMS->strftime( '%H%M' );
+    my $end_HMS     = $strp->parse_datetime( $end_time );
+    $end_suffix     = $end_HMS->strftime( '%H%M' );
+
     $begin_dt    = $dt_of_interest->clone();
-    $begin_dt->set( hour   => 9,
-                    minute => 0,
-                    second => 0,
+    $begin_dt->set( hour   => $begin_HMS->hour,
+                    minute => $begin_HMS->minute,
+                    second => $begin_HMS->second,
                   );
     say "BEGIN: $begin_dt";
     $begin_epoch = $begin_dt->epoch;
     $end_dt      = $dt_of_interest->clone();
-    $end_dt->set( hour   => 10,
-                  minute =>  0,
-                  second =>  0,
+    $end_dt->set( hour   => $end_HMS->hour,
+                  minute => $end_HMS->minute,
+                  second => $end_HMS->second,
                 );
     say "END:   $end_dt";
     $end_epoch   = $end_dt->epoch;
@@ -132,7 +157,11 @@ while (my $record = $json_fh->getline) {
   push @extracted, $h;
 }
 
-my $output_file_fh = IO::File->new($output_file, ">") or
+$output_file =~ s/\.json$/\-${begin_suffix}-${end_suffix}.json/;
+
+say "Writing JSON to: $output_file";
+
+$output_file_fh = IO::File->new($output_file, ">") or
   die "Unable to open $output_file for writing";
 
 $output_file_fh->print( encode_json( \@extracted ) );
