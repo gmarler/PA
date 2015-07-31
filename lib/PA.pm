@@ -13,9 +13,7 @@ use Clone                          qw(clone);
 use Data::Compare                  qw();
 use Scalar::Util                   qw( reftype );
 use List::Util                     qw( any );
-use DateTime                       qw();
-use DateTime::Duration             qw();
-use DateTime::Format::Duration     qw();
+use POSIX                          qw( floor );
 use Carp;
 
 # Constants
@@ -182,18 +180,36 @@ sub do_pad {
 sub format_duration {
   my ($self, $time_in_ms) = @_;
 
-  my $df =
-    DateTime::Format::Duration->new(
-      pattern => '%Y years, %m months, %e days, ' .
-                 '%H hours, %M minutes, %S seconds'
-    );
+  my ($days, $hours, $minutes, $seconds, $msec, $str);
 
-  my $s = $d->format_duration(
-    DateTime::Duration->new(
-      nanoseconds => $time_in_ms * 1000000,
-    )
-  );
+  $msec       = $time_in_ms % 1000;
+  $time_in_ms = floor($time_in_ms / 1000);
 
+  $seconds    = $time_in_ms % 60;
+  $time_in_ms = floor($time_in_ms / 60);
+
+  $minutes    = $time_in_ms % 60;
+  $time_in_ms = floor($time_in_ms / 60);
+
+  $hours      = $time_in_ms % 24;
+  $time_in_ms = floor($time_in_ms / 24);
+
+  $days = $time_in_ms;
+
+  if ($days > 0) {
+    $str .= sprintf("%dd", $days);
+  }
+
+  if ($days > 0 || $hours > 0) {
+    $str .= sprintf("%02d:", $hours);
+  }
+
+  if ($days > 0 || $hours > 0 || $minutes > 0) {
+    $str .= sprintf("%02d:", $minutes);
+  }
+
+  $str .= sprintf("%02d.%03ds", $seconds, $msec);
+  return $str;
 }
 
 1;
