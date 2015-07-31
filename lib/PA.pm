@@ -212,4 +212,51 @@ sub format_duration {
   return $str;
 }
 
+#
+# Return true if the input string starts with the specified prefix.
+#
+sub starts_with {
+  my ($self, $str, $prefix) = @_;
+
+  if (length($prefix) > length($str)) {
+    return 0;
+  }
+
+  # True if $str starts with $prefix
+  if (index($str,$prefix) == 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+sub noop { }
+
+#
+# Given a customer identifier and per-customer instrumentation identifier,
+# return the fully quanlified instrumentation id.  If custid is undefined, it
+# is assumed that instid refers to the global scope.  For details, see
+# the block comment at the top of this file on cfg_insts.
+#
+sub qualified_id {
+  my ($self, $custid, $instid) = @_;
+
+  if (not defined($custid)) {
+    return "global;$instid";
+  }
+
+  return "cust:$custid;$instid";
+}
+
+# function to walk an array and see if it conatins a given field.
+sub array_contains {
+  my ($self, $arr, $field) = @_;
+
+  if ( any { $_ eq $field  } @$arr ) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 1;
