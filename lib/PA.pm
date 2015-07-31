@@ -11,6 +11,9 @@ use namespace::autoclean;
 use Solaris::uname;
 use Clone                  qw(clone);
 use Data::Compare          qw();
+use Scalar::Util           qw( reftype );
+use List::Util             qw( any );
+use Carp;
 
 # Constants
 #
@@ -110,6 +113,66 @@ sub deep_copy {
  
   my $clone = clone($obj);
   return $clone;
+}
+
+sub deep_copy_into {
+  confess "Not implemented";
+}
+
+# Raise exception with a reasonable message if the specified key does not
+# exist in the object.  If 'prototype' is specified, raise exception
+# if the type of $href->{key} doesn't match the TYPE of 'prototype'.
+#
+#   Returns $href->{key}
+#
+sub field_exists {
+  my ($self, $href, $key, $prototype) = @_;
+
+  if ( not any { $_ =~ m/^$key$/ } keys %$href ) {
+    die "missing required field: $key";
+  }
+  if ($prototype &&
+      (reftype($href->{key}) ne reftype($prototype))) {
+    die "Field has wrong type: $key";
+  }
+
+  return $href->{key};
+}
+
+#
+# Returns true IFF the given href is empty.
+#
+sub is_empty {
+  my ($self, $href) = @_;
+
+  foreach my $key (keys %$href) {
+    return 0;
+  }
+  return 1;
+}
+
+#
+# Returns the number of keys in a given href.
+#
+sub num_props {
+  my ($self, $href) = @_;
+
+  return scalar (keys %$href);
+}
+
+sub do_pad {
+  my ($self, $chr, $width, $left, $str) = @_;
+  my $ret = $str;
+
+  while (length($ret) < $width) {
+    if ($left) {
+      $ret .= $chr;
+    } else {
+      $ret = $chr . $ret;
+    }
+  }
+
+  return $ret;
 }
 
 
