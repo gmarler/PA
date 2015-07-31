@@ -9,6 +9,8 @@ package PA;
 use Moose;
 use namespace::autoclean;
 use Solaris::uname;
+use Clone                  qw(clone);
+use Data::Compare          qw();
 
 # Constants
 #
@@ -71,7 +73,7 @@ sub sdc_config {
 }
 
 sub sys_info {
-  my ($agentname, $agentversion) = @_;
+  my ($self, $agentname, $agentversion) = @_;
 
   my $uname = uname();
   my $hostname;
@@ -94,5 +96,21 @@ sub sys_info {
     minor         => PA::AMQP->vers_minor,
   };
 }
+
+sub deep_equal {
+  my ($self, $lhs, $rhs) = @_;
+
+  my $c = Data::Compare->new($lhs, $rhs);
+
+  return $c->Cmp;
+}
+
+sub deep_copy {
+  my ($self, $obj) = @_;
+ 
+  my $clone = clone($obj);
+  return $clone;
+}
+
 
 1;
