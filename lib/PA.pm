@@ -9,10 +9,13 @@ package PA;
 use Moose;
 use namespace::autoclean;
 use Solaris::uname;
-use Clone                  qw(clone);
-use Data::Compare          qw();
-use Scalar::Util           qw( reftype );
-use List::Util             qw( any );
+use Clone                          qw(clone);
+use Data::Compare                  qw();
+use Scalar::Util                   qw( reftype );
+use List::Util                     qw( any );
+use DateTime                       qw();
+use DateTime::Duration             qw();
+use DateTime::Format::Duration     qw();
 use Carp;
 
 # Constants
@@ -175,5 +178,22 @@ sub do_pad {
   return $ret;
 }
 
+# Given a time duration in millisecs, format it appropriately for output
+sub format_duration {
+  my ($self, $time_in_ms) = @_;
+
+  my $df =
+    DateTime::Format::Duration->new(
+      pattern => '%Y years, %m months, %e days, ' .
+                 '%H hours, %M minutes, %S seconds'
+    );
+
+  my $s = $d->format_duration(
+    DateTime::Duration->new(
+      nanoseconds => $time_in_ms * 1000000,
+    )
+  );
+
+}
 
 1;
