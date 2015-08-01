@@ -13,6 +13,7 @@ use Clone                          qw(clone);
 use Data::Compare                  qw();
 use Scalar::Util                   qw( reftype );
 use List::Util                     qw( any );
+use List::MoreUtils                qw( zip uniq );
 use POSIX                          qw( floor );
 use Carp;
 
@@ -117,7 +118,7 @@ sub deep_copy {
 }
 
 sub deep_copy_into {
-  confess "Not implemented";
+  confess "Not implemented yet";
 }
 
 # Raise exception with a reasonable message if the specified key does not
@@ -258,5 +259,94 @@ sub array_contains {
     return 0;
   }
 }
+
+sub array_merge {
+  my ($self, $orig, $addl) = @_;
+
+  my @merged = zip @$orig, @$addl;
+  @merged = uniq @merged;
+
+  return \@merged;
+}
+
+sub http_param {
+  confess "Not implemented yet";
+}
+
+
+# run_stages() is given an array "stages" of functions, an initial argument
+# "arg", and a callback "callback".  Each stage represents some task,
+# asynchronous or not, which should be completed before the next stage is
+# started.  Each stage is invoked with the result of the previous stage
+# and can abort this process if it encounters an error.  When all stages
+# have completed, "callback" is invoked with the error and results
+# of the last stage that was run.
+#
+# More precisely: the first function of "stages" may be invoked during
+# run_stages() or immediately after (asynchronously).  Each stage is
+# invoked as stage(arg, callback), where "arg" is the result of the
+# previous stage (or the "arg" specified to run_stages(), for the first
+# stage) and "callback" should be invoked when the stage is complete.
+# "callback" should be invoked as callback->(err, result), where "err"
+# is a non-null instance of Error iff an error was encountered and null
+# otherwise, and "result" is an arbitrary object to be passed to the
+# next stage.  The "callback" given to run_stages() is invoked after
+# the last stage has been run with the arguments given to that
+# stage's completion callback.
+#
+sub run_stages {
+  my ($self, $stages, $arg, $callback) = @_;
+
+  my ($stage, $next);
+
+  $next = sub {
+    my ($err, $result) = @_;
+    my $nextfunc;
+
+    if ($err) {
+      $callback->($err, $result);
+    }
+
+    $nextfunc = $stages->[$stage++];
+    if (!$nextfunc) {
+      return $callback->(undef, $result);
+    }
+
+    return $nextfunc->($result, $next);
+  };
+
+  $stage = 0;
+  $next->(undef, $arg);
+}
+
+# given an object and one of its methods, return a function that invokes that
+# method in the context of the specified object.
+sub wrap_method {
+  my ($self, $obj, $method) = @_;
+
+  return sub {
+    return $obj->$method(@_);
+  }
+}
+
+sub run_parallel {
+  confess "Not implemented yet";
+}
+
+# Returns true if the given string ends with the given suffix.
+sub ends_with {
+  my ($self, $str, $suffix) = @_;
+
+  if ($str =~ m/$suffix$/) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+sub substitute {
+  confess "Not implemented yet";
+}
+
 
 1;
