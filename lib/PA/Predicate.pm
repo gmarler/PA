@@ -337,5 +337,32 @@ sub pred_print_rel {
   return $out;
 }
 
+# Prints out the value of a logical expression.
+# This should print as:
+# (<predicate>) <operator> (<predicate>)...
+# 
+# The parens may seem unnecessary in most cases, but it is designed to
+# distinguish between nested logical expressions.
+# 
+# Inputs:
+#  - pred: The logical expression to print
+#  - key: The key for the object in the logical expression
+# 
+# Output:
+#  - Returns the string representation of the specified predicate.
+#
+sub pred_print_log {
+  my ($self, $pred, $key) = @_;
+
+  my @elts = map { my $elt = '(' . $self->pred_print_gen( $_ ) . ')';
+                   $elt;
+                 } @{$pred->{$key}};
+
+  my $ret = join(' ' . $self->print_strings->{$key} . ' ', @elts);
+
+  say "pred_print_log: $ret";
+  return $ret;
+}
+
 
 1;
