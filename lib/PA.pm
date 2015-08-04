@@ -6,8 +6,8 @@ package PA;
 # VERSION
 # ABSTRACT: Performance Analytics Suite
 
-use Moose;
-use namespace::autoclean;
+require Exporter;
+
 use Solaris::uname;
 use Clone                          qw(clone);
 use Data::Compare                  qw();
@@ -17,61 +17,45 @@ use List::MoreUtils                qw( zip uniq );
 use POSIX                          qw( floor );
 use Carp;
 
+@EXPORT_OK = qw($http_port_config $http_port_agg_base $field_arity_discrete
+                $field_arity_numeric $arity_scalar $arity_discrete
+                $arity_numeric $granularity_min
+                &sdc_config &sys_info &deep_equal &deep_copy &deep_copy_into
+                &field_exists &is_empty &num_props &do_pad &format_duration
+                &starts_with &qualified_id &array_contains &noop &array_merge
+                &http_param &run_stages &wrap_method &run_parallel &ends_with
+                &substitute
+                );
+%EXPORT_TAGS = (constants => [ qw($http_port_config $http_port_agg_base
+                                  $field_arity_discrete $field_arity_numeric
+                                  $arity_scalar $arity_discrete $arit_numeric
+                                  $granularity_min) ],
+                subs => [ qw(&sdc_config &sys_info &deep_equal &deep_copy
+                             &deep_copy_into &field_exists &is_empty &num_props
+                             &do_pad &format_duration &starts_with
+                             &qualified_id &array_contains &noop &array_merge
+                             &http_param &run_stages &wrap_method &run_parallel
+                             &ends_with &substitute) ],
+               );
+
 # Constants
 #
 # Default HTTP Ports, shared by the services themselves and the tests.
-has http_port_config => (
-  is      => 'ro',
-  isa     => 'Int',
-  default => 23181,
-);
-
-has http_port_agg_base => (
-  is      => 'ro',
-  isa     => 'Int',
-  default => 23184,
-);
+my $http_port_config   = 23181;
+my $http_port_agg_base = 23184;
 
 # PA Field Arities
-# TODO: Should these be types?
-has field_arity_discrete => (
-  is      => 'ro',
-  isa     => 'Str',
-  default => 'discrete',
-);
-
-has field_arity_numeric => (
-  is      => 'ro',
-  isa     => 'Str',
-  default => 'numeric',
-);
+my $field_arity_discrete = 'discrete';
+my $field_arity_numeric  = 'numeric';
 
 # PA Instrumentation Arities
-has arity_scalar => (
-  is      => 'ro',
-  isa     => 'Str',
-  default => 'scalar',
-);
-
-has arity_discrete => (
-  is      => 'ro',
-  isa     => 'Str',
-  default => 'discrete-decomposition',
-);
-
-has arity_numeric => (
-  is      => 'ro',
-  isa     => 'Str',
-  default => 'numeric-decomposition',
-);
+my $arity_scalar   = 'scalar';
+my $arity_discrete = 'discrete-decomposition';
+my $arity_numeric  = 'numeric-decomposition';
 
 # Minimum value for "granularity" > 1. Instrumenters report data at least this
 # frequently, and all values for "granularity" must be a multiple of this.
-has granularity_min => (
-  is      => 'ro',
-  isa     => 'Num',
-  default =>     5,
-);
+my $granularity_min = 5;
 
 sub sdc_config {
   return;  # We don't do this, so undefined
