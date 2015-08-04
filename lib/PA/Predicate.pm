@@ -308,5 +308,34 @@ sub pred_validate_semantics {
   $self->pred_walk($func, $pred);
 }
 
+# Prints out the value of a relational predicate.
+# This should print as:
+# <field> <operator> <constant>
+# 
+# Input:
+#  - pred: The predicate to print
+#  - key: The key for the predicate
+# 
+# Output:
+#  - Returns the string representation of the specified predicate.
+#
+
+sub pred_print_rel {
+  my ($self, $pred, $key) = @_;
+
+  my ($out) = $pred->{$key}->[0] . ' ';
+
+  $out .= $print_strings->{$key} . ' ';
+
+  if (_STRING( $pred->{$key}->[1] )) {
+    $out .= '"';
+  }
+  $out .= $pred->{$key}->[1];
+  if (_STRING( $pred->{$key}->[1] )) {
+    $out .= '"';
+  }
+  return $out;
+}
+
 
 1;
