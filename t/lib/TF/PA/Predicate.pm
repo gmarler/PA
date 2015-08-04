@@ -23,7 +23,7 @@ sub test_startup {
 sub test_validate {
   my ($test) = shift;
 
-  throws_ok( sub { PA::Predicate->pred_validate( undef, 23 ) },
+  throws_ok( sub { PA::Predicate->pred_validate_rel( undef, 23 ) },
              'null predicate with numeric scalar should die' );
 }
 
