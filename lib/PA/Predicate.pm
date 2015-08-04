@@ -99,7 +99,7 @@ has print_strings => (
 #
 sub pred_get_key {
   my ($self, $pred) = @_;
-  my ($keysfound,$key);
+  my ($keys_found,$key);
 
   foreach my $val (keys %$pred) {
     $keys_found++;
