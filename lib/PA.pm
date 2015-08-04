@@ -17,6 +17,7 @@ use List::MoreUtils                qw( zip uniq );
 use POSIX                          qw( floor );
 use Carp;
 
+my
 @EXPORT_OK = qw($http_port_config $http_port_agg_base $field_arity_discrete
                 $field_arity_numeric $arity_scalar $arity_discrete
                 $arity_numeric $granularity_min
@@ -26,6 +27,7 @@ use Carp;
                 &http_param &run_stages &wrap_method &run_parallel &ends_with
                 &substitute
                 );
+my
 %EXPORT_TAGS = (constants => [ qw($http_port_config $http_port_agg_base
                                   $field_arity_discrete $field_arity_numeric
                                   $arity_scalar $arity_discrete $arit_numeric
