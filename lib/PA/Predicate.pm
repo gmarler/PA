@@ -13,60 +13,45 @@ use namespace::autoclean;
 # change to the set of possible initial keys must bupdate these data structures
 # as well as pred_evaluate();
 #
-has parse_funcs => (
-  is         => 'ro',
-  isa        => 'HashRef',
-  default    => sub {
-    return {
-      lt  => \&pred_validate_rel,
-      le  => \&pred_validate_rel,
-      gt  => \&pred_validate_rel,
-      ge  => \&pred_validate_rel,
-      eq  => \&pred_validate_rel,
-      ne  => \&pred_validate_rel,
-      and => \&pred_validate_log,
-      or  => \&pred_validate_log,
-    };
-  },
-);
+my %parse_funcs =
+{
+  lt  => \&pred_validate_rel,
+  le  => \&pred_validate_rel,
+  gt  => \&pred_validate_rel,
+  ge  => \&pred_validate_rel,
+  eq  => \&pred_validate_rel,
+  ne  => \&pred_validate_rel,
+  and => \&pred_validate_log,
+  or  => \&pred_validate_log,
+};
 
 # A mapping that determines which specific instrumentation fields are supported
 # by which predicate relational and logical operators.
 # TODO: populate using keys defined in PA
-has key_fields => (
-  is         => 'ro',
-  isa        => 'HashRef',
-  default    => sub {
-    return {
-      lt  => {},
-      le  => {},
-      gt  => {},
-      ge  => {},
-      eq  => {},
-      ne  => {},
-    };
-  },
-);
+my %key_fields =
+{
+  lt  => {},
+  le  => {},
+  gt  => {},
+  ge  => {},
+  eq  => {},
+  ne  => {},
+};
 
 #
 # A mapping to the operator specific printing routines.
 #
-has print_funcs => (
-  is         => 'ro',
-  isa        => 'HashRef',
-  default    => sub {
-    return {
-      lt    => \&pred_print_rel,
-      le    => \&pred_print_rel,
-      gt    => \&pred_print_rel,
-      ge    => \&pred_print_rel,
-      eq    => \&pred_print_rel,
-      ne    => \&pred_print_rel,
-      and   => \&pred_print_log,
-      or    => \&pred_print_log,
-    };
-  },
-);
+my %print_funcs =
+{
+  lt    => \&pred_print_rel,
+  le    => \&pred_print_rel,
+  gt    => \&pred_print_rel,
+  ge    => \&pred_print_rel,
+  eq    => \&pred_print_rel,
+  ne    => \&pred_print_rel,
+  and   => \&pred_print_log,
+  or    => \&pred_print_log,
+};
 
 #
 # the operator specific string to use while printing
