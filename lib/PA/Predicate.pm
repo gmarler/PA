@@ -364,5 +364,27 @@ sub pred_print_log {
   return $ret;
 }
 
+# This is the generic entry point to begin parsing an individual predicate.
+# This is responsible for determining the key and dispatching to the correct
+# function.
+# 
+# Inputs:
+#  - pred: The predicate to be printed
+# 
+# Output:
+#  - Returns the string representation of the specified predicate.
+# 
+sub pred_print_gen {
+  my ($self, $pred) = @_;
+
+  my ($key, $keys_found);
+
+  foreach $key (keys %$pred) {
+    # NOTE: $key will be left as one and only key in hashref as a side effect of
+    #       this
+    $keys_found++;
+  }
+}
+
 
 1;
