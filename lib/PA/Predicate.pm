@@ -118,9 +118,9 @@ sub pred_get_key {
 # - That the first field of the array ref is a valid type
 #
 sub pred_validate_rel {
-  my ($self, $pred, $key) = shift;
+  my ($self, $pred, $key) = @_;
 
-  my ($field, $constant);
+  my ($field, $constant, $msg);
 
   if (not exists($pred->{$key})) {
     confess("predicate is missing key %s", $key);
