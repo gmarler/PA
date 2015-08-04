@@ -441,4 +441,32 @@ sub pred_contains_field {
   return $found;
 }
 
+# Walks the predicate and replaces all of the field names with appropriate
+# values from the specified object. The object is defined where each possible
+# predicate field is a key in the object and we replace the predicate field
+# with the value from the object. This allows us to replace simple consumer
+# predicate names i.e. latency or optype with the correct D expressions.
+# 
+# Input:
+#  - obj: An Object where keys match the fields in the predicate and the values
+#    are what should be substituted in
+#  - pred: The predicate to apply this transformation to
+sub pred_replace_fields {
+  my ($self, $obj, $pred) = @_;
+
+  $self->pred_walk(
+    sub {
+      my ($x, $key) = @_;
+      my $msg;
+      my $field = $x->{$key}->[0];
+      if (not exists($obj->{$field})) {
+        $msg = sprintf("Cannot find replacement for key %s in specified " .
+                       "obj %s for predicate %s", $field, $obj, $x);
+        confess( $msg );
+      }
+      $x->{$key}->[0] = $obj->{$field};
+    }, $pred);
+}
+
+
 1;
