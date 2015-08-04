@@ -1,7 +1,6 @@
 # NOTE: TF stands for TestsFor::...
-package TF::PA::MetadataManager;
+package TF::PA::Predicate;
 
-use Time::Moment        qw();
 use File::Temp          qw();
 use Data::Dumper        qw();
 use Assert::Conditional qw();
@@ -21,10 +20,10 @@ sub test_startup {
   # ... Anything you need to do...
 }
 
-sub test_normal {
+sub test_validate {
   my ($test) = shift;
 
-  ok(1);  
+  throws_ok( sub { PA::Predicate->pred_validate( undef, 23 ) },
+             'null predicate with numeric scalar should die' );
 }
 
-1;

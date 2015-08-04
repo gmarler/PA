@@ -8,8 +8,8 @@ package PA::MetricSet;
 # ABSTRACT: Encapsulates a set of PA::Metric's
 
 use List::Util qw( any );
-use namespace::autoclean;
 use Moose;
+use namespace::autoclean;
 
 # metrics indexed by module name
 has 'modules' =>

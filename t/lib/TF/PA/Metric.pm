@@ -18,3 +18,4 @@ sub test_startup {
   # ... Anything you need to do...
 }
 
+1;
