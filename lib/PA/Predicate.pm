@@ -400,7 +400,45 @@ sub pred_print_gen {
                    "predicate %s", $key, $pred);
     confess( $msg );
   }
+
+  return $print_funcs->{$key}->($self, $pred, $key);
 }
 
+# Prints out a human readable form of a predicate. This is the general entry
+# point.
+# 
+# Input:
+#  - pred: A predicate that has already been validated by caPredValidate
+# 
+# Output:
+#  - Returns the string representation of the specified predicate.
+
+sub pred_print {
+  my ($self, $pred) = @_;
+
+  return $self->pred_print_gen($pred);
+}
+
+# Walk a predicate and check if any of the leaves are checking a specific
+# field.
+# Input:
+#  - field: The name of the field to search for
+#  - pred: The predicate to search in
+# 
+sub pred_contains_field {
+  my ($self, $field, $pred) = @_;
+
+  my $found = 0;
+
+  $self->pred_walk(
+    sub {
+      my ($x, $key) = @_;
+      if ($x->{$key}->[0] eq $field) {
+        $found = 1;
+      }
+    }, $pred);
+
+  return $found;
+}
 
 1;
