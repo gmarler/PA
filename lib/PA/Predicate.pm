@@ -4,8 +4,8 @@ use strict;
 use warnings;
 
 use Moose;
-use Assert::Conditional;
-use PA;
+use Assert::Conditional qw(:all -if 1);
+use PA                  qw(:constants );
 use namespace::autoclean;
 use Carp;
 use Scalar::Util  qw(reftype);
@@ -154,6 +154,45 @@ sub pred_validate_rel {
                    $constant);
     confess($msg);
   }
+}
+
+# This function assumes that we have a syntactically valid object and the
+# caller has already established that the only fields present are fields which
+# are "valid". We now go through and do checks to validate that fields are used
+# appropriately given their arities (as specified in "fieldarities").
+# 
+#  Input:
+#   - fieldarities: valid fields for the metric and their arities
+#   - pred: The relational predicate to validate
+#   - key: The key that we are interested in validating
+# 
+sub pred_validate_field {
+  my ($self, $fieldarities, $pred, $key) = @_;
+
+  my ($field, $constant, $arity, $msg);
+
+  $field    = $pred->{$key}->[0];
+  $constant = $pred->{$key}->[1];
+
+  assert_in_list( $field, @$fieldarities );
+  $arity = $fieldarities->{$field};
+  assert_in_list( $arity, @{$key_fields->{$key}} );
+
+  if ($arity eq $PA::field_arity_numeric &&
+      not _NUMBER( $constant )) {
+    $msg = sprintf("predicate field is of type numeric, but the constant " .
+                   "is not a number: got type %s", reftype( $constant ));
+    confess( $msg );
+  }
+
+  if ($arity ne $PA::field_arity_numeric &&
+      not _STRING( $constant )) {
+    $msg = sprintf("predicate field is of type discrete, but the " .
+                   "constant is not a string: got type %s",
+                   reftype( $constant ));
+    confess( $msg );
+  }
+
 }
 
 1;
