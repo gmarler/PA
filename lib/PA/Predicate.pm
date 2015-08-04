@@ -7,6 +7,8 @@ use Moose;
 use Assert::Conditional;
 use PA;
 use namespace::autoclean;
+use Carp;
+use Scalar::Util  qw(reftype);
 
 #
 # A mapping from a predicate key to the type specific parsing routine.  Any
@@ -106,5 +108,43 @@ sub pred_get_key {
   return $key;
 }
 
+#
+# Validates that the predicate has a valid format for relational predicates.
+# This means that it fits the format:
+# { key => [ field, constant ] }
+#
+# Input:
+# - pred: The predicate hashref
+# - key: The key that we're interested in
+#
+# On return the following points have been validated:
+# - That the key points to a two element array ref
+# - That the first field of the array ref is a valid type
+#
+sub pred_validate_rel {
+  my ($self, $pred, $key) = shift;
+
+  my ($field, $constant);
+
+  if (not exists($pred->{$key})) {
+    confess("predicate is missing key %s", $key);
+  }
+
+  if (not defined($pred->{$key}) &&
+      not reftype($pred->{$key}) eq "ARRAY") {
+    confess("predicate key does not point to an arrayref");
+  }
+
+  if (not ((my $elem_count = scalar(@{$pred->{$key}})) == 2)) {
+    confess("predicate key does not point to an arrayref of two" .
+            " elements: found %d elements instead", $elem_count);
+  }
+
+  $field = $pred->{$key}->[0];
+  $constant = $pred->{$key}->[1];
+
+
+
+}
 
 1;
