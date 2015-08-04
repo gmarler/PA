@@ -7,8 +7,8 @@ package PA::MetadataManager;
 #
 # ABSTRACT: 
 
-use namespace::autoclean;
 use Moose;
+use namespace::autoclean;
 
 has 'log'        => ( is       => 'ro',
                       isa      => 'Str',
