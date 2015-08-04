@@ -72,6 +72,16 @@ my $print_strings =
 };
 
 
+my $pred_eval_helpers =
+{
+  lt => sub { my ($a, $b) = @_; return ($a <  $b); },
+  le => sub { my ($a, $b) = @_; return ($a <= $b); },
+  gt => sub { my ($a, $b) = @_; return ($a >  $b); },
+  ge => sub { my ($a, $b) = @_; return ($a >= $b); },
+  eq => sub { my ($a, $b) = @_; return ($a == $b); },
+  ne => sub { my ($a, $b) = @_; return ($a != $b); },
+};
+
 #
 # Gets the key for the given predicate
 #
@@ -468,5 +478,52 @@ sub pred_replace_fields {
     }, $pred);
 }
 
+# Determines whether a predicate has expressions that need to evaluated.
+# 
+# Input:
+#  - The predicate to evaluate
+# Output:
+#  - True if this predicate is not trivial, false otherwise
+#
+sub pred_non_trivial {
+  my ($self, $pred) = @_;
+
+  return (not PA::is_empty($pred));
+}
+
+
+# Iterates over the predicates and returns the list of fields that are at the
+# leaves in the predicate. The list will not contain duplicates.
+# 
+# Input:
+#  - pred: The predicate to extract the fields from.
+# 
+# Return:
+#  - The list of fields used in the predicate without duplicates.
+#
+sub pred_fields {
+  my ($self, $pred) = @_;
+
+  my $ret = [];
+
+  pred_walk(
+    sub {
+      my ($x, $key) = @_;
+      my $field = $x->{$key}->[0];
+      my $found;
+
+      foreach my $ii (@$ret) {
+        if ($field eq $ii) {
+          $found++;
+          last;
+        }
+      }
+      if (not $found) {
+        push @$ret, $field;
+      }
+    }, $pred);
+
+  return $ret;
+}
 
 1;
