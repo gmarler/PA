@@ -192,7 +192,46 @@ sub pred_validate_field {
                    reftype( $constant ));
     confess( $msg );
   }
-
 }
+
+# This function assumes that we have a syntactically valid object and the
+# caller has already established that the only fields present are fields which
+# are "valid". We now go through and do checks to validate that fields are used
+# appropriately given their arities (as specified in "fieldarities").
+# 
+#  Input:
+#   - fieldarities: valid fields for the metric and their arities
+#   - pred: The relational predicate to validate
+#   - key: The key that we are interested in validating
+
+sub pred_validate_log {
+  my ($self, $pred, $key) = @_;
+
+  my ($msg);
+
+  if (not exists($pred->{$key})) {
+    $msg = sprintf("logical expression is missing key %s", $key);
+    confess($msg);
+  }
+
+  if (not defined($pred->{$key}) &&
+      not reftype($pred->{$key}) eq "ARRAY") {
+    $msg = "logical expression key does not point to an arrayref";
+    confess($msg);
+  }
+
+  if (not ((my $elem_count = scalar(@{$pred->{$key}})) == 2)) {
+    $msg =
+      sprintf("logical expression key does not contain enough " .
+              "elements: found %d elements instead", $elem_count);
+    confess($msg);
+  }
+
+  foreach my $i_key (keys %$pred) {
+    # will simply die if validation fails, silently proceeds otherwise
+    $self->pred_validate_syntax($pred->{$key}->{$i_key});
+  }
+}
+
 
 1;
