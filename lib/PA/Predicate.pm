@@ -293,5 +293,20 @@ sub pred_walk {
   }
 }
 
+# Validates the semantic properties of the predicate. This includes making sure
+# that every field is valid for the predicate and the values present match the
+# expected arity.
+#
+sub pred_validate_semantics {
+  my ($self, $fieldarities, $pred) = @_;
+
+  my $func =
+    sub { my ($ent, $key) = @_;
+          return pred_validate_field($self, $fieldarities, $ent, $key);
+        };
+
+  $self->pred_walk($func, $pred);
+}
+
 
 1;
