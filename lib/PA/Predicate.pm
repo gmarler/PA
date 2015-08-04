@@ -9,6 +9,7 @@ use PA;
 use namespace::autoclean;
 use Carp;
 use Scalar::Util  qw(reftype);
+use Params::Util  qw(_STRING);
 
 #
 # A mapping from a predicate key to the type specific parsing routine.  Any
@@ -143,8 +144,14 @@ sub pred_validate_rel {
   $field = $pred->{$key}->[0];
   $constant = $pred->{$key}->[1];
 
+  if (not _STRING( $field ) ) {
+    confess("predicate field is not a string: got %s",$field);
+  }
 
-
+  if (not _NUMBER( $constant ) &&
+      not _STRING( $constant ) ) {
+      confess("predicate constant is not a constant: got %s", $constant);
+  }
 }
 
 1;
