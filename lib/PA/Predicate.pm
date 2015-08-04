@@ -9,7 +9,7 @@ use PA                  qw(:constants );
 use namespace::autoclean;
 use Carp;
 use Scalar::Util  qw(reftype);
-use Params::Util  qw(_STRING _NUMBER);
+use Params::Util  qw(_STRING _NUMBER _HASH0 _HASH _ARRAY0 _ARRAY);
 
 #
 # A mapping from a predicate key to the type specific parsing routine.  Any
@@ -232,6 +232,42 @@ sub pred_validate_log {
     $self->pred_validate_syntax($pred->{$key}->{$i_key});
   }
 }
+
+#
+# This is the entry point for validating and parsing any given predicate. This
+# will be called when beginning to parse any specific predicate.
+# 
+# Input:
+#  - pred: The predicate that we want to validate
+# 
+# Output: None on success, an exception is thrown on error.
+#
+
+sub pred_validate_syntax {
+  my ($self, $pred) = @_;
+
+  my ($key, $msg);
+
+  if (not _HASH( $pred ) ) {
+    $msg = sprintf("predicate must be a hashref");
+    confess( $msg );
+  }
+
+  if (not $self->pred_non_trivial( $pred ) ) {
+    return;  # undef
+  }
+
+  $key = $self->pred_get_key( $pred );
+
+  if (not any { $_ eq $key } keys %$parse_funcs) {
+    $msg = sprintf("invalid key: %s", $key);
+    confess( $msg );
+  }
+
+  $parse_funcs->{$key}->($self, $pred, $key);
+}
+
+
 
 
 1;
