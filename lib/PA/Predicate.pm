@@ -9,14 +9,14 @@ use PA;
 use namespace::autoclean;
 use Carp;
 use Scalar::Util  qw(reftype);
-use Params::Util  qw(_STRING);
+use Params::Util  qw(_STRING _NUMBER);
 
 #
 # A mapping from a predicate key to the type specific parsing routine.  Any
 # change to the set of possible initial keys must bupdate these data structures
 # as well as pred_evaluate();
 #
-my %parse_funcs =
+my $parse_funcs =
 {
   lt  => \&pred_validate_rel,
   le  => \&pred_validate_rel,
@@ -31,7 +31,7 @@ my %parse_funcs =
 # A mapping that determines which specific instrumentation fields are supported
 # by which predicate relational and logical operators.
 # TODO: populate using keys defined in PA
-my %key_fields =
+my $key_fields =
 {
   lt  => {},
   le  => {},
@@ -44,7 +44,7 @@ my %key_fields =
 #
 # A mapping to the operator specific printing routines.
 #
-my %print_funcs =
+my $print_funcs =
 {
   lt    => \&pred_print_rel,
   le    => \&pred_print_rel,
@@ -59,22 +59,17 @@ my %print_funcs =
 #
 # the operator specific string to use while printing
 #
-has print_strings => (
-  is         => 'ro',
-  isa        => 'HashRef',
-  default    => sub {
-    return {
-      lt    => '<',
-      le    => '<=',
-      gt    => '>',
-      ge    => '>=',
-      eq    => '==',
-      ne    => '!=',
-      and   => '&&',
-      or    => '||',
-    };
-  },
-);
+my $print_strings =
+{
+  lt    => '<',
+  le    => '<=',
+  gt    => '>',
+  ge    => '>=',
+  eq    => '==',
+  ne    => '!=',
+  and   => '&&',
+  or    => '||',
+};
 
 
 #
