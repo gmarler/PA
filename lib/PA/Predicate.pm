@@ -227,9 +227,9 @@ sub pred_validate_log {
     confess($msg);
   }
 
-  foreach my $i_key (keys %$pred) {
+  foreach my $ii (@{$pred->{$key}}) {
     # will simply die if validation fails, silently proceeds otherwise
-    $self->pred_validate_syntax($pred->{$key}->{$i_key});
+    $self->pred_validate_syntax($pred->{$key}->[$ii]);
   }
 }
 
@@ -267,7 +267,31 @@ sub pred_validate_syntax {
   $parse_funcs->{$key}->($self, $pred, $key);
 }
 
+# We want to walk every leaf predicate and apply a function to it
+# Input:
+#  - func: A function of the signature void (*func)(predicate, key)
+#  - pred: A predicate that has previously been validated
+# 
 
+sub pred_walk {
+  my ($self, $func, $pred) = @_;
+
+  my ($key);
+
+  if (not $self->pred_non_trivial($pred)) {
+    return;  #undef
+  }
+
+  $key = $self->pred_get_key( $pred );
+
+  if ( ($key eq "and") or ($key eq "or") ) {
+    foreach my $ii ( @{$pred->{$key}} ) {
+      $self->pred_walk( $func, $pred->{$key}->[$ii] );
+    }
+  } else {
+    $func->($self, $pred, $key);
+  }
+}
 
 
 1;
