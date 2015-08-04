@@ -377,12 +377,28 @@ sub pred_print_log {
 sub pred_print_gen {
   my ($self, $pred) = @_;
 
-  my ($key, $keys_found);
+  my ($key, $keys_found, $msg);
 
   foreach $key (keys %$pred) {
     # NOTE: $key will be left as one and only key in hashref as a side effect of
     #       this
     $keys_found++;
+  }
+
+  if ($keys_found == 0) {
+    return '1';
+  }
+
+  if ($keys_found != 1) {
+    $msg = sprintf("Expected only one key for the specified predicate. " .
+                   "Found %d. Looking at predicate %s", $keys_found, $pred);
+    confess( $msg );
+  }
+
+  if (not exists($print_funcs->{$key})) {
+    $msg = sprintf("Missing print function for key %s. Looking at " .
+                   "predicate %s", $key, $pred);
+    confess( $msg );
   }
 }
 
