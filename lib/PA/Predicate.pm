@@ -123,29 +123,36 @@ sub pred_validate_rel {
   my ($field, $constant, $msg);
 
   if (not exists($pred->{$key})) {
-    confess("predicate is missing key %s", $key);
+    $msg = sprintf("predicate is missing key %s", $key);
+    confess($msg);
   }
 
   if (not defined($pred->{$key}) &&
       not reftype($pred->{$key}) eq "ARRAY") {
-    confess("predicate key does not point to an arrayref");
+    $msg = "predicate key does not point to an arrayref";
+    confess($msg);
   }
 
   if (not ((my $elem_count = scalar(@{$pred->{$key}})) == 2)) {
-    confess("predicate key does not point to an arrayref of two" .
-            " elements: found %d elements instead", $elem_count);
+    $msg =
+      sprintf("predicate key does not point to an arrayref of two" .
+              " elements: found %d elements instead", $elem_count);
+    confess($msg);
   }
 
   $field = $pred->{$key}->[0];
   $constant = $pred->{$key}->[1];
 
   if (not _STRING( $field ) ) {
-    confess("predicate field is not a string: got %s",$field);
+    $msg = sprintf("predicate field is not a string: got %s",$field);
+    confess($msg);
   }
 
   if (not _NUMBER( $constant ) &&
       not _STRING( $constant ) ) {
-      confess("predicate constant is not a constant: got %s", $constant);
+    $msg = sprintf("predicate constant is not a constant: got %s",
+                   $constant);
+    confess($msg);
   }
 }
 
