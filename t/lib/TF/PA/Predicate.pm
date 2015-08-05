@@ -67,4 +67,9 @@ sub test_pred_contains_field {
   diag Data::Dumper::Dumper( $pred );
   PA::Predicate->pred_replace_fields($obj, $pred);
   diag Data::Dumper::Dumper( $pred );
+
+  my $printed_pred = PA::Predicate->pred_print( $pred );
+  cmp_ok( $printed_pred, 'eq', '(zonename == "foo") && ' .
+          '(timestamp - now->ts > 200)',
+          'printed predicate with replaced fields looks as expected' );
 }
