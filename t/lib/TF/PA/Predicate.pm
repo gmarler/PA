@@ -31,10 +31,9 @@ sub test_validate {
            'null predicate with arrayref scalar should die' );
 
   PA::Predicate->pred_non_trivial( { } );
-  ok( not PA::Predicate->pred_non_trivial( { } ),
+  ok( not(PA::Predicate->pred_non_trivial( { } )),
       'an empty predicate SHOULD BE trivial' );
   ok( PA::Predicate->pred_non_trivial( { eq => [ 'zonename', 'bar' ] } ),
       'a predicate with an expression should be non-trivial' );
-
 }
 
