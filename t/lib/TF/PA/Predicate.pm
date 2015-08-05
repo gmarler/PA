@@ -25,5 +25,15 @@ sub test_validate {
 
   dies_ok( sub { PA::Predicate->pred_validate_rel( undef, 23 ) },
            'null predicate with numeric scalar should die' );
+  dies_ok( sub { PA::Predicate->pred_validate_rel( undef, '23' ) },
+           'null predicate with string scalar should die' );
+  dies_ok( sub { PA::Predicate->pred_validate_rel( undef, ['foo'] ) },
+           'null predicate with arrayref scalar should die' );
+
+  ok( not PA::Predicate->pred_non_trivial( { } ),
+      'an empty predicate SHOULD BE trivial' );
+  ok( PA::Predicate->pred_non_trivial( { eq => [ 'zonename', 'bar' ] } ),
+      'an predicate with an expression should be non-trivial' );
+
 }
 
