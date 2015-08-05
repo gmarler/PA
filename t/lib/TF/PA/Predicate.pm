@@ -36,11 +36,35 @@ sub test_validate {
       'a predicate with an expression should be non-trivial' );
 }
 
-sub test_walking {
+sub test_pred_contains_field {
   my ($test) = shift;
 
   my $pred = { eq => [ 'zonename', 'foo' ] };
 
   ok( PA::Predicate->pred_contains_field('zonename', $pred),
-      'predicate should contain field' );
+      'predicate should contain field "zonename"' );
+
+  ok( not(PA::Predicate->pred_contains_field('hostname', $pred)),
+      'predicate should NOT contain field "hostname"' );
+
+  $pred = { and => [ { eq => [ 'zonename', 'foo' ] },
+                     { gt => [ 'latency',  200 ]   },
+                   ]
+           };
+
+  ok( PA::Predicate->pred_contains_field('zonename', $pred),
+      'predicate should contain field "zonename"' );
+  ok( PA::Predicate->pred_contains_field('latency', $pred),
+      'predicate should contain field "latency"' );
+  ok( not(PA::Predicate->pred_contains_field('hostname', $pred),
+      'predicate should NOT contain field "hostname"' );
+
+  my $obj = {
+    zonename => 'zonename',
+    latency  => 'timestamp - now->ts',
+  };
+
+  diag Data::Dumper::Dumper( $obj );
+  PA::Predicate->pred_replace_fields($obj, $pred);
+  diag Data::Dumper::Dumper( $obj );
 }
