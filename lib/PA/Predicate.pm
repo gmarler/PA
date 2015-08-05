@@ -441,9 +441,10 @@ sub pred_contains_field {
 
   my $found = 0;
 
+  no strict "refs";
   $self->pred_walk(
     sub {
-      my ($x, $key) = @_;
+      my ($self, $x, $key) = @_;
       if ($x->{$key}->[0] eq $field) {
         $found = 1;
       }
@@ -467,7 +468,7 @@ sub pred_replace_fields {
 
   $self->pred_walk(
     sub {
-      my ($x, $key) = @_;
+      my ($self, $x, $key) = @_;
       my $msg;
       my $field = $x->{$key}->[0];
       if (not exists($obj->{$field})) {
@@ -509,7 +510,7 @@ sub pred_fields {
 
   pred_walk(
     sub {
-      my ($x, $key) = @_;
+      my ($self, $x, $key) = @_;
       my $field = $x->{$key}->[0];
       my $found;
 
