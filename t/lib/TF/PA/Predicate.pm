@@ -56,7 +56,7 @@ sub test_pred_contains_field {
       'predicate should contain field "zonename"' );
   ok( PA::Predicate->pred_contains_field('latency', $pred),
       'predicate should contain field "latency"' );
-  ok( not(PA::Predicate->pred_contains_field('hostname', $pred),
+  ok( not(PA::Predicate->pred_contains_field('hostname', $pred)),
       'predicate should NOT contain field "hostname"' );
 
   my $obj = {
