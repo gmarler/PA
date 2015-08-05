@@ -296,8 +296,8 @@ sub pred_walk {
   $key = $self->pred_get_key( $pred );
 
   if ( ($key eq "and") or ($key eq "or") ) {
-    foreach my $ii ( @{$pred->{$key}} ) {
-      $self->pred_walk( $func, $pred->{$key}->[$ii] );
+    foreach my $val ( @{$pred->{$key}} ) {
+      $self->pred_walk( $func, $val );
     }
   } else {
     $func->($self, $pred, $key);
