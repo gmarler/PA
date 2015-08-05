@@ -526,4 +526,62 @@ sub pred_fields {
   return $ret;
 }
 
+# Given a predicate and an object mapping key names to values, return whether
+# the predicate is satisfied by the specified fields.
+#
+sub pred_eval {
+  my ($self, $pred, $values) = @_;
+
+  my ($expr);
+
+  if (not $self->pred_non_trivial( $pred )) {
+    return 1;
+  }
+  assert_defined( $pred );
+  assert_hashref_nonempty( $pred );
+
+  $expr = PA::deep_copy( $pred );
+  $self->pred_replace_fields( $values, $expr );
+  return $self->pred_eval_expr( $expr );
+}
+
+sub pred_eval_expr {
+  my ($self, $expr) = @_;
+
+  my ($key);
+
+  $key = $self->pred_get_key( $expr );
+
+  if ( $key eq "and" ) {
+    foreach my $aval ( @{$expr->{and}} ) {
+      if (not $self->pred_eval_expr( $aval ) ) {
+        return 0;
+      }
+    }
+    return 1;
+  } elsif ( $key eq "or" ) {
+    foreach my $aval ( @{$expr->{or}} ) {
+      if ( $self->pred_eval_expr( $aval ) ) {
+        return 1;
+      }
+    }
+    return 0;
+  } elsif ( ( $key eq "lt" ) or ( $key eq "le" ) or
+            ( $key eq "gt" ) or ( $key eq "ge" ) ) {
+    assert_happy_code { _NUMBER( $expr->{$key}->[0] ) };
+    assert_happy_code { _NUMBER( $expr->{$key}->[1] ) };
+    assert_hashref_keys_required( %$pred_eval_helpers, $key );
+    assert_array_length( @{$expr->{$key}}, 2 );
+  } else {
+    assert_hashref_keys_required( %$pred_eval_helpers, $key );
+    assert_array_length( @{$expr->{$key}}, 2 );
+  }
+
+  return $pred_eval_helpers->{$key}->( $expr->{$key}->[0],
+                                       $expr->{$key}->[1] );
+
+}
+
+
+
 1;
