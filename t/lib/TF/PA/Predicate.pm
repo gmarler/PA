@@ -64,7 +64,7 @@ sub test_pred_contains_field {
     latency  => 'timestamp - now->ts',
   };
 
-  diag Data::Dumper::Dumper( $obj );
+  diag Data::Dumper::Dumper( $pred );
   PA::Predicate->pred_replace_fields($obj, $pred);
-  diag Data::Dumper::Dumper( $obj );
+  diag Data::Dumper::Dumper( $pred );
 }
