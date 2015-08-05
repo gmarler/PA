@@ -64,7 +64,7 @@ sub sdc_config {
 }
 
 sub sys_info {
-  my ($self, $agentname, $agentversion) = @_;
+  my ($agentname, $agentversion) = @_;
 
   my $uname = uname();
   my $hostname;
@@ -89,7 +89,7 @@ sub sys_info {
 }
 
 sub deep_equal {
-  my ($self, $lhs, $rhs) = @_;
+  my ($lhs, $rhs) = @_;
 
   my $c = Data::Compare->new($lhs, $rhs);
 
@@ -97,7 +97,7 @@ sub deep_equal {
 }
 
 sub deep_copy {
-  my ($self, $obj) = @_;
+  my ($obj) = @_;
  
   my $clone = clone($obj);
   return $clone;
@@ -114,7 +114,7 @@ sub deep_copy_into {
 #   Returns $href->{key}
 #
 sub field_exists {
-  my ($self, $href, $key, $prototype) = @_;
+  my ($href, $key, $prototype) = @_;
 
   if ( not any { $_ =~ m/^$key$/ } keys %$href ) {
     die "missing required field: $key";
@@ -131,7 +131,7 @@ sub field_exists {
 # Returns true IFF the given href is empty.
 #
 sub is_empty {
-  my ($self, $href) = @_;
+  my ($href) = @_;
 
   foreach my $key (keys %$href) {
     return 0;
@@ -143,13 +143,13 @@ sub is_empty {
 # Returns the number of keys in a given href.
 #
 sub num_props {
-  my ($self, $href) = @_;
+  my ($href) = @_;
 
   return scalar (keys %$href);
 }
 
 sub do_pad {
-  my ($self, $chr, $width, $left, $str) = @_;
+  my ($chr, $width, $left, $str) = @_;
   my $ret = $str;
 
   while (length($ret) < $width) {
@@ -165,7 +165,7 @@ sub do_pad {
 
 # Given a time duration in millisecs, format it appropriately for output
 sub format_duration {
-  my ($self, $time_in_ms) = @_;
+  my ($time_in_ms) = @_;
 
   my ($days, $hours, $minutes, $seconds, $msec, $str);
 
@@ -203,7 +203,7 @@ sub format_duration {
 # Return true if the input string starts with the specified prefix.
 #
 sub starts_with {
-  my ($self, $str, $prefix) = @_;
+  my ($str, $prefix) = @_;
 
   if (length($prefix) > length($str)) {
     return 0;
@@ -226,7 +226,7 @@ sub noop { }
 # the block comment at the top of this file on cfg_insts.
 #
 sub qualified_id {
-  my ($self, $custid, $instid) = @_;
+  my ($custid, $instid) = @_;
 
   if (not defined($custid)) {
     return "global;$instid";
@@ -237,7 +237,7 @@ sub qualified_id {
 
 # function to walk an array and see if it conatins a given field.
 sub array_contains {
-  my ($self, $arr, $field) = @_;
+  my ($arr, $field) = @_;
 
   if ( any { $_ eq $field  } @$arr ) {
     return 1;
@@ -247,7 +247,7 @@ sub array_contains {
 }
 
 sub array_merge {
-  my ($self, $orig, $addl) = @_;
+  my ($orig, $addl) = @_;
 
   my @merged = zip @$orig, @$addl;
   @merged = uniq @merged;
@@ -281,7 +281,7 @@ sub http_param {
 # stage's completion callback.
 #
 sub run_stages {
-  my ($self, $stages, $arg, $callback) = @_;
+  my ($stages, $arg, $callback) = @_;
 
   my ($stage, $next);
 
@@ -308,7 +308,7 @@ sub run_stages {
 # given an object and one of its methods, return a function that invokes that
 # method in the context of the specified object.
 sub wrap_method {
-  my ($self, $obj, $method) = @_;
+  my ($obj, $method) = @_;
 
   return sub {
     return $obj->$method(@_);
@@ -321,7 +321,7 @@ sub run_parallel {
 
 # Returns true if the given string ends with the given suffix.
 sub ends_with {
-  my ($self, $str, $suffix) = @_;
+  my ($str, $suffix) = @_;
 
   if ($str =~ m/$suffix$/) {
     return 1;
