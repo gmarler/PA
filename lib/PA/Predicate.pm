@@ -369,7 +369,7 @@ sub pred_print_log {
                    $elt;
                  } @{$pred->{$key}};
 
-  my $ret = join(' ' . $self->print_strings->{$key} . ' ', @elts);
+  my $ret = join(' ' . $print_strings->{$key} . ' ', @elts);
 
   say "pred_print_log: $ret";
   return $ret;

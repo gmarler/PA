@@ -64,9 +64,7 @@ sub test_pred_contains_field {
     latency  => 'timestamp - now->ts',
   };
 
-  diag Data::Dumper::Dumper( $pred );
   PA::Predicate->pred_replace_fields($obj, $pred);
-  diag Data::Dumper::Dumper( $pred );
 
   my $printed_pred = PA::Predicate->pred_print( $pred );
   cmp_ok( $printed_pred, 'eq', '(zonename == "foo") && ' .
