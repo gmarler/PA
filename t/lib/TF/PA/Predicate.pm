@@ -45,19 +45,23 @@ my $eval_test_cases =
 [ {
     pred   => {},                               # trivial case
     values => {},
-    result => true,
+    #result => true,
+    result => 1,
   }, {
     pred   => { eq => ['hostname', 'legs'] },   # eq: strings, !=
     values => { 'hostname' => 'louie' },
-    result => false,
+    #result => false,
+    result => 0,
   }, {
     pred   => { eq => ['hostname', 'legs'] },   # eq: strings, ==
     values => { 'hostname' => 'legs' },
-    result => true,
+    #result => true,
+    result => 1,
   }, {
     pred   => { eq    => ['pid', 12] },         # eq: numbers, !=
     values => { 'pid' => 15 },
-    result => false,
+    #result => false,
+    result => 0,
   }, {
     pred   => { eq    => ['pid', 12] },         # eq: numbers, ==
     values => { 'pid' => 12 },
