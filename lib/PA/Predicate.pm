@@ -574,10 +574,10 @@ sub pred_eval_expr {
             ( $key eq "gt" ) or ( $key eq "ge" ) ) {
     assert_happy_code { _NUMBER( $expr->{$key}->[0] ) };
     assert_happy_code { _NUMBER( $expr->{$key}->[1] ) };
-    assert_hashref_keys_required( %$pred_eval_helpers, $key );
+    assert_hashref_keys_required( $pred_eval_helpers, $key );
     assert_array_length( @{$expr->{$key}}, 2 );
   } else {
-    assert_hashref_keys_required( %$pred_eval_helpers, $key );
+    assert_hashref_keys_required( $pred_eval_helpers, $key );
     assert_array_length( @{$expr->{$key}}, 2 );
   }
 
