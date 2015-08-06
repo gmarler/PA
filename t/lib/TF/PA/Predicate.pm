@@ -292,6 +292,7 @@ sub test_print {
   foreach my $entry ( @$print_test_cases ) {
     cmp_ok(PA::Predicate->pred_print( $entry->[0] ), 'eq',
            $entry->[1],
-           "Predicate " . $entry->[0] . " produces " . $entry->[1]);
+           "Predicate " . Data::Dumper::Dumper($entry->[0]) .
+           " produces " . $entry->[1]);
   }
 }
