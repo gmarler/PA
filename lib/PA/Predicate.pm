@@ -371,7 +371,6 @@ sub pred_print_log {
 
   my $ret = join(' ' . $print_strings->{$key} . ' ', @elts);
 
-  say "pred_print_log: $ret";
   return $ret;
 }
 
