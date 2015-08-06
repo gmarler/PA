@@ -296,19 +296,19 @@ sub test_pred_invalid {
 
   my $fields = { numeric => 5, string => 'hello' };
 
-  dies_ok(PA::Predicate->pred_eval({ eq => [] }, $fields,
+  dies_ok(sub { PA::Predicate->pred_eval({ eq => [] }, $fields) },
           'Invalid predicate form (array too small)');
 
-  dies_ok(PA::Predicate->pred_eval({ eq => {} }, $fields,
+  dies_ok(sub { PA::Predicate->pred_eval({ eq => {} }, $fields) },
           'Invalid predicate form (wrong type)');
 
-  dies_ok(PA::Predicate->pred_eval({ inval => [1, 2] }, $fields,
+  dies_ok(sub { PA::Predicate->pred_eval({ inval => [1, 2] }, $fields) },
           'Invalid predicate form (invalid key)');
 
-  dies_ok(PA::Predicate->pred_eval({ le => ['string', 3] }, $fields,
+  dies_ok(sub { PA::Predicate->pred_eval({ le => ['string', 3] }, $fields) },
           'Invalid types');
 
-  dies_ok(PA::Predicate->pred_eval({ le => ['junk', 3] }, $fields,
+  dies_ok(sub { PA::Predicate->pred_eval({ le => ['junk', 3] }, $fields) },
           'Missing value');
 }
 
