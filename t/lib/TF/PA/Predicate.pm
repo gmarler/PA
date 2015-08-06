@@ -255,7 +255,4 @@ sub test_pred_contains_field {
 sub test_pred_eval {
   my ($test) = shift;
 
-  my $ds = JSON::MaybeXS->decode_json($eval_test_cases_json);
-
-  ok( $ds, 'data structure from JSON is defined' );
 }
