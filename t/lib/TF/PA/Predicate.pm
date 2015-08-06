@@ -14,31 +14,31 @@ with 'Test::Class::Moose::Role::AutoUse';
 
 my $print_test_cases =
 [
-  {},
-  {
-    eq  => [ 'execname', 'mplayer' ],
-  },
-  {
-    ne  => [ 'execname', 'vlc' ],
-  },
-  {
-    lt  => [ 'latency', 42 ],
-  },
-  {
-    gt  => [ 'latency', 23 ],
-  },
-  {
-    le  => [ 'latency', 42 ],
-  },
-  {
-    ge  => [ 'latency', 23 ],
-  },
-  {
-    and => [ {}, { eq => [ 'latency', 23 ] } ],
-  },
-  {
-    or  => [ { eq => [ 'latency', 23 ] }, {} ],
-  },
+  [ {}, '1' ],
+  [ {
+      eq  => [ 'execname', 'mplayer' ],
+    }, 'execname == "mplayer"' ],
+  [ {
+      ne  => [ 'execname', 'vlc' ],
+    }, 'execname != "vlc"' ],
+  [ {
+      lt  => [ 'latency', 42 ],
+    }, 'latency < 42' ],
+  [ {
+      gt  => [ 'latency', 23 ],
+    }, 'latency > 23' ],
+  [ {
+      le  => [ 'latency', 42 ],
+    }, 'latency <= 42' ],
+  [ {
+      ge  => [ 'latency', 23 ],
+    }, 'latency >= 23' ],
+  [ {
+      and => [ {}, { eq => [ 'latency', 23 ] } ],
+    }, '(1) && (latency == 23)' ],
+  [ {
+      or  => [ { eq => [ 'latency', 23 ] }, {} ],
+    }, '(latency == 23) || (1)' ],
 ];
 
 my $eval_test_cases =
@@ -290,6 +290,8 @@ sub test_print {
   my ($test) = shift;
 
   foreach my $entry ( @$print_test_cases ) {
-    diag PA::Predicate->pred_print( $entry );
+    cmp_ok(PA::Predicate->pred_print( $entry->[0] ), 'eq',
+           $entry->[1],
+           "Predicate " . $entry->[0] . " produces " . $entry->[1]);
   }
 }
