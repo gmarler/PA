@@ -284,6 +284,32 @@ sub test_pred_contains_field {
 sub test_pred_eval {
   my ($test) = shift;
 
+  foreach my $entry (@$eval_test_cases) {
+    cmp_ok(PA::Predicate->pred_eval( $entry->{pred} ), '==',
+           $entry->{result},
+           'Predicate evaluation produced ' . $entry->{result});
+  }
+}
+
+sub test_pred_invalid {
+  my ($test) = shift;
+
+  my $fields = { numeric => 5, string => 'hello' };
+
+  dies_ok(PA::Predicate->pred_eval({ eq => [] }, $fields,
+          'Invalid predicate form (array too small)');
+
+  dies_ok(PA::Predicate->pred_eval({ eq => {} }, $fields,
+          'Invalid predicate form (wrong type)');
+
+  dies_ok(PA::Predicate->pred_eval({ inval => [1, 2] }, $fields,
+          'Invalid predicate form (invalid key)');
+
+  dies_ok(PA::Predicate->pred_eval({ le => ['string', 3] }, $fields,
+          'Invalid types');
+
+  dies_ok(PA::Predicate->pred_eval({ le => ['junk', 3] }, $fields,
+          'Missing value');
 }
 
 sub test_print {
