@@ -509,7 +509,7 @@ sub pred_fields {
 
   my $ret = [];
 
-  pred_walk(
+  $self->pred_walk(
     sub {
       my ($self, $x, $key) = @_;
       my $field = $x->{$key}->[0];
