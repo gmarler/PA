@@ -79,8 +79,8 @@ my $pred_eval_helpers =
   le => sub { my ($a, $b) = @_; return ($a <= $b); },
   gt => sub { my ($a, $b) = @_; return ($a >  $b); },
   ge => sub { my ($a, $b) = @_; return ($a >= $b); },
-  eq => sub { my ($a, $b) = @_; return ($a == $b); },
-  ne => sub { my ($a, $b) = @_; return ($a != $b); },
+  eq => sub { my ($a, $b) = @_; return ($a eq $b); },
+  ne => sub { my ($a, $b) = @_; return ($a ne $b); },
 };
 
 #
