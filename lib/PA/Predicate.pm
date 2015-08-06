@@ -536,6 +536,8 @@ sub pred_fields {
 sub pred_eval {
   my ($self, $pred, $values) = @_;
 
+  $values //= {}; # because someone may not always pass the obj in
+
   my ($expr);
 
   if (not $self->pred_non_trivial( $pred )) {
