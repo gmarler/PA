@@ -390,9 +390,11 @@ sub pred_print_gen {
 
   my ($key, $keys_found, $msg);
 
-  foreach $key (keys %$pred) {
-    # NOTE: $key will be left as one and only key in hashref as a side effect of
-    #       this
+  # WEIRD: tried to use just $key (without my) from above, but it resets to
+  #        undef upon exiting the loop below.  So we worked around it as
+  #        below...
+  foreach my $tkey (keys %$pred) {
+    $key = $tkey; 
     $keys_found++;
   }
 
