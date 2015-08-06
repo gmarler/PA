@@ -75,7 +75,7 @@ my $eval_test_cases =
     values => { 'pid' => 15 },
     result => true
   }, {
-    pred => { ne: ['pid', 12] },                # ne: numbers, ==
+    pred => { ne  => ['pid', 12] },             # ne: numbers, ==
     values => { 'pid' => 12 },
     result => false
   }, {
