@@ -12,6 +12,35 @@ use boolean;
 use Test::Class::Moose;
 with 'Test::Class::Moose::Role::AutoUse';
 
+my $print_test_cases =
+[
+  {},
+  {
+    eq  => [ 'execname', 'mplayer' ],
+  },
+  {
+    ne  => [ 'execname', 'vlc' ],
+  },
+  {
+    lt  => [ 'latency', 42 ],
+  },
+  {
+    gt  => [ 'latency', 23 ],
+  },
+  {
+    le  => [ 'latency', 42 ],
+  },
+  {
+    ge  => [ 'latency', 23 ],
+  },
+  {
+    and => [ {}, { eq => [ 'latency', 23 ] } ],
+  },
+  {
+    or  => [ { eq => [ 'latency', 23 ] }, {} ],
+  },
+];
+
 my $eval_test_cases =
 [ {
     pred   => {},                               # trivial case
@@ -19,7 +48,7 @@ my $eval_test_cases =
     result => true,
   }, {
     pred   => { eq => ['hostname', 'legs'] },   # eq: strings, !=
-    values => { 'hostname': 'louie' },
+    values => { 'hostname' => 'louie' },
     result => false,
   }, {
     pred   => { eq => ['hostname', 'legs'] },   # eq: strings, ==
@@ -255,4 +284,12 @@ sub test_pred_contains_field {
 sub test_pred_eval {
   my ($test) = shift;
 
+}
+
+sub test_print {
+  my ($test) = shift;
+
+  foreach my $entry ( @$print_test_cases ) {
+    diag PA::Predicate->pred_print( $entry );
+  }
 }
