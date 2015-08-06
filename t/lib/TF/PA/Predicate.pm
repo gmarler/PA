@@ -70,4 +70,14 @@ sub test_pred_contains_field {
   cmp_ok( $printed_pred, 'eq', '(zonename == "foo") && ' .
           '(timestamp - now->ts > 200)',
           'printed predicate with replaced fields looks as expected' );
+
+  $pred = { and => [ { eq => [ 'zonename', 'foo' ] },
+                     { gt => [ 'latency', 200    ] },
+                   ],
+          };
+
+  my $fields = PA::Predicate->pred_fields( $pred );
+
+  cmp_deeply( $fields, [ 'zonename', 'latency' ],
+              'fields from pred_fields are generated correctly' );
 }
