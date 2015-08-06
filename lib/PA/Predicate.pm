@@ -338,11 +338,11 @@ sub pred_print_rel {
 
   $out .= $print_strings->{$key} . ' ';
 
-  if (_STRING( $pred->{$key}->[1] )) {
+  if (! _NUMBER( $pred->{$key}->[1] )) {
     $out .= '"';
   }
   $out .= $pred->{$key}->[1];
-  if (_STRING( $pred->{$key}->[1] )) {
+  if (! _NUMBER( $pred->{$key}->[1] )) {
     $out .= '"';
   }
   return $out;
