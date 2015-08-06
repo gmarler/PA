@@ -388,6 +388,7 @@ sub pred_print_gen {
   my ($self, $pred) = @_;
 
   my ($key, $keys_found, $msg);
+  $keys_found = 0;  # initialize for later comparison with 0 below.
 
   # WEIRD: tried to use just $key (without my) from above, but it resets to
   #        undef upon exiting the loop below.  So we worked around it as
