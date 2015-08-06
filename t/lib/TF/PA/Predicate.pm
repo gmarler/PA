@@ -289,7 +289,7 @@ sub test_pred_eval {
   my ($test) = shift;
 
   foreach my $entry (@$eval_test_cases) {
-    cmp_ok(PA::Predicate->pred_eval( $entry->{pred} ), '==',
+    cmp_ok(PA::Predicate->pred_eval( $entry->{pred}, $entry->{values} ), '==',
            $entry->{result},
            'Predicate evaluation produced ' . $entry->{result});
   }
