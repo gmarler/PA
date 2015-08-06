@@ -4,11 +4,180 @@ package TF::PA::Predicate;
 use File::Temp          qw();
 use Data::Dumper        qw();
 use Assert::Conditional qw();
+use JSON::MaybeXS       qw();
 # Possible alternative assertion methodology
 # use Devel::Assert     qw();
 
 use Test::Class::Moose;
 with 'Test::Class::Moose::Role::AutoUse';
+
+my $eval_test_cases_json = '
+[ {
+  pred: {},                /* trivial case */
+  values: {},
+  result: true
+}, {
+  pred: { eq: ['hostname', 'legs'] },	/* eq: strings, != */
+  values: { 'hostname': 'louie' },
+  result: false
+}, {
+	pred: { eq: ['hostname', 'legs'] },	/* eq: strings, == */
+	values: { 'hostname': 'legs' },
+	result: true
+}, {
+	pred: { eq: ['pid', 12] },		/* eq: numbers, != */
+	values: { 'pid': 15 },
+	result: false
+}, {
+	pred: { eq: ['pid', 12] },		/* eq: numbers, == */
+	values: { 'pid': 12 },
+	result: true
+}, {
+	pred: { ne: ['hostname', 'legs'] },	/* ne: strings, != */
+	values: { 'hostname': 'louie' },
+	result: true
+}, {
+	pred: { ne: ['hostname', 'legs'] },	/* ne: strings, == */
+	values: { 'hostname': 'legs' },
+	result: false
+}, {
+	pred: { ne: ['pid', 12] },		/* ne: numbers, != */
+	values: { 'pid': 15 },
+	result: true
+}, {
+	pred: { ne: ['pid', 12] },		/* ne: numbers, == */
+	values: { 'pid': 12 },
+	result: false
+}, {
+	pred: { le: ['pid', 10] },		/* le: <, =, > */
+	values: { 'pid': 5 },
+	result: true
+}, {
+	pred: { le: ['pid', 10] },
+	values: { 'pid': 10 },
+	result: true
+}, {
+	pred: { le: ['pid', 10] },
+	values: { 'pid': 15 },
+	result: false
+}, {
+	pred: { lt: ['pid', 10] },		/* lt: <, =, > */
+	values: { 'pid': 5 },
+	result: true
+}, {
+	pred: { lt: ['pid', 10] },
+	values: { 'pid': 10 },
+	result: false
+}, {
+	pred: { lt: ['pid', 10] },
+	values: { 'pid': 15 },
+	result: false
+}, {
+	pred: { ge: ['pid', 10] },		/* ge: <, =, > */
+	values: { 'pid': 5 },
+	result: false
+}, {
+	pred: { ge: ['pid', 10] },
+	values: { 'pid': 10 },
+	result: true
+}, {
+	pred: { ge: ['pid', 10] },
+	values: { 'pid': 15 },
+	result: true
+}, {
+	pred: { gt: ['pid', 10] },		/* gt: <, =, > */
+	values: { 'pid': 5 },
+	result: false
+}, {
+	pred: { gt: ['pid', 10] },
+	values: { 'pid': 10 },
+	result: false
+}, {
+	pred: { gt: ['pid', 10] },
+	values: { 'pid': 15 },
+	result: true
+}, {
+	pred: {
+	    and: [
+		{ eq: [ 'hostname', 'johnny tightlips' ] },
+		{ eq: [ 'pid', 15 ] },
+		{ eq: [ 'execname', 'sid the squealer' ] }
+	    ]
+	},
+	values: {
+	    hostname: 'johnny tightlips',
+	    pid: 15,
+	    execname: 'sid the squealer'
+	},
+	result: true
+}, {
+	pred: {
+	    and: [
+		{ eq: [ 'hostname', 'johnny tightlips' ] },
+		{ eq: [ 'pid', 15 ] },
+		{ eq: [ 'execname', 'sid the squealer' ] }
+	    ]
+	},
+	values: {
+	    hostname: 'johnny tightlips',
+	    pid: 10,
+	    execname: 'sid the squealer'
+	},
+	result: false
+}, {
+	pred: {
+	    or: [
+		{ eq: [ 'hostname', 'johnny tightlips' ] },
+		{ eq: [ 'pid', 15 ] },
+		{ eq: [ 'execname', 'sid the squealer' ] }
+	    ]
+	},
+	values: {
+	    hostname: 'johnny tightlips',
+	    pid: 10,
+	    execname: 'sid the squealer'
+	},
+	result: true
+}, {
+	pred: {
+	    or: [ {
+		and: [
+		    { eq: [ 'hostname', 'johnny tightlips' ] },
+		    { eq: [ 'pid', 15 ] },
+		    { eq: [ 'execname', 'sid the squealer' ] }
+		]
+	    }, {
+		eq: [ 'trump', 'true' ]
+	    } ]
+	},
+	values: {
+	    hostname: 'johnny tightlips',
+	    pid: 10,
+	    execname: 'sid the squealer',
+	    trump: 'true'
+	},
+	result: true
+}, {
+	pred: {
+	    or: [ {
+		and: [
+		    { eq: [ 'hostname', 'johnny tightlips' ] },
+		    { eq: [ 'pid', 15 ] },
+		    { eq: [ 'execname', 'sid the squealer' ] }
+		]
+	    }, {
+		eq: [ 'trump', 'true' ]
+	    } ]
+	},
+	values: {
+	    hostname: 'johnny tightlips',
+	    pid: 10,
+	    execname: 'sid the squealer',
+	    trump: 'false'
+	},
+	result: false
+} ];
+';
 
 # Set up for schema
 # BEGIN { use PA::MetadataManager::Schema; }
@@ -80,4 +249,12 @@ sub test_pred_contains_field {
 
   cmp_deeply( $fields, [ 'zonename', 'latency' ],
               'fields from pred_fields are generated correctly' );
+}
+
+sub test_pred_eval {
+  my ($test) = shift;
+
+  my $ds = JSON::MaybeXS->decode_json($eval_test_cases_json);
+
+  ok( $ds, 'data structure from JSON is defined' );
 }
