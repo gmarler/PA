@@ -184,3 +184,29 @@ sub _build_amqp_prefix {
 #############################################################################
 # Methods
 #############################################################################
+
+=method $self->route_key_for_inst($id);
+
+=cut
+
+sub route_key_for_inst {
+  my ($self, $id) = @_;
+
+  return $self->amqp_key_base_instrumentation . $id;
+}
+
+=method $self->incompatible( $msg );
+
+=cut
+
+sub incompatible {
+  my ($self, $msg) = @_;
+
+  return $msg->major != $self->amqp_vers_major;
+}
+
+
+
+
+
+1;
