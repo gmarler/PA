@@ -206,6 +206,34 @@ sub incompatible {
 }
 
 
+=method $self->broker();
+
+Returns the AMQP broker configuration based purely on the env, should
+we need to fall back to that
+
+=cut
+
+sub broker {
+  my ($self) = @_;
+
+  if (not exists $ENV{AMQP_HOST}) {
+    die "Environment variable $AMQP_HOST not defined";
+  }
+
+  my $broker_conf = {};
+
+  $broker_conf->{host} = $ENV{AMQP_HOST};
+
+  foreach my $env_var (qw(AMQP_LOGIN AMQP_PASSWORD AMQP_VHOST AMQP_PORT)) {
+    if (exists $ENV{$env_var}) {
+      (my ($key) = $env_var) =~ s/^AMPQ_(.+)/$1/;
+      $key = lc($key);
+      $broker_conf->{$key} = $ENV{$env_var}
+    }
+  }
+
+  return $broker_conf;
+}
 
 
 
