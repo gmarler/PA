@@ -1,7 +1,7 @@
+package PA::Stash;
+
 use strict;
 use warnings;
-
-package PA::Stash;
 
 # VERSION
 #
@@ -10,6 +10,7 @@ package PA::Stash;
 use Moose;
 use namespace::autoclean;
 use PA;
+use CHI;
 
 with 'MooseX::Log::Log4perl';
 
