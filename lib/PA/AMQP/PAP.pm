@@ -13,6 +13,47 @@ use PA;
 
 with 'MooseX::Log::Log4perl';
 
+# This hash describes all known message types and subtypes.  Message types
+# with no subtype object have no subtypes.  The value at each subtype is a
+# coderef for further processing.
+
+my $pap_message_types = {
+  cmd => {
+    disable_instrumentation => &capDispatch,
+    enable_instrumentation  => &capDispatch,
+    enable_aggregation      => &capDispatch,
+    disable_aggregation     => &capDispatch,
+    ping                    => &capValidate,
+    status                  => &capValidate,
+    abort                   => &capValidate,
+    data_delete             => &capValidate,
+    data_get                => &capValidate,
+    data_put                => &capValidate,
+  },
+  ack => {
+    disable_instrumentation => &capDispatch,
+    enable_instrumentation  => &capDispatch,
+    enable_aggregation      => &capDispatch,
+    disable_aggregation     => &capDispatch,
+    ping                    => &capValidate,
+    status                  => &capValidate,
+    abort                   => &capValidate,
+    data_delete             => &capValidate,
+    data_get                => &capValidate,
+    data_put                => &capValidate
+  },
+  notify => {
+    aggregator_online       => &capValidate,
+    configsvc_online        => &capValidate,
+    config_reset            => &capValidate,
+    instrumenter_error      => &capDispatch,
+    instrumenter_online     => &capValidate,
+    log                     => &capValidate
+  },
+  data                      => &capDispatch,
+};
+
+
 #############################################################################
 # Attributes
 #############################################################################
