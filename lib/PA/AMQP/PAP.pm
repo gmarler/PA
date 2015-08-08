@@ -224,10 +224,9 @@ sub broker {
 
   $broker_conf->{host} = $ENV{AMQP_HOST};
 
-  foreach my $env_var (qw(AMQP_LOGIN AMQP_PASSWORD AMQP_VHOST AMQP_PORT)) {
+  foreach my $key (qw(login password vhost port)) {
+    my $env_var = "AMQP_" . uc($key);
     if (exists $ENV{$env_var}) {
-      (my ($key) = $env_var) =~ s/^AMPQ_(.+)/$1/;
-      $key = lc($key);
       $broker_conf->{$key} = $ENV{$env_var}
     }
   }
