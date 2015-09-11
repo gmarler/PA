@@ -16,7 +16,6 @@ has conf => ( isa     => 'HashRef',
               default => sub { {}; },
             );
 
-
 =method autoscale
 
 Autoscale a maximum value using the following procedure
@@ -88,6 +87,8 @@ the bucketized data for that sample.
 two-tuples where each consists of a two-tuple range aref and a value.  This
 series may be expressed as an arrayref of arrayrefs, e.g.:
 
+=begin text
+
     [
         [
             [ [ 0, 9 ], 20 ],
@@ -99,8 +100,12 @@ series may be expressed as an arrayref of arrayrefs, e.g.:
         ]
     ]
 
+=end text
+
 Alternatively, the series may also be expressed as a hashref in which each
 key is the number of samples:
+
+=begin text
 
     {
         20 => [
@@ -113,6 +118,8 @@ key is the number of samples:
             ...
         ]
     }
+
+=end text
 
 In this representation, '$conf' must have 'base' and 'nsamples'
 keys to denote the desired range, and may also have 'step' to denote the
@@ -251,12 +258,12 @@ sub bucketize {
 
       # Clamp the $low and $high to our bucket range
       if ($low < 0)                 { $low = 0; }
-      if ($high >= $nbuckets)       { $high = $nbuckets - 1; }
-      if ($highfilled > $nbuckets)  { $highfilled = $nbuckets; }
+      if ($high >= $nbuckets)       { $high = $nbuckets + 1; }
+      if ($highfilled >= $nbuckets) { $highfilled = $nbuckets; }
 
       # If $low is lower than our lowest filled bucket, add in the appropriate
       # portion of our value to the partially filled bucket.
-      if (($low < $lowfilled) && ($lowfilled > 0)) {
+      if (($low < $lowfilled) && ($lowfilled < 0)) {
         $buckets[$lowfilled - 1] += ($lowfilled - $low) * $u;
       }
 
@@ -454,6 +461,5 @@ sub normalize {
   }
 
 }
-
 
 1;
