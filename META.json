@@ -1,0 +1,116 @@
+{
+   "abstract" : "Performance Analytics Suite",
+   "author" : [
+      "Gordon Marler <gmarler@bloomberg.net>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 5.020, CPAN::Meta::Converter version 2.150005",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "PA",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "xt",
+         "examples",
+         "corpus"
+      ],
+      "package" : [
+         "DB"
+      ]
+   },
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "File::Spec" : "0",
+            "File::Temp" : "0",
+            "IO::Handle" : "0",
+            "IPC::Open3" : "0",
+            "Pod::Coverage::TrustPod" : "0",
+            "Test::CPAN::Meta" : "0",
+            "Test::More" : "0",
+            "Test::Pod" : "1.41",
+            "Test::Pod::Coverage" : "1.08"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Moose" : "0",
+            "POSIX" : "0",
+            "Scalar::Util" : "0",
+            "strict" : "0",
+            "warnings" : "0"
+         }
+      },
+      "test" : {
+         "recommends" : {
+            "CPAN::Meta" : "0",
+            "CPAN::Meta::Requirements" : "0"
+         },
+         "requires" : {
+            "Data::Dumper" : "0",
+            "ExtUtils::MakeMaker" : "0",
+            "File::Spec::Functions" : "0",
+            "List::Util" : "0",
+            "Test::More" : "0",
+            "Test::Most" : "0",
+            "feature" : "0",
+            "perl" : "v5.18.1"
+         }
+      }
+   },
+   "provides" : {
+      "PA" : {
+         "file" : "lib/PA.pm",
+         "version" : "0.001"
+      },
+      "PA::Common" : {
+         "file" : "lib/PA/Common.pm",
+         "version" : "0.001"
+      },
+      "PA::DataSet" : {
+         "file" : "lib/PA/DataSet.pm",
+         "version" : "0.001"
+      },
+      "PA::DataSet::Decomp" : {
+         "file" : "lib/PA/DataSet/Decomp.pm",
+         "version" : "0.001"
+      },
+      "PA::DataSet::HeatmapDecomp" : {
+         "file" : "lib/PA/DataSet/HeatmapDecomp.pm",
+         "version" : "0.001"
+      },
+      "PA::DataSet::HeatmapScalar" : {
+         "file" : "lib/PA/DataSet/HeatmapScalar.pm",
+         "version" : "0.001"
+      },
+      "PA::DataSet::Scalar" : {
+         "file" : "lib/PA/DataSet/Scalar.pm",
+         "version" : "0.001"
+      },
+      "PA::DataSet::Simple" : {
+         "file" : "lib/PA/DataSet/Simple.pm",
+         "version" : "0.001"
+      },
+      "PA::Vis::Heatmap" : {
+         "file" : "lib/PA/Vis/Heatmap.pm",
+         "version" : "0.001"
+      }
+   },
+   "release_status" : "stable",
+   "version" : "0.001",
+   "x_contributors" : [
+      "Gordon Marler <gmarler@gmarler.com>"
+   ]
+}
+
