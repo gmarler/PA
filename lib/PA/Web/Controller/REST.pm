@@ -41,6 +41,9 @@ sub vcpu :Path('/vcpu') :Args(1) ActionClass('REST') {
   my ($self, $c, $hostname) = @_;
 
   $c->stash->{'hostname'} = $hostname;
+  $c->response->headers->header(
+    'Access-Control-Allow-Origin' => '*',
+  );
 }
 
 sub vcpu_GET {
