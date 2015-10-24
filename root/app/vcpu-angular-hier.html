@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="vcpu">
+<head>
+  <meta charset="UTF-8">
+  <title>vcpu Spike #2 with Angular and D3</title>
+</head>
+<body>
+
+<style>
+  body {
+    font-family:     'Ledger', serif;
+  }
+
+  table {
+    border:          3px solid black;
+    border-collapse: collapse;
+    border-spacing:  0;
+    background:      black;
+  }
+
+  tbody {
+  }
+
+  tr {
+    background:      black;
+  }
+
+  th {
+    border:          1px solid lightgray;
+    color:           white;
+    font-size:       12px;
+    padding:         0;
+    padding-right:   10px;
+    padding-left:    10px;
+  }
+
+  th div.cpuname {
+    width:           4em;
+    border:          0px;
+    float:           left;
+    text-align:      left;
+  }
+
+  th div.idle, th div.user, th div.sys {
+    width:           4em;
+    border:          0px;
+    float:           left;
+    text-align:      right;
+  }
+
+  tr th div.sys {
+    /* padding-right:   5px; */
+  }
+
+  td {
+    width:           16em;
+    padding:         0;
+    padding-right:   10px;
+    padding-left:    10px;
+    border:          1px solid lightgray;
+    border-collapse: collapse;
+    font-weight:     bolder;
+    font-size:       12px;
+  }
+
+  td div.cpuname {
+    width:           4em;
+    float:           left;
+    padding-top:     0;
+  }
+
+  td div.idle, div.user, div.sys {
+    width:           4em;
+    float:           left;
+    text-align:      right;
+    padding-top:     0;
+  }
+
+
+
+</style>
+
+<div ng-controller="VcpuCtrl">
+  <div vcpu-grid data="cpu_data"></div>
+</div>
+
+<script src="bower_components/angular/angular.js"></script>
+<script src="d3.js"></script>
+<script src="vcpu-angular-hier.js"></script>
+<link href='https://fonts.googleapis.com/css?family=Ledger' rel='stylesheet' type='text/css'>
+</body>
+</html>
