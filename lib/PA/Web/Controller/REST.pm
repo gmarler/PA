@@ -66,9 +66,9 @@ sub vcpu_GET {
       durable       => 1
     });
 
-  $mq->queue_declare(1, 'nydevsol10');
+  $mq->queue_declare(1, 'sundev51');
 
-  $mq->consume(1, 'nydevsol10');
+  $mq->consume(1, 'sundev51');
 
   my $dhref = $mq->recv(1000);
 
