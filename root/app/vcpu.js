@@ -28,4 +28,3 @@ var td = tr.selectAll("td")
   .append("td")
   .style("background-color", function(d) { return colorScale(d); })
   .html(function(d) { return d; });
-
