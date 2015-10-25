@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="vcpu">
+<head>
+  <meta charset="UTF-8">
+  <title>vcpu Spike with Angular and D3</title>
+</head>
+<body>
+
+<style>
+  table {
+    border-spacing: 2px 0;
+  }
+  tbody {
+    color: black;
+  }
+  table, th, td {
+    border: 2px solid black;
+    border-collapse: separate;
+  }
+  td.online {
+    border: 2px solid lime;
+  }
+  td.nointr {
+    border: 2px solid orange;
+  }
+  td.offline {
+    border: 2px solid red;
+  }
+  /*td {*/
+  /*border-collapse: separate;*/
+  /*border: 1px solid red;*/
+  /*border-spacing: 30px;*/
+  /*padding: 1em;*/
+  /*}*/
+
+  tbody td {
+  // padding: 2px;
+
+    border-radius: 6px;
+    text-align: right;
+  }
+  td {
+    width: 1.5em;
+  }
+  table {
+    width:  24em;
+  }
+</style>
+
+<div ng-controller="VcpuCtrl">
+  <div vcpu-grid data="cpu_data"></div>
+</div>
+
+<script src="bower_components/angular/angular.js"></script>
+<script src="d3.js"></script>
+<!-- <script src="bower_components/d3/d3.js"></script> -->
+<script src="vcpu-angular.js"></script>
+</body>
+</html>
