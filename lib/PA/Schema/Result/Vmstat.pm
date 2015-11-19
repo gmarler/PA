@@ -1,10 +1,11 @@
-package PA::Schema::Result::vmstat;
+package PA::Schema::Result::Vmstat;
 
 use strict;
 use warnings;
 
 use base 'DBIx::Class::Core';
 
+__PACKAGE__->load_components(qw/ InflateColumn::DateTime /);
 __PACKAGE__->table('vmstat');
 
 __PACKAGE__->add_columns(
@@ -17,6 +18,7 @@ __PACKAGE__->add_columns(
   },
   'timestamp' => {
     data_type => 'timestamptz',
+    timezone => 'UTC',
   },
   'freemem' => {
     data_type => 'bigint',
