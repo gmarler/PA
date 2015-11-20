@@ -1,0 +1,5 @@
+$HASH1 = {
+           host_id   => 3,
+           name      => 'nysolperf1',
+           time_zone => 'America/New_York'
+         };
