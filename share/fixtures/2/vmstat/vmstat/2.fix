@@ -1,0 +1,6 @@
+$HASH1 = {
+           freemem   => 215001480,
+           host_fk   => 3,
+           timestamp => '2015-11-19 22:34:11+00',
+           vmstat_id => 2
+         };
