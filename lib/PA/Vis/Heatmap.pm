@@ -88,6 +88,8 @@ the bucketized data for that sample.
 two-tuples where each consists of a two-tuple range aref and a value.  This
 series may be expressed as an arrayref of arrayrefs, e.g.:
 
+=begin text
+
     [
         [
             [ [ 0, 9 ], 20 ],
@@ -99,8 +101,13 @@ series may be expressed as an arrayref of arrayrefs, e.g.:
         ]
     ]
 
+=end text
+
+
 Alternatively, the series may also be expressed as a hashref in which each
 key is the number of samples:
+
+=begin text
 
     {
         20 => [
@@ -113,6 +120,8 @@ key is the number of samples:
             ...
         ]
     }
+
+=end text
 
 In this representation, '$conf' must have 'base' and 'nsamples'
 keys to denote the desired range, and may also have 'step' to denote the
@@ -206,13 +215,14 @@ sub bucketize {
   for ($i = 0; $i < scalar(@$data); $i++) {
     my @buckets;
     # Size @buckets
-    $#buckets = $nbuckets - 1;
+    # TODO: Probably an easier way to do this. Make sure we did it *right*!
+    $#buckets = $nbuckets + 1;
     my $datum = $data->[$i];
 
     for ($j = 0; $j < scalar(@buckets); $j++) {
       $buckets[$j] = 0;
     }
-   
+
     for ($j = 0; $j < scalar(@$datum); $j++) {
       my $range = $datum->[$j]->[0];
       my $val   = $datum->[$j]->[1];
