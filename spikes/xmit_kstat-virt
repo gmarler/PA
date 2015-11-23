@@ -1,0 +1,140 @@
+#!/usr/bin/env perl 
+
+use v5.18.1;
+use strict;
+use warnings;
+
+use Net::Async::AMQP;
+use IO::Async::Loop;
+use Data::Dumper;
+use Future::Utils qw( repeat try_repeat );
+
+# 17:04 < tom_m> the basic structure would probably be along the lines of repeat { $ch->publish(...) } until => 
+#                sub { $disconnected }, and $disconnected would be an event handler on the channel instance ($ch) 
+# 17:04 < gmarler> The data being generated is coming from a sub that grabs particular system statistics (but 
+#                  could be anything) every second and compares them with the previous second. Once that data is 
+#                  obtained, it is JSON'ified and that's the payload.
+# 17:04 < tom_m> so $ch->bus->subscribe_to_event(close => sub { $disconnected = 1 })
+# 17:05 < gmarler> Ah, so there's no on_close() or on_disconnect() handler on the cm or the channel?
+# 17:06 < tom_m> It's mostly handled through events, I try to avoid on_close / on_disconnect because you might 
+#                want more than one, and it's sometimes useful to be able to drop an existing handler
+# 17:07 < gmarler> So on the other end of the AMQP (the receiver), the event in question would simply be 
+#                  'message'?
+# 17:08 < tom_m> Yup - there's two options there: the message event on the channel, or a callback on the ->listen 
+#                method.
+# 17:08 < tom_m> examples/simple-consumer.pl uses the first, alternative-consumer.pl for the second
+# 17:09 < gmarler> k - I'll give those a whirl, then pastebin it on the off chance the example is useful.
+# 17:15 < tom_m> always room for more examples!
+
+
+
+
+# Detect disconnection from AMQP
+my $DISCONNECTED;
+# The channel we're publishing on
+my $CHANNEL;
+# The exchange we're publishing on
+my $EXCHANGE;
+
+my $loop = IO::Async::Loop->new;
+
+$loop->add(
+  my $mq = Net::Async::AMQP->new()
+);
+
+my $true = Net::AMQP::Value->true;
+my $msg  = 'info MESSAGE';
+
+$mq->connect(
+  #host      => '192.168.56.1',
+  host      => 'localhost',
+  user      => 'solperf',
+  pass      => 'solperf',
+  vhost     => '/',
+  client_properties => {
+    capabilities => {
+      'consumer_cancel_notify' => $true,
+      'connection.blocked'     => $true,
+    },
+  },
+)->then(
+  sub {
+    shift->open_channel;
+  }, sub { say "CONNECT FAILED!" }
+)->on_done(sub { say "CONNECTED!"; })->then(
+  sub {
+    #my ($channel)  = shift;
+    $CHANNEL = shift;
+    #say "GOT CHANNEL: " . Dump($CHANNEL);
+    say "GOT CHANNEL: $CHANNEL";
+
+    $EXCHANGE = 'logs';
+
+    Future->needs_all(
+      # This is subscriber code
+      $CHANNEL->queue_declare(
+        queue     => '',  # Let the queue name be generated
+        exclusive => 1,
+      ),
+      # This is publisher code
+      $CHANNEL->exchange_declare(
+        type     => 'fanout',
+        exchange => $EXCHANGE,
+      )
+    )->on_done(sub { say "EXCHANGE DECLARED!"; })->then(
+      sub {
+        my ($q) = shift;
+        say "QUEUE IS: $q";
+
+        # Register for events of interest
+        $CHANNEL->bus->subscribe_to_event(
+          connected => sub {
+            say "CONNECTED TO AMQP";
+          },
+          close => sub {
+            say "DETECTED AMQP CLOSING OF CONNECTION";
+            $DISCONNECTED = 1;
+          },
+          heartbeat_failure => sub {
+            say "HEARTBEAT FAILURE DETECTED";
+          },
+          unexpected_frame => sub {
+            say "UNEXPECTED FRAME";
+          },
+        );
+
+        $q->bind_exchange(
+          channel  => $CHANNEL,
+          exchange => $EXCHANGE,
+          routing_key => '',
+        )->on_done( sub { say "EXCHANGE BOUND"; } );
+      },
+      sub { say "EXCHANGE DECLARE FAILED"; }
+    );
+  },
+  sub { say "OPEN CHANNEL FAILED"; }
+)->then(
+  sub {
+    my ($c) = 0;
+    try_repeat {
+      say "PUBLISHING $msg $c";
+      $c++;
+      $CHANNEL->publish(
+        exchange    => $EXCHANGE,
+        routing_key => '',
+        #type        => 'application/json',
+        type        => 'text/plain',
+        payload     => $msg,
+      )->get;
+      sleep 1;
+    } until => sub { $DISCONNECTED };
+  },
+  sub { say "Problem with Exchange Declare or Publish"; }
+)->get;
+
+
+$loop->run;
+
+
+
+

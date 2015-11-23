@@ -1,3 +1,8 @@
+## Start like so:
+## CATALYST_DEBUG=1 \
+##   plackup -Ilib \
+##           -s Net::Async::HTTP::Server pa_web.psgi
+##
 use strict;
 use warnings;
 

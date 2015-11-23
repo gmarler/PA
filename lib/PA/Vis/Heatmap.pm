@@ -4,10 +4,17 @@ use warnings;
 package PA::Vis::Heatmap;
 
 # VERSION
-
+#
 use Moose;
 use POSIX        qw(log floor);
 use Scalar::Util qw(reftype);
+
+# TODO: Instead of passing $conf object around as a hashref, use it
+#       internally to the object, like so
+has conf => ( isa     => 'HashRef',
+              is      => 'rw',
+              default => sub { {}; },
+            );
 
 # TODO: Instead of passing $conf object around as a hashref, use it
 #       internally to the object, like so
@@ -219,7 +226,7 @@ sub bucketize {
     for ($j = 0; $j < scalar(@buckets); $j++) {
       $buckets[$j] = 0;
     }
-   
+
     for ($j = 0; $j < scalar(@$datum); $j++) {
       my $range = $datum->[$j]->[0];
       my $val   = $datum->[$j]->[1];
@@ -258,12 +265,12 @@ sub bucketize {
 
       # Clamp the $low and $high to our bucket range
       if ($low < 0)                 { $low = 0; }
-      if ($high >= $nbuckets)       { $high = $nbuckets + 1; }
-      if ($highfilled >= $nbuckets) { $highfilled = $nbuckets; }
+      if ($high >= $nbuckets)       { $high = $nbuckets - 1; }
+      if ($highfilled > $nbuckets)  { $highfilled = $nbuckets; }
 
       # If $low is lower than our lowest filled bucket, add in the appropriate
       # portion of our value to the partially filled bucket.
-      if (($low < $lowfilled) && ($lowfilled < 0)) {
+      if (($low < $lowfilled) && ($lowfilled > 0)) {
         $buckets[$lowfilled - 1] += ($lowfilled - $low) * $u;
       }
 
