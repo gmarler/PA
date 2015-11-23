@@ -1,0 +1,97 @@
+package PA::Web::Controller::REST;
+use Moose;
+use namespace::autoclean;
+
+use Net::AMQP::RabbitMQ;
+use JSON::MaybeXS;
+
+BEGIN { extends 'Catalyst::Controller::REST'; }
+
+=head1 NAME
+
+PA::Web::Controller::REST - Catalyst Controller
+
+=head1 DESCRIPTION
+
+Catalyst Controller.
+
+=head1 METHODS
+
+=cut
+
+
+=head2 index
+
+=cut
+
+sub index :Path :Args(0) ActionClass('REST') {
+    my ( $self, $c ) = @_;
+}
+
+sub index_GET {
+  my ($self, $c) = @_;
+
+  $self->status_ok($c,
+    entity => { test_data => 'bar' }
+  );
+}
+
+
+sub vcpu :Path('/vcpu') :Args(1) ActionClass('REST') {
+  my ($self, $c, $hostname) = @_;
+
+  $c->stash->{'hostname'} = $hostname;
+  $c->response->headers->header(
+    'Access-Control-Allow-Origin' => '*',
+  );
+}
+
+sub vcpu_GET {
+  my ($self, $c) = @_;
+
+  my $mq = Net::AMQP::RabbitMQ->new();
+
+  $mq->connect(
+    "localhost",
+    {
+      user     => "guest",
+      password => "guest",
+    }
+  );
+
+  $mq->channel_open(1);
+
+  $mq->exchange_declare(1, "amq.direct",
+    { exchange_type => 'direct',
+      durable       => 1
+    });
+
+  $mq->queue_declare(1, 'sundev51');
+
+  $mq->consume(1, 'sundev51');
+
+  my $dhref = $mq->recv(1000);
+
+  $self->status_ok($c,
+    entity => { body =>   decode_json($dhref->{body}),
+                hostname  => $c->stash->{hostname},
+              }
+            );
+}
+
+=encoding utf8
+
+=head1 AUTHOR
+
+Gordon Marler
+
+=head1 LICENSE
+
+This library is free software. You can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
+__PACKAGE__->meta->make_immutable;
+
+1;

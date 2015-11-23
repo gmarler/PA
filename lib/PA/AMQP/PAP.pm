@@ -19,38 +19,38 @@ with 'MooseX::Log::Log4perl';
 
 my $pap_message_types = {
   cmd => {
-    disable_instrumentation => &capDispatch,
-    enable_instrumentation  => &capDispatch,
-    enable_aggregation      => &capDispatch,
-    disable_aggregation     => &capDispatch,
-    ping                    => &capValidate,
-    status                  => &capValidate,
-    abort                   => &capValidate,
-    data_delete             => &capValidate,
-    data_get                => &capValidate,
-    data_put                => &capValidate,
+    disable_instrumentation => &pap_dispatch,
+    enable_instrumentation  => &pap_dispatch,
+    enable_aggregation      => &pap_dispatch,
+    disable_aggregation     => &pap_dispatch,
+    ping                    => &pap_validate,
+    status                  => &pap_validate,
+    abort                   => &pap_validate,
+    data_delete             => &pap_validate,
+    data_get                => &pap_validate,
+    data_put                => &pap_validate,
   },
   ack => {
-    disable_instrumentation => &capDispatch,
-    enable_instrumentation  => &capDispatch,
-    enable_aggregation      => &capDispatch,
-    disable_aggregation     => &capDispatch,
-    ping                    => &capValidate,
-    status                  => &capValidate,
-    abort                   => &capValidate,
-    data_delete             => &capValidate,
-    data_get                => &capValidate,
-    data_put                => &capValidate
+    disable_instrumentation => &pap_dispatch,
+    enable_instrumentation  => &pap_dispatch,
+    enable_aggregation      => &pap_dispatch,
+    disable_aggregation     => &pap_dispatch,
+    ping                    => &pap_validate,
+    status                  => &pap_validate,
+    abort                   => &pap_validate,
+    data_delete             => &pap_validate,
+    data_get                => &pap_validate,
+    data_put                => &pap_validate
   },
   notify => {
-    aggregator_online       => &capValidate,
-    configsvc_online        => &capValidate,
-    config_reset            => &capValidate,
-    instrumenter_error      => &capDispatch,
-    instrumenter_online     => &capValidate,
-    log                     => &capValidate
+    aggregator_online       => &pap_validate,
+    configsvc_online        => &pap_validate,
+    config_reset            => &pap_validate,
+    instrumenter_error      => &pap_dispatch,
+    instrumenter_online     => &pap_validate,
+    log                     => &pap_validate
   },
-  data                      => &capDispatch,
+  data                      => &pap_dispatch,
 };
 
 
