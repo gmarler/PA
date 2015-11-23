@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+
+use v5.18;
+use strict;
+use warnings;
+
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
+use PA::Schema;
+use Data::Dumper;
+
+my $connect_info = { dsn => 'DBI:Pg:dbname=template1;host=localhost;port=15432', user => 'postgres', password => '' };
+
+my $schema = PA::Schema->connect(
+  $connect_info
+);
+
+my $hosts_rs = $schema->resultset( 'Host' );
+
+foreach my $r ($hosts_rs->all) {
+  say $r->name;
+}
+
