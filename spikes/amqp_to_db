@@ -12,6 +12,7 @@ use PA::Schema;
 use Data::Dumper;
 
 use JSON::MaybeXS;
+use DateTime             qw();
 use Data::Dumper;
 use Net::AMQP::RabbitMQ;
 use IO::Async::Loop      qw();
@@ -71,19 +72,24 @@ say "TAG: $tag";
 
 
 while (my $dhref = $mq->recv(10000)) {
-  my ($host_id);
+  my ($host_id, $host_record);
   #say $dhref->{body};
-  # say Dumper( [ $dhref ] );
+  #say Dumper( [ $dhref ] );
+  my $stat_ref = decode_json($dhref->{body});
+  #say Dumper( $stat_ref );
   my ($hostname) = $dhref->{routing_key} =~ m/^([^.]+)\./;
-  if (exists $host_ids->{$hostname}) {
-    $host_id = $host_ids->{$hostname};
-  } else {
-    my $host_record =
-      $hosts_rs->find({ name => $hostname });
-    say "FOUND OR CREATED host ID " . $host_record->host_id;
-    # TODO: die here if we couldn't look up the hostname in the host table -
-    # that should never happen
-    $host_ids->{$hostname} = $host_record->host_id;
-  }
+  $host_record =
+    $hosts_rs->find({ name => $hostname });
+  # TODO: die here if we couldn't look up the hostname in the host table -
+  # that should never happen
+
+  my $new_vmstat = $host_record->create_related('vmstat_rs',
+    {
+      freemem   => $stat_ref->{freemem},
+      timestamp => DateTime->from_epoch( epoch => $stat_ref->{timestamp},
+                                         time_zone => 'UTC' ),
+      #host_fk   => $host_record->host_id,
+    }
+  );
 }
 
