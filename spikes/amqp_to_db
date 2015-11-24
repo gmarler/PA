@@ -11,15 +11,79 @@ use lib "$Bin/../lib";
 use PA::Schema;
 use Data::Dumper;
 
+use JSON::MaybeXS;
+use Data::Dumper;
+use Net::AMQP::RabbitMQ;
+use IO::Async::Loop      qw();
+use Getopt::Long;
+
+
 my $connect_info = { dsn => 'DBI:Pg:dbname=template1;host=localhost;port=15432', user => 'postgres', password => '' };
 
 my $schema = PA::Schema->connect(
   $connect_info
 );
 
+my $host_ids = {};
 my $hosts_rs = $schema->resultset( 'Host' );
+my $vmstat_rs = $schema->resultset( 'Vmstat' );
 
-foreach my $r ($hosts_rs->all) {
-  say $r->name;
+
+my $amqp_server = "localhost";
+
+GetOptions( "amqp=s" => \$amqp_server )
+  or die("ERROR in command line args");
+
+my $coder = JSON::MaybeXS->new->ascii;
+
+my $loop = IO::Async::Loop->new;
+my $mq    = Net::AMQP::RabbitMQ->new();
+my $exchange_name = "topic_stat";
+my $routing_key = '#';
+
+$mq->connect(
+  $amqp_server,
+  {
+    user   => 'guest',
+    pass   => 'guest',
+  },
+);
+
+$mq->channel_open(1);
+
+$mq->exchange_declare(1, $exchange_name,
+  { exchange_type => 'topic', }
+);
+
+my $queue_name = $mq->queue_declare(1, '',
+                                    { exclusive   => 1,
+                                      auto_delete => 1,
+                                    } );
+
+say "QUEUE NAME: $queue_name";
+
+$mq->queue_bind(1, $queue_name, $exchange_name, $routing_key );
+
+
+my $tag = $mq->consume(1, $queue_name );
+
+say "TAG: $tag";
+
+
+while (my $dhref = $mq->recv(10000)) {
+  my ($host_id);
+  #say $dhref->{body};
+  # say Dumper( [ $dhref ] );
+  my ($hostname) = $dhref->{routing_key} =~ m/^([^.]+)\./;
+  if (exists $host_ids->{$hostname}) {
+    $host_id = $host_ids->{$hostname};
+  } else {
+    my $host_record =
+      $hosts_rs->find({ name => $hostname });
+    say "FOUND OR CREATED host ID " . $host_record->host_id;
+    # TODO: die here if we couldn't look up the hostname in the host table -
+    # that should never happen
+    $host_ids->{$hostname} = $host_record->host_id;
+  }
 }
 
