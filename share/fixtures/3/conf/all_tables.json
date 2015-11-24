@@ -1,0 +1,21 @@
+{
+   "has_many" : {
+      "fetch" : 0
+   },
+   "belongs_to" : {
+      "fetch" : 0
+   },
+   "sets" : [
+      {
+         "class" : "Host",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Vmstat"
+      }
+   ],
+   "might_have" : {
+      "fetch" : 0
+   }
+}

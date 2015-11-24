@@ -6,3 +6,5 @@
 _build
 # Avoid archives of this distribution
 /PA*
+#
+share/pa-schema
