@@ -29,7 +29,7 @@ __PACKAGE__->add_columns(
     data_type         => 'varchar',
     size              => '12',
   },
-  # Filesystem type: zfs, ufs, dev, tmpfs, etc
+  # Filesystem type: zfs, ufs, dev fs, tmpfs, etc
   'fstype' => {
     data_type         => 'varchar',
     size              => '8',
