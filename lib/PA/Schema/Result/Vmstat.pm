@@ -26,7 +26,10 @@ __PACKAGE__->add_columns(
 );
 
 __PACKAGE__->set_primary_key('vmstat_id');
-__PACKAGE__->add_unique_constraint(['host_fk','timestamp']);
+# This constraint currently doesn't work because it's possible for the same
+# timestamp to show up twice, even though that shouldn't be possible
+# TODO: Hunt down and kill this bug
+# __PACKAGE__->add_unique_constraint(['host_fk','timestamp']);
 
 __PACKAGE__->belongs_to(
   'host_rs' => "PA::Schema::Result::Host",
