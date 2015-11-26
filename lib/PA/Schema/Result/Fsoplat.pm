@@ -42,6 +42,19 @@ __PACKAGE__->add_columns(
   },
 );
 
+__PACKAGE__->inflate_column('latrange', {
+  inflate => sub {
+    my ($raw_value_from_db, $result_object) = @_;
+    return [ 0, 0 ];
+  },
+  deflate => sub {
+    my ($inflated_value_from_user, $result_object) = @_;
+    # We receive an array ref, so we turn it into a range type string
+    # expression for PostgreSQL to chew on
+    "[ $inflated_value_from_user->[0], $inflated_value_from_user->[1] ]";
+  },
+});
+
 __PACKAGE__->set_primary_key('fsoplat_id');
 # This constraint currently doesn't work because it's possible for the same
 # timestamp to show up twice, even though that shouldn't be possible
