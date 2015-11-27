@@ -2,10 +2,11 @@ package PA::Web::Controller::REST;
 use Moose;
 use namespace::autoclean;
 
+BEGIN { extends 'Catalyst::Controller::REST'; }
+
 use Net::AMQP::RabbitMQ;
 use JSON::MaybeXS;
-
-BEGIN { extends 'Catalyst::Controller::REST'; }
+use Protocol::WebSocket::Handshake::Server;
 
 =head1 NAME
 
@@ -78,6 +79,24 @@ sub vcpu_GET {
               }
             );
 }
+
+=head3 VCPU WebSocket TEST
+
+=cut
+
+sub start : ChainedParent
+ PathPart('echo') CaptureArgs(0) { }
+
+sub index :Chained('start') PathPart('') Args(0)
+{
+  my ($self, $c) = @_;
+  my $url = $c->uri_for_action($self->action_for('ws'));
+
+  $url->scheme('ws');
+  $c->stash(websocket_url => $url);
+  $c->forward($c->view('HTML'));
+}
+
 
 =encoding utf8
 

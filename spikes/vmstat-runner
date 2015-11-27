@@ -1,0 +1,63 @@
+#!/usr/bin/env perl
+
+use v5.20;
+use strict;
+use warnings;
+
+use IO::Async::Process;
+ 
+use IO::Async::Loop;
+my $loop = IO::Async::Loop->new;
+
+# TODO: Once working, use following as list of identical commands to
+#       launch simultaneously
+my @process_cmds = (
+  [ "vmstat", "-T", "u", "1" ]
+);
+ 
+my $vmstat = IO::Async::Process->new(
+   command => [ "vmstat", "-T", "u", "1", "3" ],
+   stdout => {
+      on_read => sub {
+         my ( $stream, $buffref ) = @_;
+         while( $$buffref =~ s/^(.*)\n//smx ) {
+            say "vmstat emitted:\n$1";
+         }
+ 
+         return 0;
+      },
+   },
+ 
+   on_finish => sub {
+      $loop->stop;
+   },
+);
+
+my $mdb_memstat = IO::Async::Process->new(
+  command => [ "mdb", "-k" ],
+  stdin   => { via => "pipe_write" },
+  stdout  => { via => "pipe_write" },
+
+  on_finish => sub {
+    $loop->stop;
+  },
+);
+
+
+$loop->add( $vmstat );
+$loop->add( $mdb_memstat );
+ 
+$loop->run;
+
+$mdb_memstat->stdout->configure(
+  on_read => sub {
+    my ( $stream, $buffref ) = @_;
+    while ( $$buffref =~ s/^(.+)\n\>\s//smx ) {
+      say "Got a prompt after:\n$1";
+    }
+    #$mdb_memstat->stdin->write('$q' . "\n");
+
+    return 0;
+  },
+);
+

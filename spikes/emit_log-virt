@@ -1,0 +1,118 @@
+#!/usr/bin/env perl 
+
+use v5.18.1;
+use strict;
+use warnings;
+
+use Net::Async::AMQP;
+use IO::Async::Loop;
+use Data::Dumper;
+
+my $loop = IO::Async::Loop->new;
+
+$loop->add(
+  my $mq = Net::Async::AMQP->new()
+);
+
+my $true = Net::AMQP::Value->true;
+my $msg  = 'info: Hello World!';
+
+$mq->connect(
+  host    => '192.168.56.1',
+  user    => 'solperf',
+  pass    => 'solperf',
+  vhost   => '/',
+)->then(
+  sub {
+    shift->open_channel;
+  }, sub { say "CONNECT FAILED!" }
+)->on_done(sub { say "CONNECTED!"; })->then(
+  sub {
+    my ($channel)  = shift;
+    #say "GOT CHANNEL: " . Dump($channel);
+    say "GOT CHANNEL: $channel";
+    my ($exchange) = 'logs';
+    Future->needs_all(
+      # This is subscriber code
+      $channel->queue_declare(
+        queue     => '',  # Let the queue name be generated
+        exclusive => 1,
+      ),
+      # This is publisher code
+      $channel->exchange_declare(
+        type     => 'fanout',
+        exchange => $exchange,
+      )
+    )->on_done(sub { say "EXCHANGE DECLARED!"; })->then(
+      sub {
+        my ($q) = shift;
+        say "QUEUE IS: $q";
+        my ($messager) = $loop->new_future;
+        say "MESSAGER IS: $messager";
+        #$channel->bus->subscribe_to_event(
+        #  message => sub {
+        #    my ($ev, @details) = @_;
+        #    say Dumper( \@_ );
+        #    say "MESSAGE RECEIVED: @details";
+        #  }
+        #);
+        $q->bind_exchange(
+          channel  => $channel,
+          exchange => $exchange
+        )->on_done( sub { say "EXCHANGE BOUND"; } )->then(
+          sub {
+            my ($q, $ctag) = @_;
+            say "QUEUE IS: $q";
+            $q->consumer(
+              channel    => $channel,
+              ack        => 0,
+              on_message => sub {
+                say "MESSAGE: " . Dumper( { @_ } );
+                $messager->done;
+              },
+            );
+          },
+          sub { say "CONSUMER SETUP FAILED"; }
+        )->on_done( sub { say "CONSUMER ENGAGED"; } )->then(
+          sub {
+            say "PUBLISHING $msg";
+            $channel->publish(
+              exchange    => $exchange,
+              routing_key => '',
+              #type        => 'application/json',
+              type        => 'text/plain',
+              payload     => $msg,
+            );
+            $channel->publish(
+              exchange    => $exchange,
+              routing_key => '',
+              #type        => 'application/json',
+              type        => 'text/plain',
+              payload     => 'MESSAGE 2',
+            );
+
+          }
+        )->then(
+          sub {
+            Future->wait_any(
+              $messager
+            );
+          }
+        );
+      },
+      sub { say "EXCHANGE DECLARE FAILED"; }
+    );
+  },
+  sub { say "OPEN CHANNEL FAILED"; }
+)->then(
+  sub {
+    $mq->close();
+  },
+  sub { say "Problem with Exchange Declare or Publish"; }
+)->get;
+
+$loop->run;
+
+
+
+
