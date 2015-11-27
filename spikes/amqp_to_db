@@ -80,12 +80,14 @@ while (my $dhref = $mq->recv(10000)) {
   #say Dumper( $stat_ref );
   if (exists($recvd_seq{$dhref->{routing_key}})) {
     my ($next_seq) = $recvd_seq{$dhref->{routing_key}} + 1;
-    if ($dhref->{body}->{sequence} > $next_seq) {
-      my ($gap) = $dhref->{body}->{sequence} - $recvd_seq{$dhref->{routing_key}};
-      say "DETECTED GAP FOR $dhref->{routing_key} OF SIZE $gap";
+    if ($stat_ref->{sequence} > $next_seq) {
+      my ($gap) = $stat_ref->{sequence} - $recvd_seq{$dhref->{routing_key}};
+      say "$dhref->{routing_key}: EXPECTED SEQ $next_seq, RECEIVED $stat_ref->{sequence}, GAP SIZE $gap";
+      # Update sequence to the latest received
+      $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
     }
   } else {
-    $recvd_seq{$dhref->{routing_key}} = $dhref->{body}->{sequence};
+    $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
   }
   my ($hostname,$stat_type) = $dhref->{routing_key} =~ m/^([^.]+)\.(.+)/;
   $host_record =
