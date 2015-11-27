@@ -18,6 +18,7 @@ use Net::AMQP::RabbitMQ;
 use IO::Async::Loop      qw();
 use Getopt::Long;
 
+my %recvd_seq;
 
 my $connect_info = { dsn => 'DBI:Pg:dbname=template1;host=localhost;port=15432', user => 'postgres', password => '' };
 
@@ -77,6 +78,15 @@ while (my $dhref = $mq->recv(10000)) {
   #say Dumper( [ $dhref ] );
   my $stat_ref = decode_json($dhref->{body});
   #say Dumper( $stat_ref );
+  if (exists($recvd_seq{$dhref->{routing_key}})) {
+    my ($next_seq) = $recvd_seq{$dhref->{routing_key}} + 1;
+    if ($dhref->{body}->{sequence} > $next_seq) {
+      my ($gap) = $dhref->{body}->{sequence} - $recvd_seq{$dhref->{routing_key}};
+      say "DETECTED GAP FOR $dhref->{routing_key} OF SIZE $gap";
+    }
+  } else {
+    $recvd_seq{$dhref->{routing_key}} = $dhref->{body}->{sequence};
+  }
   my ($hostname,$stat_type) = $dhref->{routing_key} =~ m/^([^.]+)\.(.+)/;
   $host_record =
     $hosts_rs->find({ name => $hostname });
