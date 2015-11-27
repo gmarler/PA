@@ -1,0 +1,120 @@
+#!/usr/bin/env perl 
+
+use v5.18.1;
+use strict;
+use warnings;
+
+use Net::Async::AMQP;
+use IO::Async::Loop;
+use Data::Dumper;
+use Future::Utils qw( repeat try_repeat );
+
+# Detect disconnection from AMQP
+my $DISCONNECTED;
+# The channel we're receiving on
+my $CHANNEL;
+# The exchange we're receiving on
+my $EXCHANGE;
+
+my $loop = IO::Async::Loop->new;
+
+$loop->add(
+  my $mq = Net::Async::AMQP->new()
+);
+
+my $true = Net::AMQP::Value->true;
+my $msg  = 'info MESSAGE';
+
+$mq->bus->subscribe_to_event(
+  connected => sub {
+    say "CONNECT EVENT DETECTED";
+  },
+  message => sub {
+    say "MESSAGE EVENT DETECTED";
+  },
+);
+
+$mq->connect(
+  #host      => '192.168.56.1',
+  host      => 'localhost',
+  user      => 'solperf',
+  pass      => 'solperf',
+  vhost     => '/',
+  client_properties => {
+    capabilities => {
+      'consumer_cancel_notify' => $true,
+      'connection.blocked'     => $true,
+    },
+  },
+  on_stream => sub {
+    say "STREAM OPEN";
+  },
+  on_read   => sub {
+    say "DATA AVAILABLE";
+  },
+)->then(
+  sub {
+    shift->open_channel;
+  }, sub { say "CONNECT FAILED!" }
+)->on_done(sub { say "CONNECTED!"; })->then(
+  sub {
+    #my ($channel)  = shift;
+    $CHANNEL = shift;
+    #say "GOT CHANNEL: " . Dump($CHANNEL);
+    say "GOT CHANNEL: $CHANNEL";
+
+    $EXCHANGE = 'logs';
+
+    Future->needs_all(
+      $CHANNEL->queue_declare(
+        queue     => '',  # Let the queue name be generated
+      ),
+      $CHANNEL->exchange_declare(
+        type       => 'fanout',
+        exchange   => $EXCHANGE,
+        autodelete => 1,
+      )
+    )->on_done(sub { say "EXCHANGE DECLARED!"; })->then(
+      sub {
+        my ($q) = shift;
+        say "RECEIVE QUEUE NAME IS: " . $q->queue_name;
+
+        # Register for events of interest
+        $CHANNEL->bus->subscribe_to_event(
+          message => sub {
+            my ($event, @details) = @_;
+            say "RECEIVED MESSAGE";
+          }
+        );
+
+        $q->bind_exchange(
+          channel  => $CHANNEL,
+          exchange => $EXCHANGE,
+          routing_key => '',
+        )->on_done( sub { say "EXCHANGE BOUND"; } )->then(
+          sub {
+            $q->listen(
+              channel => $CHANNEL,
+              ack     => 0,
+            );
+          }
+        )->on_done( sub { say "LISTENING ON CHANNEL"; } )->then(
+          sub {
+            my ($q, $ctag) = @_;
+            say "Queue $q has ctag $ctag";
+            Future->done;
+          }
+        );
+      },
+      sub { say "EXCHANGE DECLARE FAILED"; }
+    );
+  },
+  sub { say "OPEN CHANNEL FAILED"; }
+)->get;
+
+
+$loop->run;
+
+
+
+
