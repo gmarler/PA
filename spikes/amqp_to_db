@@ -19,6 +19,7 @@ use IO::Async::Loop      qw();
 use Getopt::Long;
 
 my %recvd_seq;
+#my %recvd_seq2;
 
 my $connect_info = { dsn => 'DBI:Pg:dbname=template1;host=localhost;port=15432', user => 'postgres', password => '' };
 
@@ -67,10 +68,12 @@ say "QUEUE NAME: $queue_name";
 $mq->queue_bind(1, $queue_name, $exchange_name, $routing_key );
 
 
-my $tag = $mq->consume(1, $queue_name );
+my $tag = $mq->consume(1, $queue_name,
+                       { no_ack => 0, } );
 
 say "TAG: $tag";
 
+$SIG{'INT'} = sub { exit(0); };
 
 while (my $dhref = $mq->recv(10000)) {
   my ($host_id, $host_record);
@@ -80,9 +83,12 @@ while (my $dhref = $mq->recv(10000)) {
   #say Dumper( $stat_ref );
   if (exists($recvd_seq{$dhref->{routing_key}})) {
     my ($next_seq) = $recvd_seq{$dhref->{routing_key}} + 1;
-    if ($stat_ref->{sequence} > $next_seq) {
+    if ($stat_ref->{sequence} != $next_seq) {
       my ($gap) = $stat_ref->{sequence} - $recvd_seq{$dhref->{routing_key}};
       say "$dhref->{routing_key}: EXPECTED SEQ $next_seq, RECEIVED $stat_ref->{sequence}, GAP SIZE $gap";
+      # Update sequence to the latest received
+      $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
+    } else {
       # Update sequence to the latest received
       $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
     }
@@ -105,7 +111,24 @@ while (my $dhref = $mq->recv(10000)) {
       }
     );
   }
+
+  #say "ACKNOWLEGING: $dhref->{delivery_tag}";
+  $mq->ack( 1, $dhref->{delivery_tag}, 1 );
+  #if (not exists($recvd_seq2{$dhref->{routing_key}})) {
+  #  $recvd_seq2{$dhref->{routing_key}} = [];
+  #}
+  #push @{$recvd_seq2{$dhref->{routing_key}}}, $stat_ref->{sequence};
 }
 
+#END {
+#  foreach my $key (%recvd_seq2) {
+#    say "$key:";
+#    say "UNSORTED:";
+#    say Dumper( $recvd_seq2{$key} );
+#    say "SORTED:";
+#    my @seqs = sort { $a cmp $b } @{$recvd_seq2{$key}};
+#    say Dumper( \@seqs );
+#  }
+#}
 
 
