@@ -32,7 +32,32 @@ my $vmstat = IO::Async::Process->new(
       $loop->stop;
    },
 );
- 
+
+my $mdb_memstat = IO::Async::Process->new(
+  command => [ "mdb", "-k" ],
+  stdin   => { via => "pipe_write" },
+  stdout  => { via => "pipe_write" },
+
+  on_finish => sub {
+    $loop->stop;
+  },
+);
+
+
 $loop->add( $vmstat );
+$loop->add( $mdb_memstat );
  
 $loop->run;
+
+$mdb_memstat->stdout->configure(
+  on_read => sub {
+    my ( $stream, $buffref ) = @_;
+    while ( $$buffref =~ s/^(.+)\n\>\s//smx ) {
+      say "Got a prompt after:\n$1";
+    }
+    #$mdb_memstat->stdin->write('$q' . "\n");
+
+    return 0;
+  },
+);
+
