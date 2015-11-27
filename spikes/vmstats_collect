@@ -139,9 +139,11 @@ sub dovmstats {
   $outdata->{scanrate} = $sr;
 
   # say $coder->encode( $outdata );
-  $outdata->{sequence} = exists($sent_seq{$routing_key}) ?
-                         ++$sent_seq{$routing_key}       :
-                         $sent_seq{$routing_key} = 1;
+  if (not exists($sent_seq{$routing_key})) {
+    $sent_seq{$routing_key} = 0;
+  }
+  $outdata->{sequence} = ++$sent_seq{$routing_key};
+  #say "$routing_key: SENDING SEQUENCE $sent_seq{$routing_key}";
 
   $mq->publish(1, $routing_key, $coder->encode( $outdata ), { exchange => "topic_stat" } );
 }
@@ -162,9 +164,11 @@ sub doarcstats {
   $outdata = \%keep;
   $outdata->{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
 
-  $outdata->{sequence} = exists($sent_seq{$routing_key}) ?
-                         ++$sent_seq{$routing_key}       :
-                         $sent_seq{$routing_key} = 1;
+  if (not exists($sent_seq{$routing_key})) {
+    $sent_seq{$routing_key} = 0;
+  }
+  $outdata->{sequence} = ++$sent_seq{$routing_key};
+  #say "$routing_key: SENDING SEQUENCE $sent_seq{$routing_key}";
 
   $mq->publish(1, $routing_key, $coder->encode( $outdata ), { exchange => "topic_stat" } );
 }
