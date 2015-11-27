@@ -15,6 +15,8 @@ use Net::AMQP::RabbitMQ;
 use IO::Async::Loop      qw();
 use Getopt::Long;
 
+my %sent_seq;
+
 my $amqp_server = "localhost";
 
 GetOptions( "amqp=s" => \$amqp_server )
@@ -137,6 +139,9 @@ sub dovmstats {
   $outdata->{scanrate} = $sr;
 
   # say $coder->encode( $outdata );
+  $outdata->{sequence} = exists($sent_seq{$routing_key}) ?
+                         ++$sent_seq{$routing_key}       :
+                         $sent_seq{$routing_key} = 1;
 
   $mq->publish(1, $routing_key, $coder->encode( $outdata ), { exchange => "topic_stat" } );
 }
@@ -156,6 +161,10 @@ sub doarcstats {
 
   $outdata = \%keep;
   $outdata->{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+
+  $outdata->{sequence} = exists($sent_seq{$routing_key}) ?
+                         ++$sent_seq{$routing_key}       :
+                         $sent_seq{$routing_key} = 1;
 
   $mq->publish(1, $routing_key, $coder->encode( $outdata ), { exchange => "topic_stat" } );
 }
