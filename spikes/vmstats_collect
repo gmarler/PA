@@ -145,7 +145,7 @@ sub dovmstats {
   $outdata->{sequence} = ++$sent_seq{$routing_key};
   #say "$routing_key: SENDING SEQUENCE $sent_seq{$routing_key}";
 
-  $mq->publish(1, $routing_key, $coder->encode( $outdata ), { exchange => "topic_stat" } );
+  $mq->publish(1, $routing_key, $coder->encode( $outdata ), { exchange => "topic_stat" }, { expiration => 60000 } );
 }
 
 # NOTE: Instead of doing all the calculations here (which we still might have to
@@ -170,7 +170,7 @@ sub doarcstats {
   $outdata->{sequence} = ++$sent_seq{$routing_key};
   #say "$routing_key: SENDING SEQUENCE $sent_seq{$routing_key}";
 
-  $mq->publish(1, $routing_key, $coder->encode( $outdata ), { exchange => "topic_stat" } );
+  $mq->publish(1, $routing_key, $coder->encode( $outdata ), { exchange => "topic_stat" }, { expiration => 60000 } );
 }
 
 sub DELTA {
