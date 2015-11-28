@@ -1,12 +1,14 @@
 package PA::Schema;
 
-use strict;
+use 5.20.0;
 use warnings;
 
 use base 'DBIx::Class::Schema';
 
-our $VERSION = 2;
+our $VERSION = 4;
 
-__PACKAGE__->load_namespaces;
+__PACKAGE__->load_namespaces(
+  default_resultset_class => 'ResultSet',
+);
 
 1;
