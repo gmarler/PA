@@ -1,0 +1,10 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Net::Async::AMQP;
+
+# This spike shows how PA clients starting up will initially post host specific
+# information, so that it can be received and pre-inserted into the back end
+# database before the host begins to send information.
