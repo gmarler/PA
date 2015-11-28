@@ -1,0 +1,2 @@
+* Add a collector for mdb's ::memstat, for the time being
+  * Add a receiver/DB inserter for same
