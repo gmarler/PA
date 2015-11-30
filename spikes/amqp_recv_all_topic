@@ -1,0 +1,65 @@
+#!/usr/bin/env perl
+
+use v5.18;
+use strict;
+use warnings;
+
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
+use PA::Schema;
+use Data::Dumper;
+
+use JSON::MaybeXS;
+use Data::Dumper;
+use Net::AMQP::RabbitMQ;
+use IO::Async::Loop      qw();
+use Getopt::Long;
+
+my $amqp_server = "localhost";
+
+GetOptions( "amqp=s" => \$amqp_server )
+  or die("ERROR in command line args");
+
+my $coder = JSON::MaybeXS->new->ascii;
+
+my $mq    = Net::AMQP::RabbitMQ->new();
+my $exchange_name = "topic_stat";
+my $routing_key = '#';
+
+$mq->connect(
+  $amqp_server,
+  {
+    user   => 'solperf',
+    pass   => 'solperf',
+  },
+);
+
+$mq->channel_open(1);
+
+$mq->exchange_declare(1, $exchange_name,
+  { exchange_type => 'topic', }
+);
+
+my $queue_name = $mq->queue_declare(1, '',
+                                    { exclusive   => 1,
+                                      auto_delete => 1,
+                                    } );
+
+say "QUEUE NAME: $queue_name";
+
+$mq->queue_bind(1, $queue_name, $exchange_name, $routing_key );
+
+
+my $tag = $mq->consume(1, $queue_name,
+                       { no_ack => 0, } );
+
+say "TAG: $tag";
+
+while (my $dhref = $mq->recv(0)) {
+  say Dumper( [ $dhref ] );
+  $mq->ack( 1, $dhref->{delivery_tag}, 1 );
+}
+
+
