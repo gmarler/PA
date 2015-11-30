@@ -31,8 +31,8 @@ my $routing_key = '#';
 $mq->connect(
   $amqp_server,
   {
-    user   => 'solperf',
-    pass   => 'solperf',
+    user     => 'solperf',
+    password => 'solperf',
   },
 );
 
