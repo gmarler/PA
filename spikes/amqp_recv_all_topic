@@ -43,7 +43,8 @@ $mq->exchange_declare(1, $exchange_name,
 );
 
 my $queue_name = $mq->queue_declare(1, '',
-                                    { exclusive   => 1,
+                                    { 
+                                      exclusive   => 1,
                                       auto_delete => 1,
                                     } );
 

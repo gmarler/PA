@@ -6,6 +6,7 @@ use warnings;
 
 use Getopt::Long;
 use JSON::MaybeXS;
+use DateTime::TimeZone   qw();
 use Net::Async::AMQP;
 use IO::Async::Loop;
 use Data::Dumper;
@@ -14,10 +15,13 @@ use Data::Dumper;
 # information, so that it can be received and pre-inserted into the back end
 # database before the host begins to send information.
 
+my $tz            = DateTime::TimeZone->new( name => 'local' );
 my $coder         = JSON::MaybeXS->new->ascii;
 my $amqp_server   = "localhost";
 my $exchange_name = "topic_stat";
-my $routing_key   = '#';
+# my $routing_key   = '#';
+my $hostname      = qx{/bin/uname -n};
+chomp($hostname);
 
 GetOptions( "amqp=s" => \$amqp_server )
   or die("ERROR in command line args");
@@ -47,44 +51,38 @@ $mq->connect(
     my ($channel) = shift;
     say "OPENED CHANNEL " . $channel->id;
     Future->needs_all(
-      $channel->queue_declare(
-        queue       => '',  # Let the queue name be generated
-        exclusive   => 1,
-        auto_delete => 1,
-      ),
+      # $channel->queue_declare(
+      #   queue       => '',  # Let the queue name be generated
+      #   exclusive   => 1,
+      #   auto_delete => 1,
+      # ),
       $channel->exchange_declare(
         type     => 'topic',
         exchange => $exchange_name,
       )
     )->then(
       sub {
-        my ($q) = shift;
-        my ($messager) = $loop->new_future;
-        say "QUEUE IS " . $q->queue_name;
-        $q->bind_exchange(
-          exchange    => $exchange_name,
-          channel     => $channel,
-          routing_key => $routing_key,
-        )->then(
-          sub {
-            my ($q, $ctag) = @_;
-            say "BOUND EXCHANGE, SETTING UP CONSUMER";
-            $q->consumer(
-              channel    => $channel,
-              ack        => 0,          # If set to 1, we must ack
-              on_message => sub {
-                say "MESSAGE: " . Dumper( { @_ } );
-                $messager->done;
-              },
-            );
-          },
-          sub { say "CONSUMER SETUP FAILED"; }
-        );
+        my ($channel) = shift;
+        my ($outdata) = { timezone => $tz->name, };
+
+        $outdata->{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+        say "PUBLISHING " . Dumper( $outdata );
+        say "ON EXCHANGE [$exchange_name]";
+
+        $channel->publish(exchange      => $exchange_name,
+                          routing_key   => "${hostname}.host",
+                          type          => "text/plain",
+                          expiration    => 60000,
+                          delivery_mode => 1, # 2 is persistent
+                          payload       => $coder->encode( $outdata ),
+                         );
       }
     );
   },
   sub { say "FAILED TO OPEN CHANNEL"; }
 )->get();
+
+$loop->run();
 
 # ->on_done(sub { say "CONNECTED!"; })->then(
 #   sub {
