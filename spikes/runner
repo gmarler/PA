@@ -1,0 +1,153 @@
+#!/usr/bin/env perl
+
+use v5.20;
+use strict;
+use warnings;
+
+use Data::Dumper;
+use IO::Async::Process;
+use Future::Utils        qw( repeat );
+ 
+use IO::Async::Loop;
+my $loop = IO::Async::Loop->new;
+
+# TODO: Once working, use following as list of identical commands to
+#       launch simultaneously
+my @process_cmds = (
+  [ "/bin/vmstat", "-T", "u", "1" ]
+);
+
+my $epoch_regex = {
+  vmstat => qr{^ (?: (\d+) \n ) }smx,
+};
+
+our $dt_regex = qr{^
+            (?: \d+     # Epoch secs
+                \n
+            )
+           }smx;
+
+our $regex = qr{(
+                 $dt_regex   # date-timestamp
+                 (?:.+?)     # all data after date-timestamp
+               ) \z          # End of this interval
+              }smx;
+
+
+sub parse_vmstat_interval {
+  my ($c) = @_;
+  my ($data_href);
+
+  my @subs = $c =~ m{ $regex }gsmx;
+
+  if (@subs) {
+    my ($data,$dt_stamp,$coredata,);
+    $data = $subs[0];
+    ($dt_stamp) = $data =~ m/ ($dt_regex) /smx;
+    chomp $dt_stamp;
+    ($coredata = $data) =~ s/ $dt_regex //smx;
+    $data_href = parse_interval($coredata);
+    $data_href->{epoch_timestamp} = $dt_stamp;
+    say Dumper( $data_href );
+    return $data_href;
+  } else {
+    say "Found no data!";
+    return;
+  }
+}
+
+sub parse_interval {
+  my ($data) = @_;
+
+  my (%vmstat_data);
+
+  # NOTE: Need to test for this particular issue:
+  # The epoch secs can be immediately followed by the header, like so:
+  # 1418101214
+  # kthr      memory            page            disk          faults      cpu
+  # r b w   swap  free  re  mf pi po fr de sr s0 s1 s3 s4   in   sy   cs us sy id
+  # <actual data>
+  my $vmstat_regex =
+    qr{^ (?: \s+? (?<kthr_runq>(?:kthr|r)) [^\n]+ \n |   # vmstat data headers
+             \s+? (?<kthr_runq>\d+) \s+ (?<kthr_blocked>\d+) \s+
+                  (?<kthr_swapped>\d+) \s+
+             (?<swap_avail>\d+) \s+ (?<free_list>\d+) \s+
+             (?<page_reclaims>\d+) \s+ (?<minor_faults>\d+) \s+
+             (?<page_in_KB>\d+) \s+ (?<page_out_KB>\d+) \s+
+             (?<freed_KB>\d+) \s+ (?<shortfall_KB>\d+) \s+
+             (?<scan_rate>\d+) \s+
+             (?<s0>\d+) \s+ (?<s1>\d+) \s+ (?<s2>\d+) \s+ (?<s3>\d+) \s+
+             (?<interrupts>\d+) \s+ (?<syscalls>\d+) \s+
+             (?<context_switches>\d+) \s+ (?<user>\d+) \s+
+             (?<sys>\d+) \s+ (?<idle>\d+)
+             \n
+         )
+      }smx;
+
+  my @keys = qw(kthr_runq  kthr_blocked kthr_swapped swap_avail
+                free_list page_reclaims minor_faults page_in_KB
+                page_out_KB freed_KB shortfall_KB scan_rate
+                s0 s1 s2 s3 interrupts syscalls context_switches
+                user sys idle );
+
+  # We added 'g' here to get them all, one by one
+  # There's only one line per interval though, so not much to do.
+  while ($data =~ m{ $vmstat_regex }gsmx ) {
+    # Skip headers
+    next if ($+{kthr_runq} =~ m{^(?:kthr|r)$} );
+
+    my %href = map { $_ => $+{$_} } @keys;
+
+    # push @{$vmstat_data{'vm_data'}}, \%href;
+    $vmstat_data{'vm_data'} = \%href;
+  }
+
+  return $vmstat_data{'vm_data'};
+}
+
+
+
+my $vmstat = IO::Async::Process->new(
+   command => [ "/bin/vmstat", "-T", "u", "1", "5" ],
+   stdout => { 
+     on_read => sub { 0 },
+   },
+   on_finish => sub {
+     say "vmstat FINISHED!!!";
+   },
+);
+
+$loop->add( $vmstat );
+
+#$loop->run;
+
+my ($string, $eof);
+
+#while (($string, $eof) = $vmstat->stdout->read_until( ${regex} )->get) {
+#  if ($eof) { say "PROCESS EXITED"; last; }
+#  my ($epoch_secs,$interval_data);
+#  ($epoch_secs)   = $string  =~ m/ $epoch_regex->{vmstat} /smx;
+#  ($interval_data = $string) =~ s/ $epoch_regex->{vmstat} //smx;
+#  say "EPOCH SECS: $epoch_secs";
+#  say "INTERVAL DATA:\n$interval_data";
+#}
+
+my $eventual_f = repeat {
+  my $trial_f = $vmstat->stdout->read_until( ${regex} );
+  ($string, $eof) = $trial_f->get;
+  if ($eof) { $trial_f->die("PROCESS EXITED"); }
+  my ($epoch_secs,$interval_data);
+  ($epoch_secs)   = $string  =~ m/ $epoch_regex->{vmstat} /smx;
+  ($interval_data = $string) =~ s/ $epoch_regex->{vmstat} //smx;
+  say "EPOCH SECS: $epoch_secs";
+  say "INTERVAL DATA:\n$interval_data";
+  return $trial_f;
+} while => sub {
+  my $f = shift;
+  if ($f->is_failed) {
+    return 0;
+  } else {
+    return $f;
+  }
+};
+
