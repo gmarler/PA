@@ -8,6 +8,7 @@ use Data::Dumper;
 use Future;
 use IO::Async::Process;
 use IO::Async::Timer::Periodic;
+use Net::Async::AMQP;
 use File::Basename      qw( basename );
 use JSON::MaybeXS;
 use DateTime             qw();
@@ -163,4 +164,8 @@ sub capture_kstat {
   $outdata->{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
 
   return Future->wrap( $outdata );
+}
+
+sub client_startup {
+  my $tz            = DateTime::TimeZone->new( name => 'local' );
 }

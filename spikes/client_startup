@@ -35,6 +35,7 @@ $loop->add(
 my $true = Net::AMQP::Value->true;
 my $msg  = 'info: Hello World!';
 
+my $mq_future = 
 $mq->connect(
   host    => $amqp_server,
   user    => 'solperf',
@@ -51,11 +52,6 @@ $mq->connect(
     my ($channel) = shift;
     say "OPENED CHANNEL " . $channel->id;
     Future->needs_all(
-      # $channel->queue_declare(
-      #   queue       => '',  # Let the queue name be generated
-      #   exclusive   => 1,
-      #   auto_delete => 1,
-      # ),
       $channel->exchange_declare(
         type     => 'topic',
         exchange => $exchange_name,
@@ -76,11 +72,29 @@ $mq->connect(
                           delivery_mode => 1, # 2 is persistent
                           payload       => $coder->encode( $outdata ),
                          );
+        Future->wrap( $channel );
       }
-    );
+    );#  ->then(
+     #   sub {
+     #     say Dumper( \@_ );
+     #   }
+     # );
   },
   sub { say "FAILED TO OPEN CHANNEL"; }
-)->get();
+);
+
+my ($channel) = $mq_future->get();
+
+my $outdata = { junk => "yep, it's junk" };
+
+$channel->publish(exchange      => $exchange_name,
+                  routing_key   => "${hostname}.test",
+                  type          => "text/plain",
+                  expiration    => 60000,
+                  delivery_mode => 1, # 2 is persistent
+                  payload       => $coder->encode( $outdata ),
+                 );
+
 
 $loop->run();
 
