@@ -21,6 +21,7 @@ my $epoch_regex = {
   vmstat => qr{^ (?: (\d+) \n ) }smx,
 };
 
+
 our $dt_regex = qr{^
             (?: \d+     # Epoch secs
                 \n
@@ -32,6 +33,10 @@ our $regex = qr{(
                  (?:.+?)     # all data after date-timestamp
                ) \z          # End of this interval
               }smx;
+
+my $whole_interval_regex = {
+  vmstat => $regex,
+};
 
 
 sub parse_vmstat_interval {
@@ -132,15 +137,10 @@ my ($string, $eof);
 #  say "INTERVAL DATA:\n$interval_data";
 #}
 
+
+
 my $eventual_f = repeat {
-  my $trial_f = $vmstat->stdout->read_until( ${regex} );
-  ($string, $eof) = $trial_f->get;
-  if ($eof) { $trial_f->die("PROCESS EXITED"); }
-  my ($epoch_secs,$interval_data);
-  ($epoch_secs)   = $string  =~ m/ $epoch_regex->{vmstat} /smx;
-  ($interval_data = $string) =~ s/ $epoch_regex->{vmstat} //smx;
-  say "EPOCH SECS: $epoch_secs";
-  say "INTERVAL DATA:\n$interval_data";
+  my $trial_f = read_stat_program( $vmstat, "vmstat" );
   return $trial_f;
 } while => sub {
   my $f = shift;
@@ -151,3 +151,19 @@ my $eventual_f = repeat {
   }
 };
 
+
+sub read_stat_program {
+  my ($proc_obj, $stat_name) = @_;
+
+  my $regex = $whole_interval_regex->{ $stat_name };
+
+  my $trial_f = $proc_obj->stdout->read_until( ${regex} );
+  ($string, $eof) = $trial_f->get;
+  if ($eof) { $trial_f->done("PROCESS EXITED"); }
+  my ($epoch_secs,$interval_data);
+  ($epoch_secs)   = $string  =~ m/ $epoch_regex->{ $stat_name } /smx;
+  ($interval_data = $string) =~ s/ $epoch_regex->{ $stat_name } //smx;
+  say "[$stat_name] EPOCH SECS: $epoch_secs";
+  say "[$stat_name] INTERVAL DATA:\n$interval_data";
+  return $trial_f;
+}
