@@ -176,12 +176,19 @@ use PA::AMQP::Client;
 # information, so that it can be received and pre-inserted into the back end
 # database before the host begins to send information.
 
+my %client_ctor_args;
 my $amqp_server;
 
 GetOptions( "amqp=s" => \$amqp_server )
   or die("ERROR in command line args");
 
-my $client = PA::AMQP::Client->new();
+if ($amqp_server) {
+  $client_ctor_args{amqp_server} = $amqp_server;
+}
+
+my $client = PA::AMQP::Client->new( %client_ctor_args );
+
+say "AMQP SERVER: " . $client->amqp_server;
 
 exit;
 
