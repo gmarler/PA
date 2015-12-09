@@ -1,0 +1,315 @@
+#!/usr/bin/env perl
+
+use v5.18.1;
+use strict;
+use warnings;
+
+use JSON::MaybeXS;
+use Data::Dumper;
+use Solaris::kstat;
+use Time::HiRes          qw( clock_nanosleep CLOCK_HIGHRES );
+use DateTime::TimeZone   qw();
+use DateTime             qw();
+use Solaris::Sysconf     qw(_SC_PAGESIZE _SC_CLK_TCK);
+use Net::AMQP::RabbitMQ;
+use IO::Async::Loop      qw();
+use Getopt::Long;
+
+my %sent_seq;
+
+my $amqp_server = "localhost";
+
+GetOptions( "amqp=s" => \$amqp_server )
+  or die("ERROR in command line args");
+
+my $coder = JSON::MaybeXS->new->ascii;
+
+my $hostname = qx{/bin/uname -n};
+chomp($hostname);
+
+my $loop = IO::Async::Loop->new;
+my $mq    = Net::AMQP::RabbitMQ->new();
+
+$mq->connect(
+  $amqp_server,
+  {
+    user     => 'guest',
+    password => 'guest',
+  },
+);
+
+$mq->channel_open(1);
+
+$mq->exchange_declare(1, "topic_stat",
+  { exchange_type => 'topic', }
+);
+
+
+my $tz = DateTime::TimeZone->new( name => 'local' );
+
+say "TZ: " . $tz->name;
+
+my @cpu_states = qw( cpu_ticks_idle
+                     cpu_ticks_kernel
+                     cpu_ticks_user
+                    );
+
+my $pagesize = Solaris::Sysconf::sysconf(_SC_PAGESIZE);
+my $hz       = Solaris::Sysconf::sysconf(_SC_CLK_TCK);
+
+say "PAGESIZE: $pagesize";
+say "HZ:       $hz";
+
+my $k = Solaris::kstat->new();
+
+# Prime the kstat by reading the data we intend to use in this script.  In this
+# case, that's cpu:<all instances>:sys
+() = each %{$k->{unix}->{0}->{sysinfo}};
+() = each %{$k->{unix}->{0}->{vminfo}};
+() = each %{$k->{unix}->{0}->{dnlcstats}};
+() = each %{$k->{unix}->{0}->{system_misc}};
+() = each %{$k->{zfs}->{0}->{arcstats}};
+
+foreach my $instance ( keys %{$k->{cpu_info}} ) {
+  my $name = "cpu_info" . $instance;
+  () = each %{$k->{cpu_info}->{$instance}->{$name}};
+}
+foreach my $instance ( keys %{$k->{cpu}} ) {
+  () = each %{$k->{cpu}->{$instance}->{sys}};
+  () = each %{$k->{cpu}->{$instance}->{vm}};
+}
+
+
+my ($old_k, $new_k) = (undef, undef);
+
+my ($start_n)  = $k->gethrtime();
+my ($period_n) = 1 * 1_000_000_000;  # 1 sec in nanosecs
+
+while (1) {
+  $start_n = sleep_until($start_n, $period_n, 1, undef);
+
+  $old_k = $new_k;
+  $k->update();
+  $new_k = $k->copy();
+
+  dovmstats($old_k, $new_k,  "${hostname}.vmstat");
+  doarcstats($old_k, $new_k, "${hostname}.arcstats" );
+}
+
+sub dovmstats {
+  my ($old_k, $new_k, $routing_key) = @_;
+  my ($old_sys_agg, $new_sys_agg,
+      $old_vm_agg,  $new_vm_agg,
+      $etime, $percent_factor,
+      $sys_updates, $vm_updates);
+  my ($outdata) = {};
+
+  if ($old_k) {
+    $old_sys_agg = extract_sys_agg($old_k);
+    $old_vm_agg  = extract_vm_agg($old_k);
+  }
+  $new_sys_agg = extract_sys_agg($new_k);
+  $new_vm_agg  = extract_vm_agg($new_k);
+
+  $etime = cpu_ticks_delta($old_sys_agg, $new_sys_agg);
+  #say "ETIME: $etime";
+  $percent_factor = 100.0 / denom($etime);
+  #say "PERCENT FACTOR: $percent_factor";
+
+  $etime = ($etime >= 1.0)                        ?
+           (($etime / nr_active_cpus($new_k)) / $hz) : 1.0;
+  #say "UPDATED ETIME: $etime";
+  $sys_updates = denom(DELTA($old_k,$new_k,"sysinfo","updates"));
+  $vm_updates  = denom(DELTA($old_k,$new_k,"vminfo","updates"));
+  #say "SYS UPDATES: $sys_updates";
+  #say "VM  UPDATES: $vm_updates";
+
+  $outdata->{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+
+  #my $ofm = defined($old_k) ? $old_k->{unix}{0}{vminfo}{freemem} : "NONE";
+  #say "OLD FREEMEM:   " . $ofm;
+  #say "NEW FREEMEM:   " . $new_k->{unix}{0}{vminfo}{freemem};
+  #say "FREEMEM DELTA: " . DELTA($old_k,$new_k,"vminfo","freemem");
+  #say "FREEMEM pgtok: " . pgtok(int((DELTA($old_k,$new_k,"vminfo","freemem") / $vm_updates)));
+  my $freemem = pgtok(int((DELTA($old_k,$new_k,"vminfo","freemem") / $vm_updates)));
+  $outdata->{freemem} = $freemem;
+  #say "FREEMEM: $freemem";
+  my $sr = int(kstat_delta($old_vm_agg, $new_vm_agg, "scan") / $etime);
+  #say "SCAN RATE: $sr";
+  $outdata->{scanrate} = $sr;
+
+  # say $coder->encode( $outdata );
+  if (not exists($sent_seq{$routing_key})) {
+    $sent_seq{$routing_key} = 0;
+  }
+  $outdata->{sequence} = ++$sent_seq{$routing_key};
+  #say "$routing_key: SENDING SEQUENCE $sent_seq{$routing_key}";
+
+  $mq->publish(1, $routing_key, $coder->encode( $outdata ),
+               { exchange => "topic_stat" },
+               { expiration    => 60000,
+                 delivery_mode => 1 } );  # delivery_mode => 2 is persistent
+}
+
+# NOTE: Instead of doing all the calculations here (which we still might have to
+#       do, actually, we'll try just storing the raw kstat data, and let the DB
+#       do the hard calculations later, when we extract the data.  We'll do that
+#       in a prepared ResultSet.
+sub doarcstats {
+  my ($old_k, $new_k, $routing_key) = @_;
+  my ($outdata);
+
+  # Filter out the non-numeric values (class => misc, for instance)
+  my %keep = map{ $_ => $k->{zfs}{0}{arcstats}{$_}  }
+             grep { $k->{zfs}{0}{arcstats}{$_} !~ m/\D/; }
+             keys %{$k->{zfs}{0}{arcstats}};
+
+  $outdata = \%keep;
+  $outdata->{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+
+  if (not exists($sent_seq{$routing_key})) {
+    $sent_seq{$routing_key} = 0;
+  }
+  $outdata->{sequence} = ++$sent_seq{$routing_key};
+  #say "$routing_key: SENDING SEQUENCE $sent_seq{$routing_key}";
+
+  $mq->publish(1, $routing_key, $coder->encode( $outdata ),
+               { exchange => "topic_stat" },
+               { expiration => 60000,
+                 delivery_mode => 1 } );  # delivery_mode => 2 is persistent
+}
+
+sub DELTA {
+  my ($old_k, $new_k, $name, $key) = @_;
+
+  my $oldval = $old_k ? $old_k->{unix}{0}{$name}{$key} : 0;
+  return $new_k->{unix}{0}{$name}{$key} - $oldval;
+}
+
+# TODO: REFACTOR following two into extract_agg($k, "cpu_agg_name")
+sub extract_sys_agg {
+  my ($k) = @_;
+  my ($sys_agg) = {};
+
+  # Create aggregated sys info
+  foreach my $instance ( keys %{$k->{cpu}} ) {
+    foreach my $key ( keys %{$k->{cpu}->{$instance}->{sys}} ) {
+      # Skip non-numeric values
+      next if ($k->{cpu}->{$instance}->{sys}->{$key} =~ m/\D/);
+      $sys_agg->{$key} += $k->{cpu}->{$instance}->{sys}->{$key};
+    }
+  }
+  return $sys_agg;
+}
+
+sub extract_vm_agg {
+  my ($k) = @_;
+  my ($vm_agg) = {};
+
+  # Create aggregated sys info
+  foreach my $instance ( keys %{$k->{cpu}} ) {
+    foreach my $key ( keys %{$k->{cpu}->{$instance}->{vm}} ) {
+      # Skip non-numeric values
+      next if ($k->{cpu}->{$instance}->{vm}->{$key} =~ m/\D/);
+      $vm_agg->{$key} += $k->{cpu}->{$instance}->{vm}->{$key};
+    }
+  }
+  return $vm_agg;
+}
+
+
+sub cpu_ticks_delta {
+  my ($old_kstat, $new_kstat) = @_;
+  my ($ticks) = 0;
+
+  foreach my $state (@cpu_states) {
+    $ticks += kstat_delta($old_kstat, $new_kstat, $state);
+  }
+  return $ticks;
+}
+
+sub kstat_delta {
+  my ($old, $new, $name) = @_;
+
+  if ($old && (exists($old->{$name}))) {
+    return $new->{$name} - $old->{$name};
+  }
+  return $new->{$name};
+}
+
+sub nr_active_cpus {
+  my ($snapshot) = @_;
+  my ($count)    = 0;
+  # Iterate over cpu_info:instance:state, looking for those that are active
+  # and returning the count
+  foreach my $cpu ( keys %{$snapshot->{cpu_info}} ) {
+    my $name = "cpu_info" . $cpu;
+
+    if ($snapshot->{cpu_info}->{$cpu}->{$name}->{'state'} =~
+         /^(?:on\-line|no\-intr)/)
+    {
+      $count++;
+    }
+  }
+  #say "CPUS ACTIVE: $count";
+  return $count;
+}
+
+#
+# SIDE EFFECT: uses global $pagesize
+#
+sub pgtok
+{
+  my ($a) = shift;
+  return $a * ($pagesize >> 10);
+}
+
+sub denom
+{
+  my ($x) = shift;
+  # NOTE: Defined and not 0
+  return $x ? $x : 1;
+}
+
+# SIDE EFFECT: Uses global $k
+sub sleep_until {
+  my ($wakeup, $interval, $forever, $null) = @_;
+  my ($now, $pause, $pause_left);
+
+  $now   = $k->gethrtime();
+  $pause = $wakeup + $interval - $now;
+
+  if ($pause <= 0 || ($pause < ($interval / 4))) {
+    if ($forever) {
+      $wakeup = $now + $interval;
+      $pause = $interval;
+    } else {
+      $pause = $interval / 2;
+      $wakeup += $interval;
+    }
+  } else {
+    $wakeup += $interval;
+  }
+
+  if ($pause < 1000) {
+    return $wakeup;  # close enough
+  }
+
+  # Do the actual sleep
+  $pause_left = $pause;
+  my $secs_slept;
+  do {
+    #say "GOING TO SLEEP FOR $pause_left ns";
+    $secs_slept = clock_nanosleep( CLOCK_HIGHRES, $pause_left );
+    #say "secs_slept after nanosleep: $secs_slept";
+    if (! defined($secs_slept) ) {
+      say "ERROR in clock_nanosleep";
+      return $wakeup;
+    }
+    $pause_left -= $secs_slept;
+    if ($pause_left < 1000) {
+      return $wakeup; # close enough
+    }
+  } while ($pause_left > 0);
+  return $wakeup;
+}

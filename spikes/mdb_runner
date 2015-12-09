@@ -1,0 +1,78 @@
+#!/usr/bin/env perl
+
+use v5.20;
+use strict;
+use warnings;
+
+# use IO::Async::Process;
+#  
+# use IO::Async::Loop;
+# my $loop = IO::Async::Loop->new;
+# 
+# # TODO: Once working, use following as list of identical commands to
+# #       launch simultaneously
+# my @process_cmds = (
+#   [ "/bin/vmstat", "-T", "u", "1" ],
+#   [ "/bin/mdb", "-k" ]
+# );
+#  
+# my $p = IO::Async::Process->new(
+#   command => [ "/bin/mdb", "-k" ],
+#   stdio   => { via => "pipe_rdwr",
+#                on_read => sub { 0 },
+#              },
+# 
+#   on_finish => sub {
+#     say "mdb exited";
+#     $loop->stop;
+#   },
+# );
+# 
+# $loop->add( $p );
+#  
+# my $io = $p->stdio;
+# 
+# $io->read_until( '>' )->then(
+#   sub {
+#     my ($string, $eof) = @_;
+#     say "Got something";
+#     #$io->write( '$q' . "\n" );
+#   }
+# )->get();
+# 
+# #$loop->run;
+
+
+
+use Expect;
+
+# mdb might not like your default TERM, so we set it to something we know it's
+# ok with here
+$ENV{'TERM'} = "vt100";
+
+my $exp  =  Expect->new;
+# Needs a raw pseudo-tty
+$exp->raw_pty(1);
+$exp->log_stdout(0);
+#$exp->debug(1);
+$exp->spawn("/bin/mdb", "-k")
+  or die("Cannot spawn [/bin/mdb]: $!");
+
+# See if process immediately exited with error message due to no having
+# proper privileges:
+$exp->expect(5,
+  [ qr{mdb:\sfailed\sto\sopen\s/dev/kmem:\sPermission\sdenied},
+                      sub {
+                        my $self = shift;
+                        my $str = $self->match();
+                        die( "Insufficient Privileges" );
+                      } ],
+);
+
+
+
+# Only try soft close if the spawned PID is still alive
+if ($exp->pid) {
+  $exp->soft_close();
+}
+

@@ -1,0 +1,134 @@
+#!/usr/bin/env perl
+
+use v5.18;
+use strict;
+use warnings;
+
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
+use PA::Schema;
+use Data::Dumper;
+
+use JSON::MaybeXS;
+use DateTime             qw();
+use Data::Dumper;
+use Net::AMQP::RabbitMQ;
+use IO::Async::Loop      qw();
+use Getopt::Long;
+
+my %recvd_seq;
+#my %recvd_seq2;
+
+my $connect_info = { dsn => 'DBI:Pg:dbname=template1;host=localhost;port=15432', user => 'postgres', password => '' };
+
+my $schema = PA::Schema->connect(
+  $connect_info
+);
+
+my $host_ids = {};
+my $hosts_rs = $schema->resultset( 'Host' );
+my $vmstat_rs = $schema->resultset( 'Vmstat' );
+
+
+my $amqp_server = "localhost";
+
+GetOptions( "amqp=s" => \$amqp_server )
+  or die("ERROR in command line args");
+
+my $coder = JSON::MaybeXS->new->ascii;
+
+my $loop = IO::Async::Loop->new;
+my $mq    = Net::AMQP::RabbitMQ->new();
+my $exchange_name = "topic_stat";
+my $routing_key = '#';
+
+$mq->connect(
+  $amqp_server,
+  {
+    user     => 'guest',
+    password => 'guest',
+  },
+);
+
+$mq->channel_open(1);
+
+$mq->exchange_declare(1, $exchange_name,
+  { exchange_type => 'topic', }
+);
+
+my $queue_name = $mq->queue_declare(1, '',
+                                    { exclusive   => 1,
+                                      auto_delete => 1,
+                                    } );
+
+say "QUEUE NAME: $queue_name";
+
+$mq->queue_bind(1, $queue_name, $exchange_name, $routing_key );
+
+
+my $tag = $mq->consume(1, $queue_name,
+                       { no_ack => 0, } );
+
+say "TAG: $tag";
+
+$SIG{'INT'} = sub { exit(0); };
+
+while (my $dhref = $mq->recv(10000)) {
+  my ($host_id, $host_record);
+  #say $dhref->{body};
+  #say Dumper( [ $dhref ] );
+  my $stat_ref = decode_json($dhref->{body});
+  #say Dumper( $stat_ref );
+  if (exists($recvd_seq{$dhref->{routing_key}})) {
+    my ($next_seq) = $recvd_seq{$dhref->{routing_key}} + 1;
+    if ($stat_ref->{sequence} != $next_seq) {
+      my ($gap) = $stat_ref->{sequence} - $recvd_seq{$dhref->{routing_key}};
+      say "$dhref->{routing_key}: EXPECTED SEQ $next_seq, RECEIVED $stat_ref->{sequence}, GAP SIZE $gap";
+      # Update sequence to the latest received
+      $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
+    } else {
+      # Update sequence to the latest received
+      $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
+    }
+  } else {
+    $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
+  }
+  my ($hostname,$stat_type) = $dhref->{routing_key} =~ m/^([^.]+)\.(.+)/;
+  $host_record =
+    $hosts_rs->find({ name => $hostname });
+  # TODO: die here if we couldn't look up the hostname in the host table -
+  # that should never happen
+
+  if ($stat_type eq "vmstat") {
+    my $new_vmstat = $host_record->create_related('vmstat_rs',
+      {
+        freemem   => $stat_ref->{freemem},
+        timestamp => DateTime->from_epoch( epoch => $stat_ref->{timestamp},
+                                           time_zone => 'UTC' ),
+        #host_fk   => $host_record->host_id,
+      }
+    );
+  }
+
+  #say "ACKNOWLEGING: $dhref->{delivery_tag}";
+  $mq->ack( 1, $dhref->{delivery_tag}, 1 );
+  #if (not exists($recvd_seq2{$dhref->{routing_key}})) {
+  #  $recvd_seq2{$dhref->{routing_key}} = [];
+  #}
+  #push @{$recvd_seq2{$dhref->{routing_key}}}, $stat_ref->{sequence};
+}
+
+#END {
+#  foreach my $key (%recvd_seq2) {
+#    say "$key:";
+#    say "UNSORTED:";
+#    say Dumper( $recvd_seq2{$key} );
+#    say "SORTED:";
+#    my @seqs = sort { $a cmp $b } @{$recvd_seq2{$key}};
+#    say Dumper( \@seqs );
+#  }
+#}
+
+
