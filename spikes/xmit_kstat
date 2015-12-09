@@ -18,10 +18,10 @@ my $true = Net::AMQP::Value->true;
 my $msg  = 'info: Hello World!';
 
 $mq->connect(
-  host    => 'localhost',
-  user    => 'guest',
-  pass    => 'guest',
-  vhost   => '/',
+  host     => 'localhost',
+  user     => 'guest',
+  password => 'guest',
+  vhost    => '/',
 )->then(
   sub {
     shift->open_channel;

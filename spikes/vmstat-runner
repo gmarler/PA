@@ -131,5 +131,3 @@ my $vmstat = IO::Async::Process->new(
 $loop->add( $vmstat );
 
 $loop->run;
-
-

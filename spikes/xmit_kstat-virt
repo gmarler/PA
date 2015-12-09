@@ -49,7 +49,7 @@ $mq->connect(
   #host      => '192.168.56.1',
   host      => 'localhost',
   user      => 'solperf',
-  pass      => 'solperf',
+  password  => 'solperf',
   vhost     => '/',
   client_properties => {
     capabilities => {

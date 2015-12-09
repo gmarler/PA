@@ -1,0 +1,187 @@
+#!/usr/bin/env perl
+
+use v5.20;
+use strict;
+use warnings;
+
+use Getopt::Long;
+use JSON::MaybeXS;
+use DateTime::TimeZone   qw();
+use Net::Async::AMQP;
+use IO::Async::Loop;
+use Data::Dumper;
+
+# This spike shows how PA clients starting up will initially post host specific
+# information, so that it can be received and pre-inserted into the back end
+# database before the host begins to send information.
+
+my $tz            = DateTime::TimeZone->new( name => 'local' );
+my $coder         = JSON::MaybeXS->new->ascii;
+my $amqp_server   = "localhost";
+my $exchange_name = "topic_stat";
+# my $routing_key   = '#';
+my $hostname      = qx{/bin/uname -n};
+chomp($hostname);
+
+GetOptions( "amqp=s" => \$amqp_server )
+  or die("ERROR in command line args");
+
+my $loop = IO::Async::Loop->new;
+
+$loop->add(
+  my $mq = Net::Async::AMQP->new()
+);
+
+my $true = Net::AMQP::Value->true;
+my $msg  = 'info: Hello World!';
+
+my $mq_future = 
+$mq->connect(
+  host    => $amqp_server,
+  user    => 'solperf',
+  pass    => 'solperf',
+  vhost   => '/',
+)->then(
+  sub {
+    say "CONNECT SUCCEEDED";
+    shift->open_channel;
+  },
+  sub { say "CONNECT FAILED!" }
+)->then(
+  sub {
+    my ($channel) = shift;
+    say "OPENED CHANNEL " . $channel->id;
+    Future->needs_all(
+      $channel->exchange_declare(
+        type     => 'topic',
+        exchange => $exchange_name,
+      )
+    )->then(
+      sub {
+        my ($channel) = shift;
+        my ($outdata) = { timezone => $tz->name, };
+
+        $outdata->{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+        say "PUBLISHING " . Dumper( $outdata );
+        say "ON EXCHANGE [$exchange_name]";
+
+        $channel->publish(exchange      => $exchange_name,
+                          routing_key   => "${hostname}.host",
+                          type          => "text/plain",
+                          expiration    => 60000,
+                          delivery_mode => 1, # 2 is persistent
+                          payload       => $coder->encode( $outdata ),
+                         );
+        Future->wrap( $channel );
+      }
+    );#  ->then(
+     #   sub {
+     #     say Dumper( \@_ );
+     #   }
+     # );
+  },
+  sub { say "FAILED TO OPEN CHANNEL"; }
+);
+
+my ($channel) = $mq_future->get();
+
+my $outdata = { junk => "yep, it's junk" };
+
+$channel->publish(exchange      => $exchange_name,
+                  routing_key   => "${hostname}.test",
+                  type          => "text/plain",
+                  expiration    => 60000,
+                  delivery_mode => 1, # 2 is persistent
+                  payload       => $coder->encode( $outdata ),
+                 );
+
+
+$loop->run();
+
+# ->on_done(sub { say "CONNECTED!"; })->then(
+#   sub {
+#     my ($channel)  = shift;
+#     #say "GOT CHANNEL: " . Dump($channel);
+#     say "GOT CHANNEL: $channel";
+#     my ($exchange) = 'logs';
+#     Future->needs_all(
+#       # This is subscriber code
+#       $channel->queue_declare(
+#         queue     => '',  # Let the queue name be generated
+#         exclusive => 1,
+#       ),
+#       # This is publisher code
+#       $channel->exchange_declare(
+#         type     => 'fanout',
+#         exchange => $exchange,
+#       )
+#     )->on_done(sub { say "EXCHANGE DECLARED!"; })->then(
+#       sub {
+#         my ($q) = shift;
+#         say "QUEUE IS: $q";
+#         my ($messager) = $loop->new_future;
+#         say "MESSAGER IS: $messager";
+#         #$channel->bus->subscribe_to_event(
+#         #  message => sub {
+#         #    my ($ev, @details) = @_;
+#         #    say Dumper( \@_ );
+#         #    say "MESSAGE RECEIVED: @details";
+#         #  }
+#         #);
+#         $q->bind_exchange(
+#           channel  => $channel,
+#           exchange => $exchange
+#         )->on_done( sub { say "EXCHANGE BOUND"; } )->then(
+#           sub {
+#             my ($q, $ctag) = @_;
+#             say "QUEUE IS: $q";
+#             $q->consumer(
+#               channel    => $channel,
+#               ack        => 0,
+#               on_message => sub {
+#                 say "MESSAGE: " . Dumper( { @_ } );
+#                 $messager->done;
+#               },
+#             );
+#           },
+#           sub { say "CONSUMER SETUP FAILED"; }
+#         )->on_done( sub { say "CONSUMER ENGAGED"; } )->then(
+#           sub {
+#             say "PUBLISHING $msg";
+#             $channel->publish(
+#               exchange    => $exchange,
+#               routing_key => '',
+#               #type        => 'application/json',
+#               type        => 'text/plain',
+#               payload     => $msg,
+#             );
+#             $channel->publish(
+#               exchange    => $exchange,
+#               routing_key => '',
+#               #type        => 'application/json',
+#               type        => 'text/plain',
+#               payload     => 'MESSAGE 2',
+#             );
+# 
+#           }
+#         )->then(
+#           sub {
+#             Future->wait_any(
+#               $messager
+#             );
+#           }
+#         );
+#       },
+#       sub { say "EXCHANGE DECLARE FAILED"; }
+#     );
+#   },
+#   sub { say "OPEN CHANNEL FAILED"; }
+# )->then(
+#   sub {
+#     $mq->close();
+#   },
+#   sub { say "Problem with Exchange Declare or Publish"; }
+# )->get;
+
+
+

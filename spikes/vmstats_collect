@@ -33,8 +33,8 @@ my $mq    = Net::AMQP::RabbitMQ->new();
 $mq->connect(
   $amqp_server,
   {
-    user   => 'guest',
-    pass   => 'guest',
+    user     => 'guest',
+    password => 'guest',
   },
 );
 
