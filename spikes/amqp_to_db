@@ -120,15 +120,4 @@ while (my $dhref = $mq->recv(10000)) {
   #push @{$recvd_seq2{$dhref->{routing_key}}}, $stat_ref->{sequence};
 }
 
-#END {
-#  foreach my $key (%recvd_seq2) {
-#    say "$key:";
-#    say "UNSORTED:";
-#    say Dumper( $recvd_seq2{$key} );
-#    say "SORTED:";
-#    my @seqs = sort { $a cmp $b } @{$recvd_seq2{$key}};
-#    say Dumper( \@seqs );
-#  }
-#}
-
 

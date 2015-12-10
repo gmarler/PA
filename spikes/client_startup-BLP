@@ -159,6 +159,23 @@ sub BUILD {
   $self->mq;
 }
 
+
+sub send {
+  my ($self, $routing_key, $d_href) = @_;
+
+  my ($ch) = $self->amqp_channel;
+  my ($coder) = $self->json_encoder;
+  my ($exchange_name) = $self->exchange_name;
+
+  $ch->publish(exchange      => $exchange_name,
+               routing_key   => $routing_key,
+               type          => "text/plain",
+               expiration    => 60000,
+               delivery_mode => 1,           # delivery_mode => 2 is persistent
+               payload       => $coder->encode( $d_href ),
+             );
+}
+
 package main;
 use v5.20;
 use strict;
@@ -197,14 +214,7 @@ my $true = Net::AMQP::Value->true;
 my $msg  = 'info: Hello World!';
 my $outdata = { junk => "yep, it's junk" };
 
-# $channel->publish(exchange      => $exchange_name,
-#                   routing_key   => "${hostname}.test",
-#                   type          => "text/plain",
-#                   expiration    => 60000,
-#                   delivery_mode => 1, # 2 is persistent
-#                   payload       => $coder->encode( $outdata ),
-#                  );
-# 
+ 
 # 
 # $loop->run();
 
