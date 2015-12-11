@@ -19,4 +19,17 @@ sub search_by_host {
     });
 }
 
+sub search_by_host_sorted {
+  my ($rs,$host_id) = @_;
+  my ($schema) = $rs->result_source->schema;
+
+  $schema->resultset('Arcstat')->search({
+      'me.host_fk' => $host_id,
+    },
+    { order_by => 'timestamp ASC',
+      columns  => [ 'timestamp', 'hits', 'misses', ],
+    }
+  );
+}
+
 1;

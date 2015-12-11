@@ -29,7 +29,10 @@ my $host_record =
      $hosts_rs->find({ name => $hostname });
 
 
-my $records =
+my $record_count =
   $arcstat_rs->search_by_host($host_record->id)->count();
+
+my @lines = 
+  $arcstat_rs->search_by_host_sorted($host_record->id)->all;
 
 exit;
