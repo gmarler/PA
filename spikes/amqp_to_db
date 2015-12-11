@@ -28,8 +28,9 @@ my $schema = PA::Schema->connect(
 );
 
 my $host_ids = {};
-my $hosts_rs = $schema->resultset( 'Host' );
-my $vmstat_rs = $schema->resultset( 'Vmstat' );
+my $hosts_rs   = $schema->resultset( 'Host' );
+my $vmstat_rs  = $schema->resultset( 'Vmstat' );
+my $arcstat_rs = $schema->resultset( 'Arcstat' );
 
 
 my $amqp_server = "localhost";
@@ -95,6 +96,7 @@ while (my $dhref = $mq->recv(10000)) {
   } else {
     $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
   }
+
   my ($hostname,$stat_type) = $dhref->{routing_key} =~ m/^([^.]+)\.(.+)/;
   $host_record =
     $hosts_rs->find({ name => $hostname });
@@ -110,6 +112,9 @@ while (my $dhref = $mq->recv(10000)) {
         #host_fk   => $host_record->host_id,
       }
     );
+  } elsif ($stat_type eq "arcstats") {
+    say "Got an arcstat";
+    insert_arcstat($host_record, $stat_ref);
   }
 
   #say "ACKNOWLEGING: $dhref->{delivery_tag}";
@@ -120,4 +125,26 @@ while (my $dhref = $mq->recv(10000)) {
   #push @{$recvd_seq2{$dhref->{routing_key}}}, $stat_ref->{sequence};
 }
 
-
+sub insert_arcstat {
+  my ($host_record, $stat_ref) = @_;
+  my %columns;
+  my @fields = qw( buf_size c_min c c_max data_size deleted
+  demand_data_hits demand_data_misses demand_metadata_hits
+  demand_metadata_misses evict_mfu evict_mru hits l2_hits l2_misses
+  l2_persistence_hits l2_read_bytes l2_rw_clash l2_size memory_throttle_count
+  meta_limit meta_max meta_used mfu_ghost_hits mfu_hits misses mru_ghost_hits
+  mru_hits mutex_miss other_size prefetch_behind_prefetch prefetch_data_hits
+  prefetch_data_misses prefetch_joins prefetch_meta_size prefetch_metadata_hits
+  prefetch_metadata_misses prefetch_reads prefetch_size size
+  );
+  foreach my $f (@fields) {
+    $columns{$f} = $stat_ref->{$f};
+  }
+  my $new_arcstat = $host_record->create_related('arcstat_rs',
+      {
+        timestamp => DateTime->from_epoch( epoch => $stat_ref->{timestamp},
+                                           time_zone => 'UTC' ),
+        %columns,
+      }
+  );
+}
