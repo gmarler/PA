@@ -113,7 +113,6 @@ while (my $dhref = $mq->recv(10000)) {
       }
     );
   } elsif ($stat_type eq "arcstats") {
-    say "Got an arcstat";
     insert_arcstat($host_record, $stat_ref);
   }
 
@@ -142,7 +141,11 @@ sub insert_arcstat {
     "evict_mfu" => "evicted_mfu"
   };
   foreach my $f (@fields) {
-    if (not defined($stat_ref->{$f})) {
+    my $renamed_f;
+    if (exists $renamed_fields->{$f}) {
+      $renamed_f = $renamed_fields->{$f};
+    }
+    if (not defined($stat_ref->{$renamed_f //= $f})) {
       say "WARNING: $f not defined";
     }
     $columns{$f} = $stat_ref->{$f};
