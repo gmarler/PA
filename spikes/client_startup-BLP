@@ -187,6 +187,7 @@ sub send {
   }
   $d_href->{sequence} = ++$self->sent_sequence->{$routing_key};
 
+  my ($future) =
   $ch->publish(exchange      => $exchange_name,
                routing_key   => $routing_key,
                type          => "text/plain",
@@ -194,6 +195,7 @@ sub send {
                delivery_mode => 1,           # delivery_mode => 2 is persistent
                payload       => $coder->encode( $d_href ),
              );
+  return $future;
 }
 
 
@@ -295,13 +297,17 @@ sub _build_timer {
       $kstat_future->on_done(
         sub {
           my (@done_futures) = @_;
+          my (@publish_futures);
           foreach my $done_future (@done_futures) {
             my ($stat_name)  = $done_future->get->{name};
             my ($stat_stats) = $done_future->get->{stats};
             #say Dumper( $done_future->get );
             my ($routing_key) = $client->client_hostname . ".$stat_name";
-            $client->send($routing_key, $stat_stats);
+            push @publish_futures, $client->send($routing_key, $stat_stats);
           }
+          # Wait for all of the publishing futures to complete
+          my $publishing_future = Future->wait_all( @publish_futures );
+          $publishing_future->get;
         }
       );
     },
