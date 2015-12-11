@@ -203,7 +203,7 @@ package PA::Capture::kstat;
 use v5.20;
 
 use Moose;
-use MooseX::Types::Moose qw(Str Int Undef HashRef);
+use MooseX::Types::Moose qw(Str Int Undef HashRef ArrayRef);
 use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use Solaris::kstat;
@@ -243,6 +243,17 @@ has [ 'kstat' ] => (
               },
 );
 
+has [ 'kstats_to_collect' ] => (
+  is       => 'ro',
+  isa      => ArrayRef[ ArrayRef ],
+  default  => sub {
+                [ 
+                  [ "unix", 0, "system_pages" ],
+                ];
+              },
+);
+
+
 has [ 'timer' ] => (
   is       => 'ro',
   isa      => 'IO::Async::Timer::Periodic',
@@ -255,25 +266,31 @@ sub _build_timer {
   my ($self) = @_;
 
   say "BUILDING TIMER";
-  my ($k)      = $self->kstat;
-  my ($loop)   = $self->loop;
-  my ($client) = $self->client;
-
-  # TODO Put in _build_kstat, use a hashref to give list of tuples to initialize
-  () = each %{$k->{zfs}->{0}->{arcstats}};
-  () = each %{$k->{unix}->{0}->{dnlcstats}};
-  () = each %{$k->{unix}->{0}->{system_pages}};
+  my ($k)                 = $self->kstat;
+  my ($loop)              = $self->loop;
+  my ($client)            = $self->client;
+  my (@kstats_to_collect) = @{$self->kstats_to_collect};
 
   my $timer = IO::Async::Timer::Periodic->new(
     interval => 1,
     on_tick  => sub {
       $k->update;
       my $latest_k = $k->copy;
+      my @futures;
+
+      foreach my $kstat_def (@kstats_to_collect) {
+        my ($module, $instance, $name) = @$kstat_def;
+        push @futures,
+          Future->wrap(
+              { name =>  $name,
+                stats => capture_kstat($latest_k, $module, $instance, $name)
+              }
+          );
+      }
+
       my $kstat_future =
         Future->wait_all(
-          doarcstats($latest_k),
-          dodnlcstats($latest_k),
-          dosystem_pages($latest_k),
+          @futures
         );
       $kstat_future->on_done(
         sub {
@@ -304,7 +321,13 @@ sub BUILD {
   say "Building loop";
   $self->loop;
   say "Building kstat";
-  $self->kstat;
+  my ($k) = $self->kstat;
+  say "Initializing kstats to collect";
+  my (@kstats_to_collect) = @{$self->kstats_to_collect};
+  foreach my $kstat_def (@kstats_to_collect) {
+    my ($module,$instance,$name) = @$kstat_def;
+    () = each %{$k->{$module}->{$instance}->{$name}};
+  }
   say "Building timer";
   $self->timer;
 }
@@ -323,35 +346,6 @@ sub capture_kstat {
 
   return $outdata;
 }
-
-
-sub doarcstats {
-  my ($k) = @_;
-
-  return Future->wrap(
-    { name => "arcstats",
-      stats => capture_kstat($k, "zfs", 0, "arcstats") }
-  );
-}
-
-sub dodnlcstats {
-  my ($k) = @_;
-
-  return Future->wrap( 
-    { name => "dnlcstats",
-      stats => capture_kstat($k, "unix", 0, "dnlcstats") }
-  );
-}
-
-sub dosystem_pages {
-  my ($k) = @_;
-
-  return Future->wrap(
-    { name => "system_pages",
-      stats => capture_kstat($k, "unix", 0, "system_pages") }
-  );
-}
-
 
 
 package main;
@@ -375,6 +369,13 @@ use PA::Capture::kstat;
 my %client_ctor_args;
 my $amqp_server;
 
+my $kstats_to_collect =
+  [
+    [ qw( unix    0      system_pages) ],
+    [ qw( unix    0      dnlcstats) ],
+    [ qw( zfs     0      arcstats) ],
+  ];
+
 GetOptions( "amqp=s" => \$amqp_server )
   or die("ERROR in command line args");
 
@@ -387,8 +388,11 @@ $client_ctor_args{loop} = $loop;
 
 my $client = PA::AMQP::Client->new( %client_ctor_args );
 my $kstats = PA::Capture::kstat->new( 
-  loop   => $loop,      # TODO: Don't need loop if we've got client with loop within it
-  client => $client);
+  # TODO: Don't need loop if we've got client with loop within it
+  loop              => $loop,      
+  client            => $client,
+  kstats_to_collect => $kstats_to_collect,
+);
 
 say "AMQP SERVER: " . $client->amqp_server;
 $loop->run();
