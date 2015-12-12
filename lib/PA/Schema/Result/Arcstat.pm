@@ -32,9 +32,6 @@ __PACKAGE__->add_columns(
   'c_min'  => {
     data_type         => 'bigint',
   },
-  'data_freed'  => {
-    data_type         => 'bigint',
-  },
   'data_size'  => {
     data_type         => 'bigint',
   },
