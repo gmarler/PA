@@ -6,11 +6,11 @@ FROM
    FROM
      arcstat
    ORDER BY
-     snaptime ASC) as w1
-WHERE
-  (hits - prev_hits) > 0 AND
-  (snaptime - prev_snaptime) > 0
-  ;
+     snaptime ASC) as w1;
+-- WHERE
+--   (hits - prev_hits) > 0 AND
+--   (snaptime - prev_snaptime) > 0
+--   ;
 
 
 
