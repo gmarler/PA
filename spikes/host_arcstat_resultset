@@ -35,4 +35,14 @@ my $record_count =
 my @lines = 
   $arcstat_rs->search_by_host_sorted($host_record->id)->all;
 
+#say Dumper( \@lines );
+
+my @lines = 
+  $arcstat_rs->host_hit_rate($host_record->id)->all;
+
+#say Dumper( \@lines );
+foreach my $row (@lines) {
+  say $row->get_column('hit_rate_per_sec');
+}
+
 exit;
