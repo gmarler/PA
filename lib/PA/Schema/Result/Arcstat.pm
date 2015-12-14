@@ -20,6 +20,11 @@ __PACKAGE__->add_columns(
     data_type => 'timestamptz',
     timezone => 'UTC',
   },
+  # NOTE: All kstat sourced data should store snaptime, in addition to
+  #       timestamp, to facilitate rate calculations
+  'snaptime'  => {
+    data_type         => 'bigint',
+  },
   'buf_size'  => {
     data_type         => 'bigint',
   },
