@@ -67,8 +67,8 @@ sub host_hit_rate {
         {
           'hit_rate_per_sec' =>
           \[
-             '((hits - prev_hits) / ' .
-             '( (snaptime::float - prev_snaptime::float) / 1000000000.0))::bigint ' .
+             '((hits - prev_hits)::float / ' .
+             ' ((snaptime - prev_snaptime)::float / 1000000000.0) )::bigint ' .
              'AS hit_rate_per_sec'
            ],
         },
