@@ -136,6 +136,10 @@ sub insert_arcstat {
   prefetch_data_misses prefetch_joins prefetch_meta_size prefetch_metadata_hits
   prefetch_metadata_misses prefetch_reads prefetch_size size
   );
+  # NOTE: For any kstat derived metric, always include the fields specific to
+  #       kstats
+  my @kstat_fields = qw( snaptime );
+  push @fields, @kstat_fields;
   my $renamed_fields = {
     "evict_mru" => "evicted_mru",
     "evict_mfu" => "evicted_mfu"
