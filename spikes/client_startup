@@ -169,6 +169,8 @@ sub BUILD {
   $self->exchange_name;
   say "Building mq";
   $self->mq;
+  say "Registering host";
+  $self->register_host;
 }
 
 
@@ -196,6 +198,31 @@ sub send {
   return $future;
 }
 
+
+=head2 register_host
+
+When the PA client first starts up, it needs to notify the server of it's
+existence.  If the host has never been registered before, the server registers
+it.  If it has been registered before, all is well.
+
+=cut
+
+sub register_host {
+  my ($self) = @_;
+  my (@publish_futures);
+  my ($routing_key) = $self->client_hostname . ".register_host";
+
+  my ($data_href) = {
+    time_zone => $self->local_tz->name,
+  };
+  say "REGISTERING: " . $self->client_hostname;
+
+  push @publish_futures, $self->send($routing_key, $data_href);
+
+  # Wait for all (one) of the publishing futures to complete
+  my $publishing_future = Future->wait_all( @publish_futures );
+  $publishing_future->get;
+}
 
 
 package PA::Capture::kstat;

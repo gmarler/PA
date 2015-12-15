@@ -100,8 +100,22 @@ while (my $dhref = $mq->recv(10000)) {
   my ($hostname,$stat_type) = $dhref->{routing_key} =~ m/^([^.]+)\.(.+)/;
   $host_record =
     $hosts_rs->find({ name => $hostname });
-  # TODO: die here if we couldn't look up the hostname in the host table -
-  # that should never happen
+
+  # If the host_record could not be found, then this has to be an attempt to
+  # register a host for the first time.  Otherwise, we have to skip this, as we
+  # won't be able to insert the record in the first place.
+  unless ($host_record) {
+    if ($stat_type ne "register_host") {
+      say "Cannot accept $stat_type for unregistered host $hostname";
+      next;
+    } else {
+      if (register_host($schema, $hostname, $stat_ref)) {
+        say "SUCCESSFULLY REGISTERED $hostname!";
+      } else {
+        die "FAILED to register host $hostname";
+      }
+    }
+  }
 
   if ($stat_type eq "vmstat") {
     my $new_vmstat = $host_record->create_related('vmstat_rs',
@@ -124,6 +138,24 @@ while (my $dhref = $mq->recv(10000)) {
   #push @{$recvd_seq2{$dhref->{routing_key}}}, $stat_ref->{sequence};
 }
 
+sub register_host {
+  my ($schema, $hostname, $hostreg_ref) = @_;
+  my $hosts_rs   = $schema->resultset( 'Host' );
+
+  my ($time_zone) = $hostreg_ref->{time_zone};
+  my ($host_record) =
+    $hosts_rs->find_or_create({ name      => $hostname,
+                                time_zone => $time_zone});
+
+  if (defined($host_record)) {
+    say "Created host record ID: " . $host_record->host_id;
+    return 1;
+  } else {
+    say "FAILED to create host record for $hostname";
+    return;
+  }
+}
+
 sub insert_arcstat {
   my ($host_record, $stat_ref) = @_;
   my %columns;
@@ -136,6 +168,10 @@ sub insert_arcstat {
   prefetch_data_misses prefetch_joins prefetch_meta_size prefetch_metadata_hits
   prefetch_metadata_misses prefetch_reads prefetch_size size
   );
+  # NOTE: For any kstat derived metric, always include the fields specific to
+  #       kstats
+  my @kstat_fields = qw( snaptime );
+  push @fields, @kstat_fields;
   my $renamed_fields = {
     "evict_mru" => "evicted_mru",
     "evict_mfu" => "evicted_mfu"
