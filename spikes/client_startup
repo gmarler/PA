@@ -220,7 +220,7 @@ sub register_host {
 
   push @publish_futures, $self->send($routing_key, $data_href);
 
-  # Wait for all of the publishing futures to complete
+  # Wait for all (one) of the publishing futures to complete
   my $publishing_future = Future->wait_all( @publish_futures );
   $publishing_future->get;
 }
