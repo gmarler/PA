@@ -215,8 +215,9 @@ sub register_host {
   my ($routing_key) = $self->client_hostname . ".register_host";
 
   my ($data_href) = {
-    time_zone => $self->local_tz;
+    time_zone => $self->local_tz->name,
   };
+  say "REGISTERING: " . $self->client_hostname;
 
   push @publish_futures, $self->send($routing_key, $data_href);
 
