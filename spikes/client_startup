@@ -429,16 +429,4 @@ my $kstats = PA::Capture::kstat->new(
 say "AMQP SERVER: " . $client->amqp_server;
 $loop->run();
 
-sleep 10;
-exit;
-
-
-my $true = Net::AMQP::Value->true;
-my $msg  = 'info: Hello World!';
-my $outdata = { junk => "yep, it's junk" };
-
- 
-# 
-# $loop->run();
-
 
