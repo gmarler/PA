@@ -33,18 +33,26 @@ my $host_record =
 my $record_count =
   $arcstat_rs->search_by_host($host_record->id)->count();
 
-my @lines = 
+my @records = 
   $arcstat_rs->search_by_host_sorted($host_record->id)->all;
 
 #say Dumper( \@lines );
 
-my @lines = 
+my @rate = 
   $arcstat_rs->search_by_host($host_record->id)
              ->stat_rate($stat_name)->all;
 
-#say Dumper( \@lines );
-foreach my $row (@lines) {
-  say $row->get_column('timestamp') . "  " . $row->get_column('rate_per_sec');
+# foreach my $row (@rate) {
+#   say $row->get_column('timestamp') . "  " . $row->get_column('rate_per_sec');
+# }
+
+my @dates = 
+  $arcstat_rs->search_by_host($host_record->id)
+             ->avail_dates->all;
+
+foreach my $row (@dates) {
+  say $row->get_column('date');
 }
+
 
 exit;

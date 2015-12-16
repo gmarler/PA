@@ -171,4 +171,23 @@ sub stat_rate {
 # Ending queries are all the same except for an additional predicate to ensure
 # that only date/times *later than* the beginning one are selected.
 
+sub avail_dates {
+  my ($rs) = @_;
+
+  $rs->search(undef,
+    {
+      columns => [
+        {
+          'date' =>
+          \[ "to_char(timestamp, 'YYYY-MM-DD')" ],
+        },
+      ],
+      order_by => { -asc => 'timestamp' },
+      distinct => 1,
+    },
+  );
+}
+
+
+
 1;
