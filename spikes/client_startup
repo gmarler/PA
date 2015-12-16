@@ -1,7 +1,5 @@
 #!/usr/bin/env perl
 
-
-
 package PA::AMQP::Client;
 
 use v5.20;
