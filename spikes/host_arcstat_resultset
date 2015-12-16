@@ -51,7 +51,12 @@ my @dates =
              ->avail_dates->all;
 
 foreach my $row (@dates) {
-  say $row->get_column('date');
+  say "AVAILABLE HOURS FOR: " . $row->get_column('date');
+  my @hours =
+    $arcstat_rs->avail_hours_for_date($row->get_column('date'))
+               ->all;
+  my $hlist = join(", ", map { $_->get_column('hour') } @hours);
+  say $hlist;
 }
 
 

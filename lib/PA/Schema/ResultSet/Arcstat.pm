@@ -188,6 +188,26 @@ sub avail_dates {
   );
 }
 
+sub avail_hours_for_date {
+  my ($rs,$selected_date) = @_;
+
+  $rs->search(
+    {
+      \[ "to_char(timestamp, 'YYYY-MM-DD')" ] => { '=' => $selected_date },
+    },
+    {
+      columns => [
+        {
+          'hour' =>
+          \[ "to_char(timestamp, 'HH24')" ],
+        },
+      ],
+      order_by => { -asc => 'timestamp' },
+      distinct => 1,
+    },
+  );
+}
+
 
 
 1;
