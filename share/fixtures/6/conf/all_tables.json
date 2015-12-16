@@ -1,0 +1,29 @@
+{
+   "belongs_to" : {
+      "fetch" : 0
+   },
+   "sets" : [
+      {
+         "quantity" : "all",
+         "class" : "Fsoplat"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Arcstat"
+      },
+      {
+         "class" : "Host",
+         "quantity" : "all"
+      },
+      {
+         "class" : "Vmstat",
+         "quantity" : "all"
+      }
+   ],
+   "might_have" : {
+      "fetch" : 0
+   },
+   "has_many" : {
+      "fetch" : 0
+   }
+}
