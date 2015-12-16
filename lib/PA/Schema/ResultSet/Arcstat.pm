@@ -78,18 +78,21 @@ sub host_hit_rate {
 }
 
 sub stat_rate {
-  my ($rs,$stat_name) = @_;
+  my ($rs,$stat) = @_;
   my ($schema) = $rs->result_source->schema;
 
-  # Validate that the stat_name is the name of an available column in the table:
+  # Validate that the stat's name is the name of an available column in the table:
   #
-
+  unless ($rs->result_source->has_column( $stat )) {
+    die "There is no $stat column in this table";
+  }
 
   $rs->search(undef,
     {
       columns => [
+        'timestamp',
         'snaptime',
-        'hits',
+        $stat,
         {
           'prev_snaptime' =>
           \[
@@ -97,7 +100,7 @@ sub stat_rate {
            ],
           'prev_hits' =>
           \[
-            'lag(hits) OVER (ORDER BY hits ASC) AS prev_hits'
+            "lag( $stat ) OVER (ORDER BY $stat ASC) AS prev_${stat}"
            ],
 
         },
@@ -110,15 +113,17 @@ sub stat_rate {
     { 'prev_snaptime' => { '!=', undef } },
     {
       columns => [
+        'timestamp',
         {
-          'hit_rate_per_sec' =>
+          'rate_per_sec' =>
           \[
-             '((hits - prev_hits)::float / ' .
+             "(($stat - prev_${stat})::float / " .
              ' ((snaptime - prev_snaptime)::float / 1000000000.0) )::bigint ' .
-             'AS hit_rate_per_sec'
+             'AS rate_per_sec'
            ],
         },
       ],
+      order_by => { -asc => [ 'timestamp' ] },
     },
   );
 }

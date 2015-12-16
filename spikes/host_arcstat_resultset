@@ -24,7 +24,7 @@ my $hosts_rs   = $schema->resultset( 'Host' );
 my $vmstat_rs  = $schema->resultset( 'Vmstat' );
 my $arcstat_rs = $schema->resultset( 'Arcstat' );
 
-my $hostname = "nydevsol10";
+my $hostname = $ARGV[0];
 my $host_record =
      $hosts_rs->find({ name => $hostname });
 
@@ -38,11 +38,12 @@ my @lines =
 #say Dumper( \@lines );
 
 my @lines = 
-  $arcstat_rs->host_hit_rate($host_record->id)->all;
+  $arcstat_rs->search_by_host($host_record->id)
+             ->stat_rate("hits")->all;
 
 #say Dumper( \@lines );
 foreach my $row (@lines) {
-  say $row->get_column('hit_rate_per_sec');
+  say $row->get_column('timestamp') . "  " . $row->get_column('rate_per_sec');
 }
 
 exit;
