@@ -37,6 +37,9 @@ our $VERSION = '0.01';
 
 __PACKAGE__->config(
     name => 'PA::Web',
+    schema_class => 'PA::Schema',
+    connect_info =>
+      ['DBI:Pg:dbname=template1;host=localhost;port=15432','postgres',''],
     # Disable deprecated behavior needed by old applications
     disable_component_resolution_regex_fallback => 1,
     enable_catalyst_header => 1, # Send X-Catalyst header
