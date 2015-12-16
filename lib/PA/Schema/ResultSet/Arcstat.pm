@@ -181,9 +181,8 @@ sub avail_hours_for_date {
   my ($rs,$selected_date) = @_;
 
   $rs->search(
-    {
-      \[ "to_char(timestamp, 'YYYY-MM-DD')" ] => { '=' => $selected_date },
-    },
+    # Cast the timestamp column to date
+    \['CAST(timestamp AS DATE) = ?', $selected_date ],
     {
       columns => [
         {
