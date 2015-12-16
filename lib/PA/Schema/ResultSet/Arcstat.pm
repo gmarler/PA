@@ -196,6 +196,25 @@ sub avail_hours_for_date {
   );
 }
 
+sub avail_mins_for_date_hour {
+  my ($rs,$selected_date,$selected_HH) = @_;
+
+  $rs->search(
+    # Cast the timestamp column to date
+    \['(CAST(timestamp AS DATE) = ?) AND (EXTRACT(HOUR FROM timestamp) = ?)',
+      $selected_date, $selected_HH ],
+    {
+      columns => [
+        {
+          'min' =>
+          \[ "to_char(timestamp, 'MI')" ],
+        },
+      ],
+      order_by => { -asc => 'timestamp' },
+      distinct => 1,
+    },
+  );
+}
 
 
 1;

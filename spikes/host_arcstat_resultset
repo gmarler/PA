@@ -55,8 +55,16 @@ foreach my $row (@dates) {
   my @hours =
     $arcstat_rs->avail_hours_for_date($row->get_column('date'))
                ->all;
-  my $hlist = join(", ", map { $_->get_column('hour') } @hours);
-  say $hlist;
+  #my $hlist = join(", ", map { $_->get_column('hour') } @hours);
+  #say $hlist;
+  foreach my $hour_row (@hours) {
+    say "HOUR: " . $hour_row->get_column('hour');
+    my @mins =
+      $arcstat_rs->avail_mins_for_date_hour($row->get_column('date'),$hour_row->get_column('hour'))
+                 ->all;
+    my $mlist = join(", ", map { $_->get_column('min') } @mins);
+    say "MINUTES: $mlist";
+  }
 }
 
 exit;
