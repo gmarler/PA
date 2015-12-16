@@ -2,7 +2,7 @@ package PA::Web::Controller::Host;
 use Moose;
 use namespace::autoclean;
 
-BEGIN { extends 'Catalyst::Controller'; }
+BEGIN { extends 'Catalyst::Controller::REST'; }
 
 =head1 NAME
 
@@ -17,16 +17,28 @@ Catalyst Controller.
 =cut
 
 
-=head2 index
+=head2 host_list
 
 =cut
 
-sub index :Path :Args(0) {
-    my ( $self, $c ) = @_;
+sub host_list : Path('/host') :Args(0) : ActionClass('REST')
+{
 
-    $c->response->body('Matched PA::Web::Controller::Host in Host.');
 }
 
+sub host_list_GET {
+  my ($self, $c) = @_;
+
+  my %host_list;
+  my $host_rs = $c->model('DB::Host')->search;
+  while ( my $host_row = $host_rs->next ) {
+    $host_list{ $host_row->name } = 
+      { id => $host_row->host_id,
+        time_zone => $host_row->time_zone,
+      };
+  }
+  $self->status_ok( $c, entity => \%host_list );
+}
 
 
 =encoding utf8
