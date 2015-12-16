@@ -28,8 +28,9 @@ my $schema = PA::Schema->connect(
 );
 
 my $host_ids = {};
-my $hosts_rs = $schema->resultset( 'Host' );
-my $vmstat_rs = $schema->resultset( 'Vmstat' );
+my $hosts_rs   = $schema->resultset( 'Host' );
+my $vmstat_rs  = $schema->resultset( 'Vmstat' );
+my $arcstat_rs = $schema->resultset( 'Arcstat' );
 
 
 my $amqp_server = "localhost";
@@ -47,8 +48,8 @@ my $routing_key = '#';
 $mq->connect(
   $amqp_server,
   {
-    user     => 'guest',
-    password => 'guest',
+    user     => 'solperf',
+    password => 'solperf',
   },
 );
 
@@ -95,11 +96,26 @@ while (my $dhref = $mq->recv(10000)) {
   } else {
     $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
   }
+
   my ($hostname,$stat_type) = $dhref->{routing_key} =~ m/^([^.]+)\.(.+)/;
   $host_record =
     $hosts_rs->find({ name => $hostname });
-  # TODO: die here if we couldn't look up the hostname in the host table -
-  # that should never happen
+
+  # If the host_record could not be found, then this has to be an attempt to
+  # register a host for the first time.  Otherwise, we have to skip this, as we
+  # won't be able to insert the record in the first place.
+  unless ($host_record) {
+    if ($stat_type ne "register_host") {
+      say "Cannot accept $stat_type for unregistered host $hostname";
+      next;
+    } else {
+      if (register_host($schema, $hostname, $stat_ref)) {
+        say "SUCCESSFULLY REGISTERED $hostname!";
+      } else {
+        die "FAILED to register host $hostname";
+      }
+    }
+  }
 
   if ($stat_type eq "vmstat") {
     my $new_vmstat = $host_record->create_related('vmstat_rs',
@@ -110,6 +126,8 @@ while (my $dhref = $mq->recv(10000)) {
         #host_fk   => $host_record->host_id,
       }
     );
+  } elsif ($stat_type eq "arcstats") {
+    insert_arcstat($host_record, $stat_ref);
   }
 
   #say "ACKNOWLEGING: $dhref->{delivery_tag}";
@@ -120,15 +138,71 @@ while (my $dhref = $mq->recv(10000)) {
   #push @{$recvd_seq2{$dhref->{routing_key}}}, $stat_ref->{sequence};
 }
 
-#END {
-#  foreach my $key (%recvd_seq2) {
-#    say "$key:";
-#    say "UNSORTED:";
-#    say Dumper( $recvd_seq2{$key} );
-#    say "SORTED:";
-#    my @seqs = sort { $a cmp $b } @{$recvd_seq2{$key}};
-#    say Dumper( \@seqs );
-#  }
-#}
+sub register_host {
+  my ($schema, $hostname, $hostreg_ref) = @_;
+  my $hosts_rs   = $schema->resultset( 'Host' );
 
+  my ($time_zone) = $hostreg_ref->{time_zone};
+  my ($host_record) =
+    $hosts_rs->find_or_create({ name      => $hostname,
+                                time_zone => $time_zone});
 
+  if (defined($host_record)) {
+    say "Created host record ID: " . $host_record->host_id;
+    return 1;
+  } else {
+    say "FAILED to create host record for $hostname";
+    return;
+  }
+}
+
+sub insert_arcstat {
+  my ($host_record, $stat_ref) = @_;
+  my %columns;
+  my @fields = qw( p buf_size c_min c c_max data_size deleted
+  demand_data_hits demand_data_misses demand_metadata_hits
+  demand_metadata_misses evict_mfu evict_mru hits l2_hits l2_misses
+  l2_persistence_hits l2_read_bytes l2_rw_clash l2_size memory_throttle_count
+  meta_limit meta_max meta_used mfu_ghost_hits mfu_hits misses mru_ghost_hits
+  mru_hits mutex_miss other_size prefetch_behind_prefetch prefetch_data_hits
+  prefetch_data_misses prefetch_joins prefetch_meta_size prefetch_metadata_hits
+  prefetch_metadata_misses prefetch_reads prefetch_size size
+  );
+  # NOTE: For any kstat derived metric, always include the fields specific to
+  #       kstats
+  my @kstat_fields = qw( snaptime );
+  push @fields, @kstat_fields;
+  my $renamed_fields = {
+    "evict_mru" => "evicted_mru",
+    "evict_mfu" => "evicted_mfu"
+  };
+  foreach my $f (@fields) {
+    my $renamed_f;
+    if (exists $renamed_fields->{$f}) {
+      $renamed_f = $renamed_fields->{$f};
+    }
+    if (not defined($stat_ref->{$renamed_f //= $f})) {
+      say "WARNING: $f not defined";
+    }
+    $columns{$f} = $stat_ref->{$f};
+  }
+  foreach my $old_fname (keys %$renamed_fields) {
+    my $new_fname = $renamed_fields->{$old_fname};
+    if (exists $stat_ref->{$new_fname}) {
+      $columns{$old_fname} = $stat_ref->{$new_fname};
+    }
+  }
+  foreach my $f (keys %columns) {
+    if (not defined($columns{$f})) {
+      say "WARNING: $f not defined";
+    }
+  }
+
+  my $new_arcstat = $host_record->create_related('arcstat_rs',
+      {
+        timestamp => DateTime->from_epoch( epoch => $stat_ref->{timestamp},
+                                           time_zone => 'UTC' ),
+        %columns,
+      }
+  );
+}

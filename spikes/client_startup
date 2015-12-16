@@ -1,5 +1,385 @@
 #!/usr/bin/env perl
 
+package PA::AMQP::Client;
+
+use v5.20;
+
+use Moose;
+use MooseX::Types::Moose qw(Str Int Undef HashRef);
+use Moose::Util::TypeConstraints;
+use namespace::autoclean;
+use IO::Async::Loop             qw();
+use DateTime::TimeZone          qw();
+use Net::Async::AMQP            qw();
+use JSON::MaybeXS               qw();
+
+with 'MooseX::Log::Log4perl';
+
+class_type 'Net::Async::AMQP', { class => 'Net::Async::AMQP' };
+class_type 'Net::Async::AMQP::Channel';
+class_type 'IO::Async::Loop';
+
+#############################################################################
+# Attributes
+#############################################################################
+
+has [ 'loop' ] => (
+  is       => 'ro',
+  isa      => 'IO::Async::Loop',
+  default  => sub {
+                say "BUILDING PA::AMQP::Client loop";
+                return IO::Async::Loop->new;
+              },
+);
+
+#
+# The sequence # of the data sent for each particular routing_key
+#
+has [ 'sent_sequence' ] => (
+  is       => 'rw',
+  isa      => HashRef,
+  default  => sub {
+                return {};
+              },
+);
+
+has [ 'mq' ] => (
+  is       => 'ro',
+  isa      => 'Net::Async::AMQP',
+  lazy     => 1,
+  builder  => '_build_mq',
+);
+ 
+has [ 'amqp_channel' ] => (
+  is       => 'rw',
+  isa      => Undef | 'Net::Async::AMQP::Channel',
+  default  => undef,
+);
+
+
+has [ 'local_tz' ] => (
+  is       => 'ro',
+  isa      => 'DateTime::TimeZone',
+  default  => sub {
+                DateTime::TimeZone->new( name => 'local' );
+              },
+);
+
+has [ 'amqp_server' ] => (
+  is       => 'ro',
+  isa      => 'Str',
+  default  => sub {
+                return "localhost";
+              },
+);
+
+has [ 'mq_user' ] => (
+  is       => 'ro',
+  isa      => 'Str',
+  default  => sub {
+                return "solperf";
+              },
+);
+
+has [ 'mq_password' ] => (
+  is       => 'ro',
+  isa      => 'Str',
+  default  => sub {
+                return "solperf";
+              },
+);
+
+has [ 'exchange_name' ] => (
+  is       => 'ro',
+  isa      => 'Str',
+  default  => sub {
+                return "topic_stat";
+              },
+);
+
+has [ 'client_hostname' ] => (
+  is       => 'ro',
+  isa      => 'Str',
+  default  => sub {
+                my $hostname = qx{/bin/uname -n};
+                chomp($hostname);
+                return $hostname;
+              },
+);
+
+has [ 'json_encoder' ] => (
+  is       => 'ro',
+  isa      => 'Object',
+  default  => sub {
+                return JSON::MaybeXS->new->ascii;
+              },
+);
+
+
+sub _build_mq {
+  my ($self) = @_;
+
+  my $loop = $self->loop;
+  $loop->add(
+    my $mq = Net::Async::AMQP->new()
+  );
+  $mq->connect(
+    host    => $self->amqp_server,
+    user    => $self->mq_user,
+    pass    => $self->mq_password,
+    vhost   => '/',
+  )->then(
+    sub {
+      say "CONNECT SUCCEEDED";
+      shift->open_channel;
+    },
+    sub { say "CONNECT FAILED!" }
+  )->then(
+    sub {
+      my ($channel) = shift;
+      say "OPENED CHANNEL " . $channel->id;
+      # Store channel for later use
+      $self->amqp_channel($channel);
+      Future->needs_all(
+        $channel->exchange_declare(
+          type     => 'topic',
+          exchange => $self->exchange_name,
+        )
+      );
+    },
+    sub { say "FAILED TO OPEN CHANNEL"; }
+  )->get;
+
+  return $mq;
+}
+
+# Use BUILD to specify the order in which attributes are initialized
+sub BUILD {
+  my ($self) = @_;
+
+  say "Building loop";
+  $self->loop;
+  say "Building amqp_server";
+  $self->amqp_server;
+  say "Building mq_user";
+  $self->mq_user;
+  say "Building mq_password";
+  $self->mq_password;
+  say "Building exchange_name";
+  $self->exchange_name;
+  say "Building mq";
+  $self->mq;
+  say "Registering host";
+  $self->register_host;
+}
+
+
+sub send {
+  my ($self, $routing_key, $d_href) = @_;
+
+  my ($ch) = $self->amqp_channel;
+  my ($coder) = $self->json_encoder;
+  my ($exchange_name) = $self->exchange_name;
+
+  # Increment Sequence for this routing_key
+  if (not exists($self->sent_sequence->{$routing_key})) {
+    $self->sent_sequence->{$routing_key} = 0;
+  }
+  $d_href->{sequence} = ++$self->sent_sequence->{$routing_key};
+
+  my ($future) =
+  $ch->publish(exchange      => $exchange_name,
+               routing_key   => $routing_key,
+               type          => "text/plain",
+               expiration    => 60000,
+               delivery_mode => 1,           # delivery_mode => 2 is persistent
+               payload       => $coder->encode( $d_href ),
+             );
+  return $future;
+}
+
+
+=head2 register_host
+
+When the PA client first starts up, it needs to notify the server of it's
+existence.  If the host has never been registered before, the server registers
+it.  If it has been registered before, all is well.
+
+=cut
+
+sub register_host {
+  my ($self) = @_;
+  my (@publish_futures);
+  my ($routing_key) = $self->client_hostname . ".register_host";
+
+  my ($data_href) = {
+    time_zone => $self->local_tz->name,
+  };
+  say "REGISTERING: " . $self->client_hostname;
+
+  push @publish_futures, $self->send($routing_key, $data_href);
+
+  # Wait for all (one) of the publishing futures to complete
+  my $publishing_future = Future->wait_all( @publish_futures );
+  $publishing_future->get;
+}
+
+
+package PA::Capture::kstat;
+
+use v5.20;
+
+use Moose;
+use MooseX::Types::Moose qw(Str Int Undef HashRef ArrayRef);
+use Moose::Util::TypeConstraints;
+use namespace::autoclean;
+use Solaris::kstat;
+use IO::Async::Loop;
+use IO::Async::Timer::Periodic;
+use Future;
+use Data::Dumper;
+use PA::AMQP::Client;
+
+with 'MooseX::Log::Log4perl';
+
+#############################################################################
+# Attributes
+#############################################################################
+
+has [ 'client' ] => (
+  is       => 'ro',
+  isa      => 'PA::AMQP::Client',
+  required => 1,
+);
+
+has [ 'loop' ] => (
+  is       => 'ro',
+  isa      => 'IO::Async::Loop',
+  default  => sub {
+                say "BUILDING PA::Capture::kstat loop";
+                return IO::Async::Loop->new;
+              },
+);
+
+has [ 'kstat' ] => (
+  is       => 'ro',
+  isa      => 'Solaris::kstat',
+  default  => sub {
+                say "BUILDING kstat";
+                return Solaris::kstat->new;
+              },
+);
+
+has [ 'kstats_to_collect' ] => (
+  is       => 'ro',
+  isa      => ArrayRef[ ArrayRef ],
+  default  => sub {
+                [ 
+                  [ "unix", 0, "system_pages" ],
+                ];
+              },
+);
+
+
+has [ 'timer' ] => (
+  is       => 'ro',
+  isa      => 'IO::Async::Timer::Periodic',
+  builder  => '_build_timer',
+  lazy     => 1,
+);
+
+
+sub _build_timer {
+  my ($self) = @_;
+
+  say "BUILDING TIMER";
+  my ($k)                 = $self->kstat;
+  my ($loop)              = $self->loop;
+  my ($client)            = $self->client;
+  my (@kstats_to_collect) = @{$self->kstats_to_collect};
+
+  my $timer = IO::Async::Timer::Periodic->new(
+    interval => 1,
+    on_tick  => sub {
+      $k->update;
+      my $latest_k = $k->copy;
+      my @futures;
+
+      foreach my $kstat_def (@kstats_to_collect) {
+        my ($module, $instance, $name) = @$kstat_def;
+        push @futures,
+          Future->wrap(
+              { name =>  $name,
+                stats => capture_kstat($latest_k, $module, $instance, $name)
+              }
+          );
+      }
+
+      my $kstat_future =
+        Future->wait_all(
+          @futures
+        );
+      $kstat_future->on_done(
+        sub {
+          my (@done_futures) = @_;
+          my (@publish_futures);
+          foreach my $done_future (@done_futures) {
+            my ($stat_name)  = $done_future->get->{name};
+            my ($stat_stats) = $done_future->get->{stats};
+            #say Dumper( $done_future->get );
+            my ($routing_key) = $client->client_hostname . ".$stat_name";
+            push @publish_futures, $client->send($routing_key, $stat_stats);
+          }
+          # Wait for all of the publishing futures to complete
+          my $publishing_future = Future->wait_all( @publish_futures );
+          $publishing_future->get;
+        }
+      );
+    },
+  );
+
+  $timer->start;
+  $loop->add($timer);
+
+  return $timer;
+}
+
+sub BUILD {
+  my ($self) = @_;
+
+  say "Building client";
+  $self->client;
+  say "Building loop";
+  $self->loop;
+  say "Building kstat";
+  my ($k) = $self->kstat;
+  say "Initializing kstats to collect";
+  my (@kstats_to_collect) = @{$self->kstats_to_collect};
+  foreach my $kstat_def (@kstats_to_collect) {
+    my ($module,$instance,$name) = @$kstat_def;
+    () = each %{$k->{$module}->{$instance}->{$name}};
+  }
+  say "Building timer";
+  $self->timer;
+}
+
+sub capture_kstat {
+  my ($k, $module, $instance, $name) = @_;
+
+  my ($outdata);
+  # Filter out the non-numeric values (class => misc, for instance)
+  my %keep = map{ $_ => $k->{$module}{$instance}{$name}{$_}  }
+             grep { $k->{$module}{$instance}{$name}{$_} !~ m/\D/; }
+             keys %{$k->{$module}{$instance}{$name}};
+
+  $outdata = \%keep;
+  $outdata->{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+
+  return $outdata;
+}
+
+
+package main;
 use v5.20;
 use strict;
 use warnings;
@@ -10,178 +390,42 @@ use DateTime::TimeZone   qw();
 use Net::Async::AMQP;
 use IO::Async::Loop;
 use Data::Dumper;
+use PA::AMQP::Client;
+use PA::Capture::kstat;
 
 # This spike shows how PA clients starting up will initially post host specific
 # information, so that it can be received and pre-inserted into the back end
 # database before the host begins to send information.
 
-my $tz            = DateTime::TimeZone->new( name => 'local' );
-my $coder         = JSON::MaybeXS->new->ascii;
-my $amqp_server   = "localhost";
-my $exchange_name = "topic_stat";
-# my $routing_key   = '#';
-my $hostname      = qx{/bin/uname -n};
-chomp($hostname);
+my %client_ctor_args;
+my $amqp_server;
+
+my $kstats_to_collect =
+  [
+    [ qw( unix    0      system_pages) ],
+    [ qw( unix    0      dnlcstats) ],
+    [ qw( zfs     0      arcstats) ],
+  ];
 
 GetOptions( "amqp=s" => \$amqp_server )
   or die("ERROR in command line args");
 
-my $loop = IO::Async::Loop->new;
+if ($amqp_server) {
+  $client_ctor_args{amqp_server} = $amqp_server;
+}
 
-$loop->add(
-  my $mq = Net::Async::AMQP->new()
+my $loop = IO::Async::Loop->new();
+$client_ctor_args{loop} = $loop;
+
+my $client = PA::AMQP::Client->new( %client_ctor_args );
+my $kstats = PA::Capture::kstat->new( 
+  # TODO: Don't need loop if we've got client with loop within it
+  loop              => $loop,      
+  client            => $client,
+  kstats_to_collect => $kstats_to_collect,
 );
 
-my $true = Net::AMQP::Value->true;
-my $msg  = 'info: Hello World!';
-
-my $mq_future = 
-$mq->connect(
-  host    => $amqp_server,
-  user    => 'solperf',
-  pass    => 'solperf',
-  vhost   => '/',
-)->then(
-  sub {
-    say "CONNECT SUCCEEDED";
-    shift->open_channel;
-  },
-  sub { say "CONNECT FAILED!" }
-)->then(
-  sub {
-    my ($channel) = shift;
-    say "OPENED CHANNEL " . $channel->id;
-    Future->needs_all(
-      $channel->exchange_declare(
-        type     => 'topic',
-        exchange => $exchange_name,
-      )
-    )->then(
-      sub {
-        my ($channel) = shift;
-        my ($outdata) = { timezone => $tz->name, };
-
-        $outdata->{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
-        say "PUBLISHING " . Dumper( $outdata );
-        say "ON EXCHANGE [$exchange_name]";
-
-        $channel->publish(exchange      => $exchange_name,
-                          routing_key   => "${hostname}.host",
-                          type          => "text/plain",
-                          expiration    => 60000,
-                          delivery_mode => 1, # 2 is persistent
-                          payload       => $coder->encode( $outdata ),
-                         );
-        Future->wrap( $channel );
-      }
-    );#  ->then(
-     #   sub {
-     #     say Dumper( \@_ );
-     #   }
-     # );
-  },
-  sub { say "FAILED TO OPEN CHANNEL"; }
-);
-
-my ($channel) = $mq_future->get();
-
-my $outdata = { junk => "yep, it's junk" };
-
-$channel->publish(exchange      => $exchange_name,
-                  routing_key   => "${hostname}.test",
-                  type          => "text/plain",
-                  expiration    => 60000,
-                  delivery_mode => 1, # 2 is persistent
-                  payload       => $coder->encode( $outdata ),
-                 );
-
-
+say "AMQP SERVER: " . $client->amqp_server;
 $loop->run();
-
-# ->on_done(sub { say "CONNECTED!"; })->then(
-#   sub {
-#     my ($channel)  = shift;
-#     #say "GOT CHANNEL: " . Dump($channel);
-#     say "GOT CHANNEL: $channel";
-#     my ($exchange) = 'logs';
-#     Future->needs_all(
-#       # This is subscriber code
-#       $channel->queue_declare(
-#         queue     => '',  # Let the queue name be generated
-#         exclusive => 1,
-#       ),
-#       # This is publisher code
-#       $channel->exchange_declare(
-#         type     => 'fanout',
-#         exchange => $exchange,
-#       )
-#     )->on_done(sub { say "EXCHANGE DECLARED!"; })->then(
-#       sub {
-#         my ($q) = shift;
-#         say "QUEUE IS: $q";
-#         my ($messager) = $loop->new_future;
-#         say "MESSAGER IS: $messager";
-#         #$channel->bus->subscribe_to_event(
-#         #  message => sub {
-#         #    my ($ev, @details) = @_;
-#         #    say Dumper( \@_ );
-#         #    say "MESSAGE RECEIVED: @details";
-#         #  }
-#         #);
-#         $q->bind_exchange(
-#           channel  => $channel,
-#           exchange => $exchange
-#         )->on_done( sub { say "EXCHANGE BOUND"; } )->then(
-#           sub {
-#             my ($q, $ctag) = @_;
-#             say "QUEUE IS: $q";
-#             $q->consumer(
-#               channel    => $channel,
-#               ack        => 0,
-#               on_message => sub {
-#                 say "MESSAGE: " . Dumper( { @_ } );
-#                 $messager->done;
-#               },
-#             );
-#           },
-#           sub { say "CONSUMER SETUP FAILED"; }
-#         )->on_done( sub { say "CONSUMER ENGAGED"; } )->then(
-#           sub {
-#             say "PUBLISHING $msg";
-#             $channel->publish(
-#               exchange    => $exchange,
-#               routing_key => '',
-#               #type        => 'application/json',
-#               type        => 'text/plain',
-#               payload     => $msg,
-#             );
-#             $channel->publish(
-#               exchange    => $exchange,
-#               routing_key => '',
-#               #type        => 'application/json',
-#               type        => 'text/plain',
-#               payload     => 'MESSAGE 2',
-#             );
-# 
-#           }
-#         )->then(
-#           sub {
-#             Future->wait_any(
-#               $messager
-#             );
-#           }
-#         );
-#       },
-#       sub { say "EXCHANGE DECLARE FAILED"; }
-#     );
-#   },
-#   sub { say "OPEN CHANNEL FAILED"; }
-# )->then(
-#   sub {
-#     $mq->close();
-#   },
-#   sub { say "Problem with Exchange Declare or Publish"; }
-# )->get;
-
 
 

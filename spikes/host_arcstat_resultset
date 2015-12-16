@@ -1,0 +1,63 @@
+#!/usr/bin/env perl
+
+use v5.20;
+use strict;
+use warnings;
+
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
+use PA::Schema;
+use Data::Dumper;
+
+use DateTime             qw();
+
+my $connect_info = { dsn => 'DBI:Pg:dbname=template1;host=localhost;port=15432', user => 'postgres', password => '' };
+
+my $schema = PA::Schema->connect(
+  $connect_info
+);
+
+my $host_ids = {};
+my $hosts_rs   = $schema->resultset( 'Host' );
+my $vmstat_rs  = $schema->resultset( 'Vmstat' );
+my $arcstat_rs = $schema->resultset( 'Arcstat' );
+
+my $hostname = $ARGV[0];
+my $stat_name = $ARGV[1];
+my $host_record =
+     $hosts_rs->find({ name => $hostname });
+
+
+my $record_count =
+  $arcstat_rs->search_by_host($host_record->id)->count();
+
+my @records = 
+  $arcstat_rs->search_by_host_sorted($host_record->id)->all;
+
+#say Dumper( \@lines );
+
+my @rate = 
+  $arcstat_rs->search_by_host($host_record->id)
+             ->stat_rate($stat_name)->all;
+
+# foreach my $row (@rate) {
+#   say $row->get_column('timestamp') . "  " . $row->get_column('rate_per_sec');
+# }
+
+my @dates = 
+  $arcstat_rs->search_by_host($host_record->id)
+             ->avail_dates->all;
+
+foreach my $row (@dates) {
+  say "AVAILABLE HOURS FOR: " . $row->get_column('date');
+  my @hours =
+    $arcstat_rs->avail_hours_for_date($row->get_column('date'))
+               ->all;
+  my $hlist = join(", ", map { $_->get_column('hour') } @hours);
+  say $hlist;
+}
+
+
+exit;
