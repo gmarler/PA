@@ -129,6 +129,7 @@ sub stat_rate {
   );
 }
 
+
 # To fill out the date/time picker in a web interface, we'll need to display
 # what date/time ranges are available for selection in the begin/end range.
 #
