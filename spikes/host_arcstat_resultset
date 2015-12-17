@@ -24,7 +24,8 @@ my $hosts_rs   = $schema->resultset( 'Host' );
 my $vmstat_rs  = $schema->resultset( 'Vmstat' );
 my $arcstat_rs = $schema->resultset( 'Arcstat' );
 
-my $hostname = "nydevsol10";
+my $hostname = $ARGV[0];
+my $stat_name = $ARGV[1];
 my $host_record =
      $hosts_rs->find({ name => $hostname });
 
@@ -32,17 +33,39 @@ my $host_record =
 my $record_count =
   $arcstat_rs->search_by_host($host_record->id)->count();
 
-my @lines = 
+my @records = 
   $arcstat_rs->search_by_host_sorted($host_record->id)->all;
 
 #say Dumper( \@lines );
 
-my @lines = 
-  $arcstat_rs->host_hit_rate($host_record->id)->all;
+my @rate = 
+  $arcstat_rs->search_by_host($host_record->id)
+             ->stat_rate($stat_name)->all;
 
-#say Dumper( \@lines );
-foreach my $row (@lines) {
-  say $row->get_column('hit_rate_per_sec');
+# foreach my $row (@rate) {
+#   say $row->get_column('timestamp') . "  " . $row->get_column('rate_per_sec');
+# }
+
+my @dates = 
+  $arcstat_rs->search_by_host($host_record->id)
+             ->avail_dates->all;
+
+foreach my $row (@dates) {
+  say "AVAILABLE HOURS FOR: " . $row->get_column('date');
+  my @hours =
+    $arcstat_rs->avail_hours_for_date($row->get_column('date'))
+               ->all;
+  #my $hlist = join(", ", map { $_->get_column('hour') } @hours);
+  #say $hlist;
+  foreach my $hour_row (@hours) {
+    say "HOUR: " . $hour_row->get_column('hour');
+    my @mins =
+      $arcstat_rs->avail_mins_for_date_hour($row->get_column('date'),$hour_row->get_column('hour'))
+                 ->all;
+    my $mlist = join(", ", map { $_->get_column('min') } @mins);
+    say "MINUTES: $mlist";
+  }
 }
 
 exit;
+
