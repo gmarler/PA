@@ -227,6 +227,39 @@ sub register_host {
 }
 
 
+
+# To capture output from *stat commands
+package PA::Capture::Stat;
+
+
+
+
+
+
+
+# To capture output from DTrace scripts
+package PA::Capture::DTrace;
+
+use v5.20;
+
+use Moose;
+use MooseX::Types::Moose qw(Str Int Undef HashRef ArrayRef);
+use Moose::Util::TypeConstraints;
+use namespace::autoclean;
+use Solaris::kstat;
+use IO::Async::Loop;
+use Future;
+use Data::Dumper;
+use PA::AMQP::Client;
+
+with 'MooseX::Log::Log4perl';
+
+
+
+
+
+
+
 package PA::Capture::kstat;
 
 use v5.20;
