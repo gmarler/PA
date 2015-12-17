@@ -77,6 +77,7 @@ sub host_hit_rate {
   );
 }
 
+
 sub stat_rate {
   my ($rs,$stat) = @_;
   my ($schema) = $rs->result_source->schema;
@@ -127,17 +128,6 @@ sub stat_rate {
     },
   );
 }
-
-# SELECT ((hits - prev_hits) /
-#         ( (snaptime::float - prev_snaptime::float) / 1000000000.0 ))::bigint AS hit_rate_per_sec
-# FROM
-#   (SELECT snaptime, hits,
-#           lag(hits) OVER (ORDER BY snaptime ASC) as prev_hits,
-#           lag(snaptime) OVER (ORDER BY snaptime ASC) as prev_snaptime
-#    FROM
-#      arcstat
-#    ORDER BY
-#      snaptime ASC) as w1;
 
 
 # To fill out the date/time picker in a web interface, we'll need to display
@@ -192,9 +182,8 @@ sub avail_hours_for_date {
   my ($rs,$selected_date) = @_;
 
   $rs->search(
-    {
-      \[ "to_char(timestamp, 'YYYY-MM-DD')" ] => { '=' => $selected_date },
-    },
+    # Cast the timestamp column to date
+    \['CAST(timestamp AS DATE) = ?', $selected_date ],
     {
       columns => [
         {
@@ -208,6 +197,25 @@ sub avail_hours_for_date {
   );
 }
 
+sub avail_mins_for_date_hour {
+  my ($rs,$selected_date,$selected_HH) = @_;
+
+  $rs->search(
+    # Cast the timestamp column to date
+    \['(CAST(timestamp AS DATE) = ?) AND (EXTRACT(HOUR FROM timestamp) = ?)',
+      $selected_date, $selected_HH ],
+    {
+      columns => [
+        {
+          'min' =>
+          \[ "to_char(timestamp, 'MI')" ],
+        },
+      ],
+      order_by => { -asc => 'timestamp' },
+      distinct => 1,
+    },
+  );
+}
 
 
 1;
