@@ -14,11 +14,13 @@ use DateTime::Set                qw();
 use DateTime::Span               qw();
 use Fcntl                        qw(SEEK_SET);
 use Moose::Util::TypeConstraints;
+use Data::Dumper;
 
 #
 # These are the methods objects which use this role must implement
 #
 requires '_build_dt_regex';
+requires '_build_datetime_parser';
 requires '_build_strptime_pattern';
 requires '_parse_interval';
 
@@ -43,6 +45,14 @@ has 'dt_regex' => (
   isa     => 'RegexpRef',
   lazy    => 1,
   builder => '_build_dt_regex',
+);
+
+# And this actually parses the datetime into a DateTime object
+has 'datetime_parser' => (
+  is      => 'ro',
+  isa     => 'CodeRef',
+  lazy    => 1,
+  builder => '_build_datetime_parser',
 );
 
 has 'strptime_pattern' => (
@@ -92,10 +102,30 @@ has 'regex_eof' => ( is => 'rw', isa => 'RegexpRef',
 sub parse_interval {
   my ($self, $interval_output) = @_;
 
-  #my ($dt_regex) = $self->dt_regex;
-  #my ($regex)    = $self->regex;
+  my ($dt_stamp, $interval_data);
 
-  return $self->_parse_interval($interval_output);
+  my ($dt_regex) = $self->dt_regex;
+  my ($regex)    = $self->regex;
+
+  # Find and extract timestamp via timestamp regex
+  ($dt_stamp) = $interval_output =~ m/ ($dt_regex) /smx;
+  chomp($dt_stamp);
+
+  ($interval_data = $interval_output) =~ s/ $dt_regex //smx;
+
+  #
+  # Then parse the timestamp
+  # Well, not really - we don't need to do that actually
+  # TODO Remove references to parsing timestamps into epoch secs
+  #
+  # Then parse the interval data
+  my $dhref = $self->_parse_interval($interval_data);
+
+  #
+  # Add the timestamp to the gathered data and return it
+  #
+  $dhref->{timestamp} = $dt_stamp;
+  return $dhref;
 }
 
 
@@ -109,7 +139,23 @@ use v5.20;
 
 use Moose;
 use namespace::autoclean;
-use Data::Dumper
+use Data::Dumper;
+use DateTime              qw();
+use DateTime::TimeZone    qw();
+use DateTime::Format::Builder (
+  # Epoch seconds
+  parsers => {
+    parse_datetime => [
+      {
+        # parse epoch secs into a DateTime in the UTC time zone
+        # TODO Test that the timezone *IS* in UTC, and not floating or somesuch
+        params      => [ qw( epoch ) ],
+        regex       => qr/^ (\d+) $/x,
+        constructor => [ 'DateTime', 'from_epoch' ],
+      },
+    ]
+  }
+);
 
 with 'PA::Parser';
 
@@ -128,6 +174,9 @@ sub _build_strptime_pattern {
   return "%s";
 }
 
+sub _build_datetime_parser {
+  return &parse_datetime;
+}
 
 =head2 _parse_interval
 
@@ -271,10 +320,10 @@ my $mdb     = Solaris::mdb->new( timeout => 30 );
 my $capture = PA::Capture::mdb::memstat->new;
 
 my $timer = IO::Async::Timer::Periodic->new(
-  interval       => 30,
+  #interval       => 30,
+  interval       => 5,
   on_tick  => sub {
     my $out = $mdb->capture_dcmd("time::print -d ! sed -e 's/^0t//' ; ::memstat");
-    say $out;
 
     my $dhref = $capture->extract($out);
     say Dumper( $dhref );

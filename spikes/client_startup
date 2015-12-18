@@ -459,6 +459,8 @@ my $kstats = PA::Capture::kstat->new(
   client            => $client,
   kstats_to_collect => $kstats_to_collect,
 );
+#my $vmstat = PA::Capture::vmstat->new();
+#my $dtrace = PA::Capture::DTrace->new();
 
 say "AMQP SERVER: " . $client->amqp_server;
 $loop->run();
