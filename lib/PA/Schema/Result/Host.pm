@@ -36,4 +36,9 @@ __PACKAGE__->has_many(
   'floplat_rs'  => 'PA::Schema::Result::Fsoplat',
   {'foreign.host_fk' => 'self.host_id'} );
 
+__PACKAGE__->has_many(
+  'memstat_rs'  => 'PA::Schema::Result::Memstat',
+  {'foreign.host_fk' => 'self.host_id'} );
+
+
 1;
