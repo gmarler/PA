@@ -294,8 +294,25 @@ use IO::Async::Loop;
 use IO::Async::Timer::Periodic;
 use Solaris::mdb;
 use Data::Dumper;
+use PA::AMQP::Client;
+use Getopt::Long;
 
 my $loop = IO::Async::Loop->new;
+
+my %client_ctor_args;
+my $amqp_server;
+
+GetOptions( "amqp=s" => \$amqp_server )
+  or die("ERROR in command line args");
+
+if ($amqp_server) {
+  $client_ctor_args{amqp_server} = $amqp_server;
+}
+
+$client_ctor_args{loop} = $loop;
+
+my $client = PA::AMQP::Client->new( %client_ctor_args );
+
 
 # NOTE: This will only be possible when IO::Async can work with ptys
 #
@@ -332,5 +349,8 @@ my $timer = IO::Async::Timer::Periodic->new(
 
 $timer->start;
 $loop->add($timer);
+
+say "AMQP SERVER: " . $client->amqp_server;
+$loop->run();
 
 $loop->run;
