@@ -1,1 +1,1 @@
-angular.module('pa.models.subsystems', []);
+angular.module('pa.model.subsystems', []);

@@ -1,1 +1,1 @@
-angular.module('pa.models.host', []);
+angular.module('pa.model.host', []);

@@ -1,17 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="PA">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Performance Analytics</title>
+
+  <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- <link href="../assets/css/PA.css" rel="stylesheet"> -->
+
 </head>
 <body>
 
+  <div class="container-fluid">
+  </div>
 
-  <script src="../bower_components/angular/angular.min.js"></script>
+  <!--
+  <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+  <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="../bower_components/lodash/lodash.min.js"
+  -->
+  <script src="../bower_components/angular/angular.js"></script>
+  <script src="../bower_components/d3/d3.min.js"></script>
+  <script src="../bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
+  <script src="../bower_components/bootstrap-ui-datetime-picker/dist/datetime-picker.min.js"></script>
 
+  <script src="pa-app.js"></script>
   <script src="host/host.js"></script>
   <script src="subsystems/subsystems.js"></script>
   <script src="common/models/host-model.js"></script>
   <script src="common/models/subsystems-model.js"></script>
+
 </body>
 </html>
