@@ -1,0 +1,1 @@
+angular.module('pa.models.host', []);
