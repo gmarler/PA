@@ -3,14 +3,17 @@ angular.module('PA', [
   'host',
   'subsystems'
 ])
-  .config(function($stateProvider) {
+  .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
       .state('PA', {
         url:'',
+        //abstract: true
         templateUrl: 'subsystems/subsystems.tmpl.html',
         controller: 'MainCtrl'
       })
     ;
+
+    //$urlRouterProvider.otherwise('/');
   })
   .controller('MainCtrl', function ($scope) {
     $scope.hosts = [
