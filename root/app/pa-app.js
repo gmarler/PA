@@ -7,13 +7,13 @@ angular.module('PA', [
     $stateProvider
       .state('PA', {
         url:'',
-        //abstract: true
-        templateUrl: 'subsystems/subsystems.tmpl.html',
-        controller: 'MainCtrl'
+        abstract: true
+        // templateUrl: 'subsystems/subsystems.tmpl.html',
+        // controller: 'MainCtrl'
       })
     ;
 
-    //$urlRouterProvider.otherwise('/');
+    $urlRouterProvider.otherwise('/');
   })
   .controller('MainCtrl', function ($scope) {
     $scope.hosts = [
