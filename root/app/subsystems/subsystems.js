@@ -1,3 +1,3 @@
 angular.module('subsystems', [
-  'pa.model.subsystems'
+  'pa.models.subsystems'
 ]);

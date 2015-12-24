@@ -1,3 +1,3 @@
 angular.module('host', [
-  'pa.model.host'
+  'pa.models.host'
 ]);
