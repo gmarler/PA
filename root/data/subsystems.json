@@ -1,3 +1,6 @@
 [
-  {"name": "CPU"}
+  {"name": "CPU"},
+  {"name": "Filesystem"},
+  {"name": "Network"},
+  {"name": "Memory"}
 ]
