@@ -5,6 +5,6 @@ describe('initial test', function() {
   });
 
   it('should have title', function() {
-    expect(browser.getTitle()).toEqual('Nothing');
+    expect(browser.getTitle()).toEqual('Initial Protractor Test');
   });
 });
