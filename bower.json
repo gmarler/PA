@@ -6,7 +6,8 @@
     "angular-ui-router": "0.2.15",
     "bootstrap": "3.3.6",
     "d3": "3.5.9",
-    "lodash": "3.10.1"
-  }
+    "lodash": "3.10.1",
+    "bootstrap-ui-datetime-picker": "2.0.5"
+  },
   "private": true
 }
