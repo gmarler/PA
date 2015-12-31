@@ -7,13 +7,18 @@ angular.module('pa.subsystems', [
         url: '/host/:hostID',
         views: {
           'subsystems@': {
-            controller: 'SubsystemsCtrl',
+            controller: 'SubsystemsCtrl as subsystemsCtrl',
             templateUrl: 'subsystems/subsystems.tmpl.html'
           }
         }
       })
   })
-  .controller('SubsystemsCtrl', function SubsystemsCtrl($scope, $stateParams) {
-    $scope.currentHostID = $stateParams.hostID;
+  .controller('SubsystemsCtrl', function ($stateParams, SubsystemsModel) {
+    // $scope.currentHostID = $stateParams.hostID;
+
+    var subsystemsCtrl = this;
+
+    subsystemsCtrl.subsystems               = SubsystemsModel.getSubsystems();
+    console.log(subsystemsCtrl.subsystems);
   })
 ;

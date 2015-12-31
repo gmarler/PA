@@ -1,7 +1,9 @@
 <a href="#" class="logo">PA</a>
 <ul class="nav nav-sidebar">
-  <li><a href="#" class="btn btn-primary btn-lg disabled" role="button">CPU</a></li>
-  <li><a href="#" class="btn btn-primary btn-lg disabled" role="button">MEMORY</a></li>
-  <li><a href="#" class="btn btn-primary btn-lg disabled" role="button">FILESYSTEM</a></li>
-  <li><a href="#" class="btn btn-primary btn-lg disabled" role="button">NETWORK</a></li>
+  <li ng-repeat="subsystem in subsystemsCtrl.subsystems">
+    <a href="#" class="btn btn-primary btn-lg disabled" role="button">
+      {{subsystem.name}}
+    </a>
+  </li>
+
 </ul>
