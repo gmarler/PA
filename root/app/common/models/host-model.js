@@ -1,1 +1,17 @@
-angular.module('pa.models.host', []);
+angular.module('pa.models.host', [
+
+])
+  .service('HostModel', function () {
+    var model = this,
+        hosts = [
+          {"id": 1, "name": "nydevsol10", "time_zone": "America/New_York"},
+          {"id": 2, "name": "sundev51",   "time_zone": "America/New_York"},
+          {"id": 3, "name": "p315",       "time_zone": "Europe/London"},
+          {"id": 4, "name": "solperf1",   "time_zone": "America/New_York"}
+        ];
+
+    model.getHosts = function () {
+      return hosts;
+    }
+  })
+;

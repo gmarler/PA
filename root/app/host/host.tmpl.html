@@ -1,27 +1,27 @@
-
-  <div class="col-md-1">
-    <h3>Host Info</h3>
-  </div>
-  <div class="col-md-2">
-    <div class="row">
-      <div class="col-md-4">
-        <h3>Name</h3>
-      </div>
-      <div class="col-md-5">
-        <h3>
-          <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-            Select Hostname <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li><a href="#">nydevsol10</a></li>
-            <li><a href="#">sundev51</a></li>
-            <li><a href="#">p315</a></li>
-            <li><a href="#">nysolperf1</a></li>
-          </ul>
-        </h3>
-      </div>
+<div class="col-md-1">
+  <h3>Host Info</h3>
+</div>
+<div class="col-md-2">
+  <div class="row">
+    <div class="col-md-4">
+      <h3>Name</h3>
+    </div>
+    <div class="col-md-5">
+      <h3>
+        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+          Select Hostname <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+          <li ng-repeat="host in hostCtrl.hosts">
+            <a href="#">
+              {{host.name}}
+            </a>
+          </li>
+        </ul>
+      </h3>
     </div>
   </div>
-  <div class="col-md-3">
-    <h3>Time Zone <span class="label label-info">America/New_York</span></h3>
-  </div>
+</div>
+<div class="col-md-3">
+  <h3>Time Zone <span class="label label-info">America/New_York</span></h3>
+</div>

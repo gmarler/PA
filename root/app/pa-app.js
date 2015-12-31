@@ -1,12 +1,12 @@
 angular.module('PA', [
   'ui.router',
-  'host',
-  'subsystems'
+  'pa.host',
+  'pa.subsystems'
 ])
   .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
-      .state('PA', {
-        url:'',
+      .state('pa', {
+        url:      '',
         abstract: true
         // templateUrl: 'subsystems/subsystems.tmpl.html',
         // controller: 'MainCtrl'

@@ -1,10 +1,10 @@
-angular.module('subsystems', [
+angular.module('pa.subsystems', [
   'pa.models.subsystems'
 ])
   .config(function($stateProvider) {
     $stateProvider
       .state('subsystems', {
-        url: '/',
+        url: '/host/:hostID',
         views: {
           'subsystems@': {
             controller: 'SubsystemsCtrl',
@@ -13,7 +13,7 @@ angular.module('subsystems', [
         }
       })
   })
-  .controller('SubsystemsCtrl', function SubsystemsCtrl($scope) {
-
+  .controller('SubsystemsCtrl', function SubsystemsCtrl($scope, $stateParams) {
+    $scope.currentHostID = $stateParams.hostID;
   })
 ;

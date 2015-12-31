@@ -12,7 +12,16 @@
 </head>
 <body ng-controller="MainCtrl">
   <div class="container-fluid">
-    <div class="row" ui-view="subsystems">
+    <div class="row">
+
+      <div class="col-md-2 sidebar" ui-view="subsystems">
+
+      </div>
+
+      <div class="col-md-offset-2 col-md-10 main" ui-view="host">
+
+      </div>
+
     </div>
   </div>
 
@@ -23,7 +32,7 @@
   <script src="../bower_components/angular/angular.js"></script>
   <script src="../bower_components/d3/d3.min.js"></script>
   <script src="../bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
-  <script src="../bower_components/bootstrap-ui-datetime-picker/dist/datetime-picker.min.js"></script>
+  <!--<script src="../bower_components/bootstrap-ui-datetime-picker/dist/datetime-picker.min.js"></script>-->
 
   <script src="pa-app.js"></script>
   <script src="host/host.js"></script>
