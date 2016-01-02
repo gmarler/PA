@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Performance Analytics Host Component Spike</title>
+
+  <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../bower_components/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+
+  <link href="../assets/css/PA.css" rel="stylesheet">
+
+  <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+  <script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+
+<div class="container-fluid">
+  <div class="row">
+
+    <div class="col-md-2 sidebar">
+    </div>
+
+    <div class="col-md-offset-2 col-md-10 main">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          Host Info
+        </div>
+
+        <div class="panel-body">
+
+          <label>Name:</label>
+
+          <button class="btn btn-primary dropdown-toggle btn-sm" type="button" data-toggle="dropdown">
+            Select Hostname <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <li ng-repeat="host in hostCtrl.hosts">
+              <a href="#">
+                {{host.name}}
+              </a>
+            </li>
+          </ul>
+
+          <label>Time Zone:</label> <span id="host_time_zone" class="label label-info">Europe/London</span>
+
+        </div>
+      </div>
+
+
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
