@@ -25,6 +25,5 @@ angular.module('pa.host', [
         hostCtrl.hosts = result;
         console.log(hostCtrl.hosts)
       });
-    ;
   })
 ;
