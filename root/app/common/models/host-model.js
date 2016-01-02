@@ -1,17 +1,24 @@
 angular.module('pa.models.host', [
 
 ])
-  .service('HostModel', function () {
+  .service('HostModel', function ($http) {
     var model = this,
-        hosts = [
-          {"id": 1, "name": "nydevsol10", "time_zone": "America/New_York"},
-          {"id": 2, "name": "sundev51",   "time_zone": "America/New_York"},
-          {"id": 3, "name": "p315",       "time_zone": "Europe/London"},
-          {"id": 4, "name": "solperf1",   "time_zone": "America/New_York"}
-        ];
+        URLS = {
+          FETCH: '../data/hosts.json'
+        },
+        hosts;
+
+    function extract(result) {
+      return result.data;
+    }
+
+    function cacheHosts(result) {
+      hosts = extract(result);
+      return hosts;
+    }
 
     model.getHosts = function () {
-      return hosts;
+      return $http.get(URLS.FETCH).then(cacheHosts);;
     }
   })
 ;

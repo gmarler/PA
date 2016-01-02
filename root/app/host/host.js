@@ -20,7 +20,11 @@ angular.module('pa.host', [
     //hostCtrl.currentHostName     = $stateParams.host.name;
     //hostCtrl.currentHostTimeZone = $stateParams.host.time_zone;
 
-    hostCtrl.hosts               = HostModel.getHosts();
-    console.log(hostCtrl.hosts);
+    HostModel.getHosts()
+      .then(function(result) {
+        hostCtrl.hosts = result;
+        console.log(hostCtrl.hosts)
+      });
+    ;
   })
 ;
