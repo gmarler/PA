@@ -131,7 +131,6 @@ while (my $dhref = $mq->recv(10000)) {
   }
 
   if ($stat_type eq "fsop_lat") {
-    my $timestamp = $stat_ref->{timestamp};
     my $stat_href = $stat_ref->{interval_data}->[0];
     foreach my $fsop_fstype (keys %$stat_href) {
       my ($fsop, $fstype) = $fsop_fstype =~ m{([^:]+):(.+)};
@@ -143,7 +142,9 @@ while (my $dhref = $mq->recv(10000)) {
         my $count     = $lat_range_count->[1];
         my $new_fsop_lat = $host_record->create_related('fsoplat_rs',
           {
-            timestamp   => $timestamp,
+            timestamp   => DateTime->from_epoch(
+                             epoch => $stat_ref->{timestamp},
+                             time_zone => 'UTC' ),
             fsop        => $fsop,
             fstype      => $fstype,
             latrange    => $lat_range,
