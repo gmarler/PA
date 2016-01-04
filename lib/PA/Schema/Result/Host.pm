@@ -33,7 +33,7 @@ __PACKAGE__->has_many(
   {'foreign.host_fk' => 'self.host_id'} );
 
 __PACKAGE__->has_many(
-  'floplat_rs'  => 'PA::Schema::Result::Fsoplat',
+  'fsoplat_rs'  => 'PA::Schema::Result::Fsoplat',
   {'foreign.host_fk' => 'self.host_id'} );
 
 __PACKAGE__->has_many(
