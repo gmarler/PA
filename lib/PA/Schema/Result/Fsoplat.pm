@@ -47,8 +47,24 @@ __PACKAGE__->add_columns(
 __PACKAGE__->inflate_column('latrange', {
   inflate => sub {
     my ($raw_value_from_db, $result_object) = @_;
-    say "Need to inflate this from latrange: \n" . Dumper( $raw_value_from_db );
-    return [ 0, 0 ];
+    #say "Need to inflate this from latrange: \n" . Dumper( $raw_value_from_db );
+    my ($start, $end, $start_inclusive, $end_inclusive) = (undef, undef, 0, 0);
+    if ($raw_value_from_db =~ /^\[/) {
+      $start_inclusive++;
+    }
+    if ($raw_value_from_db =~ /\]$/) {
+      $end_inclusive++;
+    }
+    #say "START INCLUSIVE: $start_inclusive";
+    #say "  END INCLUSIVE: $end_inclusive";
+    ($start, $end) = $raw_value_from_db =~ m/^[\[(](\d+),(\d+)[)\]]$/;
+    if (not $start_inclusive) {
+      $start += 1;
+    }
+    if (not $end_inclusive) {
+      $end -= 1;
+    }
+    return [ $start+0, $end+0 ];
   },
   deflate => sub {
     my ($inflated_value_from_user, $result_object) = @_;
