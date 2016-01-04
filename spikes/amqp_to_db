@@ -130,6 +130,30 @@ while (my $dhref = $mq->recv(10000)) {
     insert_arcstat($host_record, $stat_ref);
   }
 
+  if ($stat_type eq "fsop_lat") {
+    my $timestamp = $stat_ref->{timestamp};
+    my $stat_href = $stat_ref->{interval_data}->[0];
+    foreach my $fsop_fstype (keys %$stat_href) {
+      my ($fsop, $fstype) = $fsop_fstype =~ m{([^:]+):(.+)};
+      #say "WORKING FSOP: $fsop, FSTYPE: $fstype";
+      #say Dumper( $stat_href->{$fsop_fstype} );
+      my $latencies = $stat_href->{$fsop_fstype};
+      foreach my $lat_range_count (@$latencies) {
+        my $lat_range = $lat_range_count->[0];
+        my $count     = $lat_range_count->[1];
+        my $new_fsop_lat = $host_record->create_related('fsoplat_rs',
+          {
+            timestamp   => $timestamp,
+            fsop        => $fsop,
+            fstype      => $fstype,
+            latrange    => $lat_range,
+            count       => $count,
+          }
+        );
+      }
+    }
+  }
+
   #say "ACKNOWLEGING: $dhref->{delivery_tag}";
   $mq->ack( 1, $dhref->{delivery_tag}, 1 );
   #if (not exists($recvd_seq2{$dhref->{routing_key}})) {

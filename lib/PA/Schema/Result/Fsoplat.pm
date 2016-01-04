@@ -3,10 +3,12 @@ package PA::Schema::Result::Fsoplat;
 #
 # Filesystem Operations Latency Table
 #
+use v5.20;
 use strict;
 use warnings;
 
 use base 'DBIx::Class::Core';
+use Data::Dumper;
 
 __PACKAGE__->load_components(qw/ InflateColumn::DateTime /);
 __PACKAGE__->table('fsoplat');
@@ -45,6 +47,7 @@ __PACKAGE__->add_columns(
 __PACKAGE__->inflate_column('latrange', {
   inflate => sub {
     my ($raw_value_from_db, $result_object) = @_;
+    say "Need to inflate this from latrange: \n" . Dumper( $raw_value_from_db );
     return [ 0, 0 ];
   },
   deflate => sub {
