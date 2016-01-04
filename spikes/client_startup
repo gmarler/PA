@@ -23,15 +23,161 @@ use MooseX::Types::Moose qw(Str Int Undef HashRef ArrayRef);
 use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use Solaris::kstat;
+use DTrace::Consumer;
 use IO::Async::Loop;
 use Future;
 use Data::Dumper;
 use PA::AMQP::Client;
-
+use JSON::MaybeXS;
 
 with 'MooseX::Log::Log4perl';
 
+#############################################################################
+# Attributes
+#############################################################################
 
+has [ 'client' ] => (
+  is       => 'ro',
+  isa      => 'PA::AMQP::Client',
+  required => 1,
+);
+
+has [ 'loop' ] => (
+  is       => 'ro',
+  isa      => 'IO::Async::Loop',
+  default  => sub {
+                say "BUILDING " . __PACKAGE__ . " loop";
+                return IO::Async::Loop->new;
+              },
+);
+
+has [ 'dtc' ] => (
+  is       => 'ro',
+  isa      => 'DTrace::Consumer',
+  default  => sub {
+                say "BUILDING DTrace::Consumer";
+                my $dtc = DTrace::Consumer->new;
+                return $dtc;
+              },
+);
+
+has [ 'dtrace_options' ] => (
+  is       => 'ro',
+  isa      => 'ArrayRef',
+  default  => sub {
+                return [ ];
+              },
+);
+
+has [ 'timer' ] => (
+  is       => 'ro',
+  isa      => 'IO::Async::Timer::Periodic',
+  builder  => '_build_timer',
+  lazy     => 1,
+);
+
+has [ 'dtrace_script' ] => (
+  is       => 'ro',
+  isa      => 'Str',
+  required => 1,
+);
+
+has [ 'json_encoder' ] => (
+  is       => 'ro',
+  isa      => 'Cpanel::JSON::XS',
+  default  => sub {
+                return JSON::MaybeXS->new->ascii;
+              },
+);
+
+#
+# This is the statistic name to send with the MQ routing key, so we can identify
+# what kind of DTrace capture data this is; as in, for what metric.  May need to
+# refine this going forward, or redo in other terms.
+#
+has [ 'stat_name' ] => (
+  is       => 'ro',
+  isa      => 'Str',
+  required => 1,
+);
+
+
+sub _build_timer {
+  my ($self) = @_;
+
+  say "BUILDING TIMER";
+  my ($dtc)               = $self->dtc;
+  my ($loop)              = $self->loop;
+  my ($client)            = $self->client;
+  my ($prog)              = $self->dtrace_script;
+  my ($coder)             = $self->json_encoder;
+
+  $dtc->strcompile($prog);
+  $dtc->go();
+
+  my $timer = IO::Async::Timer::Periodic->new(
+    interval => 1,
+    on_tick  => sub {
+
+      my $agg = {};
+
+      $dtc->aggwalk(
+        sub {
+          my ($id, $key, $val) = @_;
+
+          if (not exists( $agg->{$id} ) ) {
+            $agg->{$id} = {};
+          }
+
+          my $merged_key = join ':', @$key;
+          $agg->{$id}->{$merged_key} = $val;
+        }
+      );
+
+      my %reduced_agg;
+      $reduced_agg{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+      $reduced_agg{interval_data}  = [ ];
+      foreach my $aggid (keys %$agg) {
+        push @{$reduced_agg{interval_data}}, $agg->{$aggid};
+      }
+
+      my @publish_futures;
+      my ($routing_key) = $client->client_hostname . "." . $self->stat_name;
+      push @publish_futures, $client->send($routing_key, \%reduced_agg);
+
+      # Wait for all of the publishing futures to complete
+      my $publishing_future = Future->wait_all( @publish_futures );
+      $publishing_future->get;
+    },
+  );
+
+  $timer->start;
+  $loop->add($timer);
+
+  return $timer;
+}
+
+sub BUILD {
+  my ($self) = @_;
+
+  say "Building client";
+  $self->client;
+  say "Building loop";
+  $self->loop;
+  my ($dtc) = $self->dtc;
+  say "Applying DTrace options (if any)";
+  my (@dtrace_options) = @{$self->dtrace_options};
+  if (@dtrace_options) {
+    foreach my $option (@dtrace_options) {
+      say "Setting option $option->[0] to $option->[1]";
+      $dtc->setopt(@$option) or die "Unable to set $option";
+    }
+  } else {
+    say "No DTrace options to set";
+  }
+  say "Building timer";
+  $self->timer;
+}
 
 
 
@@ -68,7 +214,7 @@ has [ 'loop' ] => (
   is       => 'ro',
   isa      => 'IO::Async::Loop',
   default  => sub {
-                say "BUILDING PA::Capture::kstat loop";
+                say "BUILDING " . __PACKAGE__ . " loop";
                 return IO::Async::Loop->new;
               },
 );
@@ -239,8 +385,109 @@ my $kstats = PA::Capture::kstat->new(
   client            => $client,
   kstats_to_collect => $kstats_to_collect,
 );
+
 #my $vmstat = PA::Capture::vmstat->new();
-#my $dtrace = PA::Capture::DTrace->new();
+
+my $dtrace_script = q\
+this string fstype;
+
+fbt::fop_read:entry,
+fbt::fop_write:entry,
+fbt::fop_ioctl:entry,
+fbt::fop_access:entry,
+fbt::fop_getattr:entry,
+fbt::fop_setattr:entry,
+fbt::fop_lookup:entry,
+fbt::fop_create:entry,
+fbt::fop_remove:entry,
+fbt::fop_link:entry,
+fbt::fop_rename:entry,
+fbt::fop_mkdir:entry,
+fbt::fop_rmdir:entry,
+fbt::fop_readdir:entry,
+fbt::fop_symlink:entry,
+fbt::fop_readlink:entry,
+fbt::fop_fsync:entry,
+fbt::fop_getpage:entry,
+fbt::fop_putpage:entry,
+fbt::fop_map:entry,
+fbt::fop_open:entry
+/((self->vnode0 == NULL))/{
+	self->vnode0 = arg0;
+	self->depth0 = stackdepth;
+	self->latency0 = timestamp;
+}
+
+fbt::fop_open:return
+/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof((*((vnode_t**)self->vnode0))->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "dev" || this->fstype == "dev fs" || this->fstype == "proc" || this->fstype == "lofs" || this->fstype == "tmpfs" || this->fstype == "nfs")))/{
+	@[((probefunc + 4)),this->fstype] = llquantize((timestamp - self->latency0), 10, 3, 11, 100);
+}
+
+fbt::fop_read:return,
+fbt::fop_write:return,
+fbt::fop_ioctl:return,
+fbt::fop_access:return,
+fbt::fop_getattr:return,
+fbt::fop_setattr:return,
+fbt::fop_lookup:return,
+fbt::fop_create:return,
+fbt::fop_remove:return,
+fbt::fop_link:return,
+fbt::fop_rename:return,
+fbt::fop_mkdir:return,
+fbt::fop_rmdir:return,
+fbt::fop_readdir:return,
+fbt::fop_symlink:return,
+fbt::fop_readlink:return,
+fbt::fop_fsync:return,
+fbt::fop_getpage:return,
+fbt::fop_putpage:return,
+fbt::fop_map:return
+/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof(((vnode_t*)self->vnode0)->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "dev" || this->fstype == "dev fs" || this->fstype == "proc" || this->fstype == "lofs" || this->fstype == "tmpfs" || this->fstype == "nfs")))/{
+	@[((probefunc + 4)),this->fstype] = llquantize((timestamp - self->latency0), 10, 3, 11, 100);
+}
+
+fbt::fop_read:return,
+fbt::fop_write:return,
+fbt::fop_ioctl:return,
+fbt::fop_access:return,
+fbt::fop_getattr:return,
+fbt::fop_setattr:return,
+fbt::fop_lookup:return,
+fbt::fop_create:return,
+fbt::fop_remove:return,
+fbt::fop_link:return,
+fbt::fop_rename:return,
+fbt::fop_mkdir:return,
+fbt::fop_rmdir:return,
+fbt::fop_readdir:return,
+fbt::fop_symlink:return,
+fbt::fop_readlink:return,
+fbt::fop_fsync:return,
+fbt::fop_getpage:return,
+fbt::fop_putpage:return,
+fbt::fop_map:return,
+fbt::fop_open:entry
+/((self->depth0 == stackdepth))/{
+	(self->vnode0) = 0;
+	(self->depth0) = 0;
+	(self->latency0) = 0;
+}
+
+\;
+
+
+# Capture Filesystem Operation Latency data
+my $dtrace_options = [ [ qw( dynvarsize   32m ) ],
+                       [ qw( cleanrate  137Hz ) ],
+                     ];
+my $dtrace_capture =
+  PA::Capture::DTrace->new( client         => $client,
+                            loop           => $loop,
+                            dtrace_script  => $dtrace_script,
+                            stat_name      => 'fsop_lat',
+                            dtrace_options => $dtrace_options );
+
 
 say "AMQP SERVER: " . $client->amqp_server;
 $loop->run();
