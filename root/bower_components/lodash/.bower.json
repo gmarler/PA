@@ -26,5 +26,6 @@
   },
   "_source": "git://github.com/lodash/lodash.git",
   "_target": "3.10.1",
-  "_originalSource": "lodash"
+  "_originalSource": "lodash",
+  "_direct": true
 }
