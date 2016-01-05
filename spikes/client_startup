@@ -483,7 +483,7 @@ my $dtrace_options = [ [ qw( dynvarsize   32m ) ],
                      ];
 my $dtrace_capture =
   PA::Capture::DTrace->new( client         => $client,
-                            loop           => $loop,
+    # loop           => $loop,
                             dtrace_script  => $dtrace_script,
                             stat_name      => 'fsop_lat',
                             dtrace_options => $dtrace_options );
