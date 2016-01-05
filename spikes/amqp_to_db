@@ -85,7 +85,7 @@ while (my $dhref = $mq->recv(10000)) {
   if (exists($recvd_seq{$dhref->{routing_key}})) {
     my ($next_seq) = $recvd_seq{$dhref->{routing_key}} + 1;
     if ($stat_ref->{sequence} != $next_seq) {
-      my ($gap) = $stat_ref->{sequence} - $recvd_seq{$dhref->{routing_key}};
+      my ($gap) = $stat_ref->{sequence} - $recvd_seq{$dhref->{routing_key}} - 1;
       say "$dhref->{routing_key}: EXPECTED SEQ $next_seq, RECEIVED $stat_ref->{sequence}, GAP SIZE $gap";
       # Update sequence to the latest received
       $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};

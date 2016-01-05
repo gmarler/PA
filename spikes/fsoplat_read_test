@@ -32,7 +32,6 @@ my $rs = $schema->resultset('Fsoplat')->search;
 
 while(my $fsoplat = $rs->next) {
   say Dumper( $fsoplat->latrange );
-  exit;
 }
 
 exit;
