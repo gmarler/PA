@@ -6,6 +6,10 @@ use strict;
 use warnings;
 use v5.20;
 
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
 use Moose::Role;
 use namespace::autoclean;
 use IO::File                     qw();
@@ -353,4 +357,3 @@ $loop->add($timer);
 say "AMQP SERVER: " . $client->amqp_server;
 $loop->run();
 
-$loop->run;
