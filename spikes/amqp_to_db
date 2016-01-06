@@ -16,6 +16,7 @@ use DateTime             qw();
 use Data::Dumper;
 use Net::AMQP::RabbitMQ;
 use IO::Async::Loop      qw();
+use IO::Async::Function  qw();
 use Getopt::Long;
 
 my %recvd_seq;
@@ -76,6 +77,14 @@ say "TAG: $tag";
 
 $SIG{'INT'} = sub { exit(0); };
 
+my $fsop_lat_handler = IO::Async::Function->new(
+  code => \&fsop_lat_organize,
+);
+
+$loop->add( $fsop_lat_handler );
+
+my @pending_futures;
+
 while (my $dhref = $mq->recv(10000)) {
   my ($host_id, $host_record);
   #say $dhref->{body};
@@ -130,29 +139,42 @@ while (my $dhref = $mq->recv(10000)) {
     insert_arcstat($host_record, $stat_ref);
   }
 
+
   if ($stat_type eq "fsop_lat") {
-    my $stat_href = $stat_ref->{interval_data}->[0];
-    foreach my $fsop_fstype (keys %$stat_href) {
-      my ($fsop, $fstype) = $fsop_fstype =~ m{([^:]+):(.+)};
-      #say "WORKING FSOP: $fsop, FSTYPE: $fstype";
-      #say Dumper( $stat_href->{$fsop_fstype} );
-      my $latencies = $stat_href->{$fsop_fstype};
-      foreach my $lat_range_count (@$latencies) {
-        my $lat_range = $lat_range_count->[0];
-        my $count     = $lat_range_count->[1];
-        my $new_fsop_lat = $host_record->create_related('fsoplat_rs',
-          {
-            timestamp   => DateTime->from_epoch(
-                             epoch => $stat_ref->{timestamp},
-                             time_zone => 'UTC' ),
-            fsop        => $fsop,
-            fstype      => $fstype,
-            latrange    => $lat_range,
-            count       => $count,
-          }
-        );
-      }
-    }
+    my @fsop_data;
+    #my @next_pending_futures;
+    #say "PENDING FUTURES: " . scalar(@pending_futures);
+    #foreach my $pf (@pending_futures) {
+    #  if ($pf->is_done) {
+    #    $pf->get;
+    #  } else {
+    #    push @next_pending_futures, $pf;
+    #  }
+    #}
+
+    # @pending_futures = @next_pending_futures;
+
+    my $fsop_data_aref =
+      $fsop_lat_handler->call(
+        args => [ $stat_ref, $host_record ],
+      )->on_done(
+        sub {
+          my $ret_aref = shift;
+          #say Dumper( $ret_aref );
+          return $ret_aref;
+        }
+      )->on_fail(
+        sub {
+          say "CANNOT HANDLE Filesystem Latency DATA! - $_[0]";
+        }
+      )->get;
+      #push @pending_futures, $f;
+
+      push @fsop_data,
+        [ qw( host_fk timestamp fsop fstype latrange count ) ];
+      push @fsop_data, @$fsop_data_aref;
+      #say Dumper( \@fsop_data );
+      $schema->resultset('Fsoplat')->populate( \@fsop_data );
   }
 
   #say "ACKNOWLEGING: $dhref->{delivery_tag}";
@@ -162,6 +184,31 @@ while (my $dhref = $mq->recv(10000)) {
   #}
   #push @{$recvd_seq2{$dhref->{routing_key}}}, $stat_ref->{sequence};
 }
+
+
+sub fsop_lat_organize {
+  my ($stat_ref, $host_record) = @_;
+  my $stat_href = $stat_ref->{interval_data}->[0];
+  my $timestamp = DateTime->from_epoch( epoch => $stat_ref->{timestamp},
+                                           time_zone => 'UTC' ),
+  my $host_id   = $host_record->id;
+  my $ret_aref = [];
+
+  foreach my $fsop_fstype (keys %$stat_href) {
+    my ($fsop, $fstype) = $fsop_fstype =~ m{([^:]+):(.+)};
+    my $latencies = $stat_href->{$fsop_fstype};
+    foreach my $lat_range_count (@$latencies) {
+      # "deflate" the latency range into something the DB will understand as a
+      # string
+      my $lat_range = "[ $lat_range_count->[0]->[0], $lat_range_count->[0]->[1] ]";
+      my $count     = $lat_range_count->[1];
+      push @$ret_aref, [ $host_id, $timestamp, $fsop, $fstype, $lat_range, $count ];
+    }
+  }
+
+  return $ret_aref;
+}
+
 
 sub register_host {
   my ($schema, $hostname, $hostreg_ref) = @_;
