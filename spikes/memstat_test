@@ -346,6 +346,7 @@ my $timer = IO::Async::Timer::Periodic->new(
   on_tick  => sub {
     my $out = $mdb->capture_dcmd("time::print -d ! sed -e 's/^0t//' ; ::memstat");
 
+    say "GOT: $out";
     my $dhref = $capture->extract($out);
     say Dumper( $dhref );
   },
