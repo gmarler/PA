@@ -341,7 +341,7 @@ my $mdb     = Solaris::mdb->new( timeout => 30 );
 my $capture = PA::Capture::mdb::memstat->new;
 
 my $timer = IO::Async::Timer::Periodic->new(
-  #interval       => 30,
+  reschedule     => "drift",
   interval       => 5,
   on_tick  => sub {
     my $out = $mdb->capture_dcmd("time::print -d ! sed -e 's/^0t//' ; ::memstat");
