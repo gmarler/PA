@@ -190,7 +190,7 @@ sub fsop_lat_organize {
   my ($stat_ref, $host_record) = @_;
   my $stat_href = $stat_ref->{interval_data}->[0];
   my $timestamp = DateTime->from_epoch( epoch => $stat_ref->{timestamp},
-                                           time_zone => 'UTC' ),
+                                        time_zone => 'UTC' ),
   my $host_id   = $host_record->id;
   my $ret_aref = [];
 
