@@ -1,5 +1,7 @@
 package PA::Schema::Result::Memstat;
 
+# VERSION
+
 use strict;
 use warnings;
 

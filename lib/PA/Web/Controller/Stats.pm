@@ -2,6 +2,8 @@ package PA::Web::Controller::Stats;
 use Moose;
 use namespace::autoclean;
 
+# VERSION
+
 BEGIN { extends 'Catalyst::Controller'; }
 
 =head1 NAME

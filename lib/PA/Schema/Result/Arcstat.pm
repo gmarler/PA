@@ -1,5 +1,7 @@
 package PA::Schema::Result::Arcstat;
 
+# VERSION
+
 use strict;
 use warnings;
 

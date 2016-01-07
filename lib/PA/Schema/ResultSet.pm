@@ -1,5 +1,7 @@
 package PA::Schema::ResultSet;
 
+# VERSION
+
 use 5.20.0;
 use warnings;
 

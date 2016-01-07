@@ -1,5 +1,7 @@
 package PA::Schema::Result::Host;
 
+# VERSION
+
 use strict;
 use warnings;
 

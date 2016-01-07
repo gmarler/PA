@@ -1,5 +1,7 @@
 package PA::Web::Model::DB;
 
+# VERSION
+
 use strict;
 use base 'Catalyst::Model::DBIC::Schema';
 

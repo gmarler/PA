@@ -2,6 +2,8 @@ package PA::Web::Controller::Host;
 use Moose;
 use namespace::autoclean;
 
+# VERSION
+
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 use JSON::MaybeXS;

@@ -3,6 +3,8 @@ package PA::Schema::Candy;
 use 5.20.0;
 use warnings;
 
+# VERSION
+
 use parent 'DBIx::Class::Candy';
 
 use base { 'PA::Schema::Result' }

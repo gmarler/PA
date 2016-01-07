@@ -3,6 +3,8 @@ package PA::Predicate;
 use strict;
 use warnings;
 
+# VERSION 
+
 use v5.18.1;
 use Moose;
 use Assert::Conditional qw(:all -if 1);
