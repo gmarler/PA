@@ -85,7 +85,7 @@ $loop->add( $fsop_lat_handler );
 
 my @pending_futures;
 
-while (my $dhref = $mq->recv(10000)) {
+while (my $dhref = $mq->recv(45000)) {
   my ($host_id, $host_record);
   #say $dhref->{body};
   #say Dumper( [ $dhref ] );
@@ -175,6 +175,27 @@ while (my $dhref = $mq->recv(10000)) {
       push @fsop_data, @$fsop_data_aref;
       #say Dumper( \@fsop_data );
       $schema->resultset('Fsoplat')->populate( \@fsop_data );
+  }
+
+  if ($stat_type eq "memstat") {
+    my %memstat_data;
+    my @memstat_types = qw( defdump_prealloc zfs_file_data free_cachelist kernel
+                            anon exec_and_libs page_cache zfs_metadata
+                            free_freelist total );
+    foreach my $memstat_type (@memstat_types) {
+      foreach my $submeta (keys %{$stat_ref->{$memstat_type}}) {
+        $memstat_data{"${memstat_type}_${submeta}"} =
+          $stat_ref->{$memstat_type}->{$submeta};
+      }
+    }
+    say Dumper( \%memstat_data );
+    my $new_memstat = $host_record->create_related('memstat_rs',
+      {
+        timestamp => DateTime->from_epoch( epoch => $stat_ref->{timestamp},
+                                           time_zone => 'UTC' ),
+        %memstat_data,
+      }
+    );
   }
 
   #say "ACKNOWLEGING: $dhref->{delivery_tag}";
