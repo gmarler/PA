@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
 
 # VERSION
+# PODNAME: heatmap1 - a heatmap test generator
+
 use warnings;
 use strict;
 use v5.18;
