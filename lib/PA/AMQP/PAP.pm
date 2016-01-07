@@ -258,7 +258,7 @@ sub broker {
   my ($self) = @_;
 
   if (not exists $ENV{AMQP_HOST}) {
-    die "Environment variable $AMQP_HOST not defined";
+    die "Environment variable AMQP_HOST not defined";
   }
 
   my $broker_conf = {};
