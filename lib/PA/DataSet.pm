@@ -5,6 +5,7 @@ package PA::DataSet;
 
 use Moose;
 
+# VERSION
 # ABSTRACT: Data collected by aggregator for instrumentation over time period.
 
 =head1 DESCRIPTION

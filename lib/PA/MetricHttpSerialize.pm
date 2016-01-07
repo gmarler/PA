@@ -3,4 +3,5 @@ use warnings;
 
 package PA::MetricHttpSerialize;
 
+# VERSION
 1;

@@ -1,5 +1,7 @@
 package PA::Schema::Result::Vmstat;
 
+# VERSION
+
 use strict;
 use warnings;
 

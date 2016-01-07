@@ -1,5 +1,6 @@
 package PA::Schema::Result::Fsoplat;
 
+# VERSION
 #
 # Filesystem Operations Latency Table
 #

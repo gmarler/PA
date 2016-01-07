@@ -1,5 +1,7 @@
 package PA::Schema::ResultSet::Arcstat;
 
+# VERSION
+
 use 5.20.0;
 use warnings;
 use parent 'PA::Schema::ResultSet';

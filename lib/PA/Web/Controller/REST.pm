@@ -2,6 +2,8 @@ package PA::Web::Controller::REST;
 use Moose;
 use namespace::autoclean;
 
+# VERSION
+
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 use Net::AMQP::RabbitMQ;

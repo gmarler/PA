@@ -1,5 +1,7 @@
 package PA::AMQP::Client;
 
+# VERSION
+#
 use v5.20;
 
 use Moose;
