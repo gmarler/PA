@@ -81,31 +81,31 @@ actually needs as long as the caller specifies which data to look at.
 
 =cut
 
-has granularity => { is => 'ro',
+has granularity => ( is => 'ro',
                      isa => 'Int',
-                   };
+                   );
 
-has nsources    => { is => 'ro',
+has nsources    => ( is => 'ro',
                      isa => 'Int',
-                   };
+                   );
 
-has sources     => { is => 'ro',
+has sources     => ( is => 'ro',
                      isa => 'HashRef',
-                   };
+                   );
 
-has reporting   => { is => 'ro',
+has reporting   => ( is => 'ro',
                      isa => 'HashRef',
-                   };
+                   );
 
-has major_vers  => { is => 'ro',
+has major_vers  => ( is => 'ro',
                      isa => 'Int',
                      default => 0,
-                   };
+                   );
 
-has minor_vers  => { is => 'ro',
+has minor_vers  => ( is => 'ro',
                      isa => 'Int',
                      default => 1,
-                   };
+                   );
 
 =method update(source, time, datum)
 

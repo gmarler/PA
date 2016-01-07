@@ -1,6 +1,6 @@
 package PA::Schema::Candy;
 
-use 5.20.0;
+use v5.20;
 use warnings;
 
 # VERSION

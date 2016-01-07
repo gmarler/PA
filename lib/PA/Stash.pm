@@ -42,28 +42,28 @@ with 'MooseX::Log::Log4perl';
 has 'stash_version_major' =>
   ( is       => 'ro',
     isa      => 'Int',
-    default  => 1;
+    default  => 1,
   );
 
 # stash format minor version
 has 'stash_version_minor' =>
   ( is       => 'ro',
     isa      => 'Int',
-    default  => 0;
+    default  => 0,
   );
 
 # bucket format major version
 has 'bucket_version_major' =>
   ( is       => 'ro',
     isa      => 'Int',
-    default  => 1;
+    default  => 1,
   );
 
 # bucket format minor version
 has 'bucket_version_minor' =>
   ( is       => 'ro',
     isa      => 'Int',
-    default  => 0;
+    default  => 0,
   );
 
 # See the block comment at the top of this file.  This implementation of a
@@ -145,8 +145,6 @@ after _build_rootdir => sub {
 PA::Stash->new( rootdir => '/tmp/stash' );
 
 =cut
-
-
 
 1;
 
