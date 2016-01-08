@@ -1,11 +1,11 @@
 #!/usr/bin/env perl
 
+use strict;
+use warnings;
+use v5.20;
+
 # VERSION
 # PODNAME: heatmap1 - a heatmap test generator
-
-use warnings;
-use strict;
-use v5.18;
 
 use DTrace::Consumer;
 use Time::HiRes   qw(gettimeofday);
