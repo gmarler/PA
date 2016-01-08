@@ -86,7 +86,7 @@ has 'creator' =>
       # PA::deep_copy($sysinfo);
       # This was done just to get the test to pass
       return { };
-    };
+    },
   );
 
 has 'busy' =>
