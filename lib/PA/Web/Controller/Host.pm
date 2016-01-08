@@ -20,6 +20,9 @@ Catalyst Controller.
 
 =cut
 
+# Make sure we always avoid this message by setting a default type:
+# [info] Could not find a serializer for an empty content-type
+__PACKAGE__->config(default => 'application/json');
 
 =method host_list
 
