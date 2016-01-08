@@ -27,6 +27,6 @@ sub test_startup {
   );
 
   # ... passed as a reference to init()
-  Log::Log4perl::init( \$conf );
+  Log::Log4perl::init( \$log_conf );
 }
 
