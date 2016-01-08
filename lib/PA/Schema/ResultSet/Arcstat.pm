@@ -100,6 +100,12 @@ sub host_hit_rate {
 }
 
 
+=method stat_rate( $stat )
+
+Extract rate per time interval for the specific ARC statistic
+
+=cut
+
 sub stat_rate {
   my ($rs,$stat) = @_;
   my ($schema) = $rs->result_source->schema;
@@ -183,6 +189,12 @@ sub stat_rate {
 # Ending queries are all the same except for an additional predicate to ensure
 # that only date/times *later than* the beginning one are selected.
 
+=method avail_dates
+
+Extract the list of dates for which ARC statistics are available
+
+=cut
+
 sub avail_dates {
   my ($rs) = @_;
 
@@ -199,6 +211,12 @@ sub avail_dates {
     },
   );
 }
+
+=method avail_hours_for_date
+
+Given a date, return the list of hours that have ARC stat data available
+
+=cut
 
 sub avail_hours_for_date {
   my ($rs,$selected_date) = @_;
@@ -218,6 +236,14 @@ sub avail_hours_for_date {
     },
   );
 }
+
+
+=method avail_mins_for_date_hour
+
+Given a date and an hour, return list of minutes for which ARC stat data is
+available.
+
+=cut
 
 sub avail_mins_for_date_hour {
   my ($rs,$selected_date,$selected_HH) = @_;
