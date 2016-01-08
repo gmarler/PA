@@ -52,7 +52,8 @@ my $pap_message_types = {
     instrumenter_online     => &pap_validate,
     log                     => &pap_validate,
   },
-  data                      => &pap_dispatch,
+  # TODO: This probably needs to point to a href too, not just a CODEREF
+  # data                      => &pap_dispatch,
 };
 
 
