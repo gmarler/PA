@@ -124,6 +124,12 @@ sub _build_timer {
   return $timer;
 }
 
+=method BUILD
+
+Build order for our object
+
+=cut
+
 sub BUILD {
   my ($self) = @_;
 
@@ -143,6 +149,12 @@ sub BUILD {
   $self->timer;
 }
 
+=method capture_kstat( $module, $instance, $name )
+
+Given the necessary tuple module:instance:name, extract the kstat data.
+
+=cut
+
 sub capture_kstat {
   my ($k, $module, $instance, $name) = @_;
 
@@ -157,9 +169,5 @@ sub capture_kstat {
 
   return $outdata;
 }
-
-
-
-
 
 1;

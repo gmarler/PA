@@ -148,6 +148,12 @@ sub _build_timer {
   return $timer;
 }
 
+=method BUILD
+
+Build order for our object
+
+=cut
+
 sub BUILD {
   my ($self) = @_;
 

@@ -2,6 +2,7 @@ package PA::AMQP::PAP;
 
 use strict;
 use warnings;
+use v5.20;
 
 # VERSION
 #
@@ -12,6 +13,47 @@ use namespace::autoclean;
 use PA;
 
 with 'MooseX::Log::Log4perl';
+
+#
+# This hash describes all known message types and subtypes.  Message types
+# with no subtype object have no subtypes.  The value at each subtype is a
+# coderef for further processing.
+
+my $pap_message_types = {
+  cmd => {
+    disable_instrumentation => &pap_dispatch,
+    enable_instrumentation  => &pap_dispatch,
+    enable_aggregation      => &pap_dispatch,
+    disable_aggregation     => &pap_dispatch,
+    ping                    => &pap_validate,
+    status                  => &pap_validate,
+    abort                   => &pap_validate,
+    data_delete             => &pap_validate,
+    data_get                => &pap_validate,
+    data_put                => &pap_validate,
+  },
+  ack => {
+    disable_instrumentation => &pap_dispatch,
+    enable_instrumentation  => &pap_dispatch,
+    enable_aggregation      => &pap_dispatch,
+    disable_aggregation     => &pap_dispatch,
+    ping                    => &pap_validate,
+    status                  => &pap_validate,
+    abort                   => &pap_validate,
+    data_delete             => &pap_validate,
+    data_get                => &pap_validate,
+    data_put                => &pap_validate
+  },
+  notify => {
+    aggregator_online       => &pap_validate,
+    configsvc_online        => &pap_validate,
+    config_reset            => &pap_validate,
+    instrumenter_error      => &pap_dispatch,
+    instrumenter_online     => &pap_validate,
+    log                     => &pap_validate
+  },
+  data                      => &pap_dispatch,
+};
 
 
 #############################################################################
@@ -246,50 +288,16 @@ sub pap_dispatch {
   return;
 }
 
-# NOTE:
-# The below is only placed here so that pap_dispatch() is defined (above) before
-# it is referenced
-#
-# This hash describes all known message types and subtypes.  Message types
-# with no subtype object have no subtypes.  The value at each subtype is a
-# coderef for further processing.
+=method $self->pap_validate()
 
-my $pap_message_types = {
-  cmd => {
-    disable_instrumentation => &pap_dispatch,
-    enable_instrumentation  => &pap_dispatch,
-    enable_aggregation      => &pap_dispatch,
-    disable_aggregation     => &pap_dispatch,
-    ping                    => &pap_validate,
-    status                  => &pap_validate,
-    abort                   => &pap_validate,
-    data_delete             => &pap_validate,
-    data_get                => &pap_validate,
-    data_put                => &pap_validate,
-  },
-  ack => {
-    disable_instrumentation => &pap_dispatch,
-    enable_instrumentation  => &pap_dispatch,
-    enable_aggregation      => &pap_dispatch,
-    disable_aggregation     => &pap_dispatch,
-    ping                    => &pap_validate,
-    status                  => &pap_validate,
-    abort                   => &pap_validate,
-    data_delete             => &pap_validate,
-    data_get                => &pap_validate,
-    data_put                => &pap_validate
-  },
-  notify => {
-    aggregator_online       => &pap_validate,
-    configsvc_online        => &pap_validate,
-    config_reset            => &pap_validate,
-    instrumenter_error      => &pap_dispatch,
-    instrumenter_online     => &pap_validate,
-    log                     => &pap_validate
-  },
-  data                      => &pap_dispatch,
-};
+NOTE: This is a placeholder, just to get this module to past testing.  It may
+not even belong here, but in a Role or similar, so look at this in the future
 
+=cut
+
+sub pap_validate {
+  return;
+}
 
 
 1;

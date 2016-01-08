@@ -155,7 +155,12 @@ sub _build_mq {
   return $mq;
 }
 
-# Use BUILD to specify the order in which attributes are initialized
+=method BUILD
+
+Use BUILD to specify the order in which attributes are initialized
+
+=cut
+
 sub BUILD {
   my ($self) = @_;
 
@@ -175,6 +180,15 @@ sub BUILD {
   $self->register_host;
 }
 
+=method send( $routing_key, $d_href )
+
+Given a routing key and the data to be sent over the queuing service, turn the
+data into JSON and send it.
+
+Also provide a sequencing number so we can determine if the sequence is being
+broken or data is being lost.
+
+=cut
 
 sub send {
   my ($self, $routing_key, $d_href) = @_;
