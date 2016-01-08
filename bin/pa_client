@@ -16,6 +16,8 @@ use Data::Dumper;
 use Solaris::mdb;
 use PA::AMQP::Client;
 use PA::Capture::kstat;
+use PA::Capture::DTrace;
+use PA::Capture::mdb::memstat;
 
 # This spike shows how PA clients starting up will initially post host specific
 # information, so that it can be received and pre-inserted into the back end
