@@ -2,15 +2,10 @@ package PA::Parser;
 
 use strict;
 use warnings;
+use v5.20;
 
 # VERSION
 # ABSTRACT: Object to represent basic Parser capabilities
-
-use v5.20;
-
-use FindBin qw($Bin);
-
-use lib "$Bin/../lib";
 
 use Moose::Role;
 use namespace::autoclean;
