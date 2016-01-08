@@ -105,6 +105,12 @@ sub _build_timer {
   return $timer;
 }
 
+=method BUILD
+
+Build our object in the proper sequence
+
+=cut
+
 sub BUILD {
   my ($self) = @_;
 

@@ -21,7 +21,9 @@ Catalyst Controller.
 =cut
 
 
-=head2 host_list
+=method host_list
+
+First step in chain that extracts a list of hosts as a REST entity
 
 =cut
 
@@ -32,6 +34,12 @@ sub host_list : Path('/host') :Args(0) : ActionClass('REST') {
     'Access-Control-Allow-Origin' => '*',
   );
 }
+
+=method host_list_GET
+
+Implement GET verb for host_list REST query
+
+=cut
 
 sub host_list_GET {
   my ($self, $c) = @_;

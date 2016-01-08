@@ -79,13 +79,13 @@ has 'bucket_version_minor' =>
 has 'creator' =>
   ( is       => 'ro',
     isa      => 'HashRef',
-    builder  => sub {
+    default  => sub {
       my ($self) = shift;
 
       # TODO: Get this right
       # PA::deep_copy($sysinfo);
       # This was done just to get the test to pass
-      return { };
+      return {};
     },
   );
 

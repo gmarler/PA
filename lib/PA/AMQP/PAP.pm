@@ -42,7 +42,7 @@ my $pap_message_types = {
     abort                   => &pap_validate,
     data_delete             => &pap_validate,
     data_get                => &pap_validate,
-    data_put                => &pap_validate
+    data_put                => &pap_validate,
   },
   notify => {
     aggregator_online       => &pap_validate,
@@ -50,7 +50,7 @@ my $pap_message_types = {
     config_reset            => &pap_validate,
     instrumenter_error      => &pap_dispatch,
     instrumenter_online     => &pap_validate,
-    log                     => &pap_validate
+    log                     => &pap_validate,
   },
   data                      => &pap_dispatch,
 };
