@@ -1,9 +1,11 @@
 package PA::Schema::ResultSet::Arcstat;
 
+use strict;
+use warnings;
+use 5.20.0;
+
 # VERSION
 
-use 5.20.0;
-use warnings;
 use parent 'PA::Schema::ResultSet';
 
 #sub search_by_name {

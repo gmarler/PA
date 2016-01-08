@@ -1,10 +1,10 @@
 package PA::AMQP;
 
-# VERSION
-use v5.20;
 use strict;
 use warnings;
+use v5.20;
 
+# VERSION
 
 
 

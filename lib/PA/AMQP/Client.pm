@@ -1,8 +1,10 @@
 package PA::AMQP::Client;
 
-# VERSION
-#
+use strict;
+use warnings;
 use v5.20;
+
+# VERSION
 
 use Moose;
 use MooseX::Types::Moose qw(Str Int Undef HashRef);

@@ -190,11 +190,11 @@ has [ 'amqp_key_all' ] => (
   },
 );
 
-# 
+#
 # Each instrumentation gets its own key, which exactly one aggregator
 # subscribes to.  This facilitates distribution of instrumentation data
 # processing across multiple aggregators.
-# 
+#
 has [ 'amqp_key_base_instrumentation' ] => (
   is       => 'ro',
   isa      => 'Str',
@@ -275,5 +275,15 @@ sub broker {
   return $broker_conf;
 }
 
+=method $self->pap_dispatch()
+
+NOTE: This is a placeholder, just to get this module to past testing.  It may
+not even belong here, but in a Role or similar, so look at this in the future
+
+=cut
+
+sub pap_dispatch {
+  return;
+}
 
 1;
