@@ -105,6 +105,12 @@ has 'regex_eof' => ( is => 'rw', isa => 'RegexpRef',
                    );
 
 
+=method parse_interval($interval_output)
+
+Parse the data out of a single interval of time
+
+=cut
+
 sub parse_interval {
   my ($self, $interval_output) = @_;
 

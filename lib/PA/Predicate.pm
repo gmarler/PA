@@ -3,7 +3,7 @@ package PA::Predicate;
 use strict;
 use warnings;
 
-# VERSION 
+# VERSION
 
 use v5.18.1;
 use Moose;
@@ -85,14 +85,17 @@ my $pred_eval_helpers =
   ne => sub { my ($a, $b) = @_; return ($a ne $b); },
 };
 
-#
-# Gets the key for the given predicate
-#
-# Input:
-# - pred: The predicate to get the key for
-# Output
-# = Returns the key for the specified predicate object
-#
+=method pred_get_key( $pred )
+
+Gets the key for the given predicate
+
+Input:
+- pred: The predicate to get the key for
+Output
+= Returns the key for the specified predicate object
+
+=cut
+
 sub pred_get_key {
   my ($self, $pred) = @_;
   my ($keys_found,$key);
@@ -117,19 +120,22 @@ sub pred_get_key {
   return $key;
 }
 
-#
-# Validates that the predicate has a valid format for relational predicates.
-# This means that it fits the format:
-# { key => [ field, constant ] }
-#
-# Input:
-# - pred: The predicate hashref
-# - key: The key that we're interested in
-#
-# On return the following points have been validated:
-# - That the key points to a two element array ref
-# - That the first field of the array ref is a valid type
-#
+=method pred_validate_rel( $pred, $key )
+
+Validates that the predicate has a valid format for relational predicates.
+This means that it fits the format:
+{ key => [ field, constant ] }
+
+Input:
+- pred: The predicate hashref
+- key: The key that we're interested in
+
+On return the following points have been validated:
+- That the key points to a two element array ref
+- That the first field of the array ref is a valid type
+
+=cut
+
 sub pred_validate_rel {
   my ($self, $pred, $key) = @_;
 
@@ -169,16 +175,20 @@ sub pred_validate_rel {
   }
 }
 
-# This function assumes that we have a syntactically valid object and the
-# caller has already established that the only fields present are fields which
-# are "valid". We now go through and do checks to validate that fields are used
-# appropriately given their arities (as specified in "fieldarities").
-# 
-#  Input:
-#   - fieldarities: valid fields for the metric and their arities
-#   - pred: The relational predicate to validate
-#   - key: The key that we are interested in validating
-# 
+=method pred_validate_field( $fieldarities, $pred, $key )
+
+This function assumes that we have a syntactically valid object and the
+caller has already established that the only fields present are fields which
+are "valid". We now go through and do checks to validate that fields are used
+appropriately given their arities (as specified in "fieldarities").
+
+ Input:
+  - fieldarities: valid fields for the metric and their arities
+  - pred: The relational predicate to validate
+  - key: The key that we are interested in validating
+
+=cut
+
 sub pred_validate_field {
   my ($self, $fieldarities, $pred, $key) = @_;
 
@@ -207,15 +217,19 @@ sub pred_validate_field {
   }
 }
 
-# This function assumes that we have a syntactically valid object and the
-# caller has already established that the only fields present are fields which
-# are "valid". We now go through and do checks to validate that fields are used
-# appropriately given their arities (as specified in "fieldarities").
-# 
-#  Input:
-#   - fieldarities: valid fields for the metric and their arities
-#   - pred: The relational predicate to validate
-#   - key: The key that we are interested in validating
+=method pred_validate_log( $pred, $key )
+
+This function assumes that we have a syntactically valid object and the
+caller has already established that the only fields present are fields which
+are "valid". We now go through and do checks to validate that fields are used
+appropriately given their arities (as specified in "fieldarities").
+
+ Input:
+  - fieldarities: valid fields for the metric and their arities
+  - pred: The relational predicate to validate
+  - key: The key that we are interested in validating
+
+=cut
 
 sub pred_validate_log {
   my ($self, $pred, $key) = @_;
@@ -246,15 +260,18 @@ sub pred_validate_log {
   }
 }
 
-#
-# This is the entry point for validating and parsing any given predicate. This
-# will be called when beginning to parse any specific predicate.
-# 
-# Input:
-#  - pred: The predicate that we want to validate
-# 
-# Output: None on success, an exception is thrown on error.
-#
+=method pred_validate_syntax( $pred )
+
+
+This is the entry point for validating and parsing any given predicate. This
+will be called when beginning to parse any specific predicate.
+
+Input:
+ - pred: The predicate that we want to validate
+
+Output: None on success, an exception is thrown on error.
+
+=cut
 
 sub pred_validate_syntax {
   my ($self, $pred) = @_;
@@ -280,11 +297,14 @@ sub pred_validate_syntax {
   $parse_funcs->{$key}->($self, $pred, $key);
 }
 
-# We want to walk every leaf predicate and apply a function to it
-# Input:
-#  - func: A function of the signature void (*func)(predicate, key)
-#  - pred: A predicate that has previously been validated
-# 
+=method pred_walk( $func, $pred )
+
+We want to walk every leaf predicate and apply a function to it
+Input:
+ - func: A function of the signature void (*func)(predicate, key)
+ - pred: A predicate that has previously been validated
+
+=cut
 
 sub pred_walk {
   my ($self, $func, $pred) = @_;
@@ -306,10 +326,14 @@ sub pred_walk {
   }
 }
 
-# Validates the semantic properties of the predicate. This includes making sure
-# that every field is valid for the predicate and the values present match the
-# expected arity.
-#
+=method pred_validate_semantics( $fieldarities, $pred )
+
+Validates the semantic properties of the predicate. This includes making sure
+that every field is valid for the predicate and the values present match the
+expected arity.
+
+=cut
+
 sub pred_validate_semantics {
   my ($self, $fieldarities, $pred) = @_;
 
@@ -321,17 +345,20 @@ sub pred_validate_semantics {
   $self->pred_walk($func, $pred);
 }
 
-# Prints out the value of a relational predicate.
-# This should print as:
-# <field> <operator> <constant>
-# 
-# Input:
-#  - pred: The predicate to print
-#  - key: The key for the predicate
-# 
-# Output:
-#  - Returns the string representation of the specified predicate.
-#
+=method pred_print_red( $pred, $key )
+
+Prints out the value of a relational predicate.
+This should print as:
+<field> <operator> <constant>
+
+Input:
+ - pred: The predicate to print
+ - key: The key for the predicate
+
+Output:
+ - Returns the string representation of the specified predicate.
+
+=cut
 
 sub pred_print_rel {
   my ($self, $pred, $key) = @_;
@@ -350,20 +377,24 @@ sub pred_print_rel {
   return $out;
 }
 
-# Prints out the value of a logical expression.
-# This should print as:
-# (<predicate>) <operator> (<predicate>)...
-# 
-# The parens may seem unnecessary in most cases, but it is designed to
-# distinguish between nested logical expressions.
-# 
-# Inputs:
-#  - pred: The logical expression to print
-#  - key: The key for the object in the logical expression
-# 
-# Output:
-#  - Returns the string representation of the specified predicate.
-#
+=method pred_print_log( $pred, $key )
+
+Prints out the value of a logical expression.
+This should print as:
+(<predicate>) <operator> (<predicate>)...
+
+The parens may seem unnecessary in most cases, but it is designed to
+distinguish between nested logical expressions.
+
+Inputs:
+ - pred: The logical expression to print
+ - key: The key for the object in the logical expression
+
+Output:
+ - Returns the string representation of the specified predicate.
+
+=cut
+
 sub pred_print_log {
   my ($self, $pred, $key) = @_;
 
@@ -376,16 +407,20 @@ sub pred_print_log {
   return $ret;
 }
 
-# This is the generic entry point to begin parsing an individual predicate.
-# This is responsible for determining the key and dispatching to the correct
-# function.
-# 
-# Inputs:
-#  - pred: The predicate to be printed
-# 
-# Output:
-#  - Returns the string representation of the specified predicate.
-# 
+=method pred_print_gen( $pred )
+
+This is the generic entry point to begin parsing an individual predicate.
+This is responsible for determining the key and dispatching to the correct
+function.
+
+Inputs:
+ - pred: The predicate to be printed
+
+Output:
+ - Returns the string representation of the specified predicate.
+
+=cut
+
 sub pred_print_gen {
   my ($self, $pred) = @_;
 
@@ -396,7 +431,7 @@ sub pred_print_gen {
   #        undef upon exiting the loop below.  So we worked around it as
   #        below...
   foreach my $tkey (keys %$pred) {
-    $key = $tkey; 
+    $key = $tkey;
     $keys_found++;
   }
 
@@ -419,14 +454,18 @@ sub pred_print_gen {
   return $print_funcs->{$key}->($self, $pred, $key);
 }
 
-# Prints out a human readable form of a predicate. This is the general entry
-# point.
-# 
-# Input:
-#  - pred: A predicate that has already been validated by caPredValidate
-# 
-# Output:
-#  - Returns the string representation of the specified predicate.
+=method pred_print( $pred )
+
+Prints out a human readable form of a predicate. This is the general entry
+point.
+
+Input:
+ - pred: A predicate that has already been validated by caPredValidate
+
+Output:
+ - Returns the string representation of the specified predicate.
+
+=cut
 
 sub pred_print {
   my ($self, $pred) = @_;
@@ -434,12 +473,16 @@ sub pred_print {
   return $self->pred_print_gen($pred);
 }
 
-# Walk a predicate and check if any of the leaves are checking a specific
-# field.
-# Input:
-#  - field: The name of the field to search for
-#  - pred: The predicate to search in
-# 
+=method pred_contains_field( $field, $pred )
+
+Walk a predicate and check if any of the leaves are checking a specific
+field.
+Input:
+ - field: The name of the field to search for
+ - pred: The predicate to search in
+
+=cut
+
 sub pred_contains_field {
   my ($self, $field, $pred) = @_;
 
@@ -457,16 +500,21 @@ sub pred_contains_field {
   return $found;
 }
 
-# Walks the predicate and replaces all of the field names with appropriate
-# values from the specified object. The object is defined where each possible
-# predicate field is a key in the object and we replace the predicate field
-# with the value from the object. This allows us to replace simple consumer
-# predicate names i.e. latency or optype with the correct D expressions.
-# 
-# Input:
-#  - obj: An Object where keys match the fields in the predicate and the values
-#    are what should be substituted in
-#  - pred: The predicate to apply this transformation to
+=method pred_replace_fields( $obj, $pred )
+
+Walks the predicate and replaces all of the field names with appropriate
+values from the specified object. The object is defined where each possible
+predicate field is a key in the object and we replace the predicate field
+with the value from the object. This allows us to replace simple consumer
+predicate names i.e. latency or optype with the correct D expressions.
+
+Input:
+ - obj: An Object where keys match the fields in the predicate and the values
+   are what should be substituted in
+ - pred: The predicate to apply this transformation to
+
+=cut
+
 sub pred_replace_fields {
   my ($self, $obj, $pred) = @_;
 
@@ -484,29 +532,36 @@ sub pred_replace_fields {
     }, $pred);
 }
 
-# Determines whether a predicate has expressions that need to evaluated.
-# 
-# Input:
-#  - The predicate to evaluate
-# Output:
-#  - True if this predicate is not trivial, false otherwise
-#
+=method pred_non_trivial( $pred )
+
+Determines whether a predicate has expressions that need to evaluated.
+
+Input:
+ - The predicate to evaluate
+Output:
+ - True if this predicate is not trivial, false otherwise
+
+=cut
+
 sub pred_non_trivial {
   my ($self, $pred) = @_;
 
   return (not PA::is_empty($pred));
 }
 
+=method pred_fields( $pred )
 
-# Iterates over the predicates and returns the list of fields that are at the
-# leaves in the predicate. The list will not contain duplicates.
-# 
-# Input:
-#  - pred: The predicate to extract the fields from.
-# 
-# Return:
-#  - The list of fields used in the predicate without duplicates.
-#
+Iterates over the predicates and returns the list of fields that are at the
+leaves in the predicate. The list will not contain duplicates.
+
+Input:
+ - pred: The predicate to extract the fields from.
+
+Return:
+ - The list of fields used in the predicate without duplicates.
+
+=cut
+
 sub pred_fields {
   my ($self, $pred) = @_;
 
@@ -532,9 +587,13 @@ sub pred_fields {
   return $ret;
 }
 
-# Given a predicate and an object mapping key names to values, return whether
-# the predicate is satisfied by the specified fields.
-#
+=method pred_eval( $pred, $values )
+
+Given a predicate and an object mapping key names to values, return whether
+the predicate is satisfied by the specified fields.
+
+=cut
+
 sub pred_eval {
   my ($self, $pred, $values) = @_;
 
@@ -550,6 +609,12 @@ sub pred_eval {
   $self->pred_replace_fields( $values, $expr );
   return $self->pred_eval_expr( $expr );
 }
+
+=method pred_eval_expr( $expr )
+
+Evaluate an expression on a predicate
+
+=cut
 
 sub pred_eval_expr {
   my ($self, $expr) = @_;
