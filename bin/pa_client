@@ -153,10 +153,10 @@ my $dtrace_capture =
                             stat_name      => 'fsop_lat',
                             dtrace_options => $dtrace_options );
 
-my $memstat_capture =
-  PA::Capture::mdb::memstat->new( client         => $client,
-                                  stat_name      => 'memstat',
-                                );
+# my $memstat_capture =
+#   PA::Capture::mdb::memstat->new( client         => $client,
+#                                   stat_name      => 'memstat',
+#                                 );
 
 
 say "AMQP SERVER: " . $client->amqp_server;
