@@ -14,6 +14,12 @@ use parent 'PA::Schema::ResultSet';
 
 #sub find_by_name { $_[0]->search_by_name($_[1])->single }
 
+=method search_by_host
+
+Search for Arcstat data by host
+
+=cut
+
 sub search_by_host {
   my ($rs,$host_id) = @_;
   my ($schema) = $rs->result_source->schema;
@@ -22,6 +28,12 @@ sub search_by_host {
       'me.host_fk' => $host_id,
     });
 }
+
+=method search_by_host_sorted
+
+Search for ARC stat data by host, sorted by ascending timestamp
+
+=cut
 
 sub search_by_host_sorted {
   my ($rs,$host_id) = @_;
@@ -35,6 +47,12 @@ sub search_by_host_sorted {
     }
   );
 }
+
+=method host_hit_rate
+
+Get the hit rate for the given host
+
+=cut
 
 sub host_hit_rate {
   my ($rs,$host_id) = @_;

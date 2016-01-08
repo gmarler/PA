@@ -23,13 +23,21 @@ Catalyst Controller.
 =cut
 
 
-=head2 index
+=method index
+
+Start of REST query
 
 =cut
 
 sub index :Path :Args(0) ActionClass('REST') {
     my ( $self, $c ) = @_;
 }
+
+=method index_GET
+
+Implement GET verb on REST request
+
+=cut
 
 sub index_GET {
   my ($self, $c) = @_;
@@ -40,6 +48,12 @@ sub index_GET {
 }
 
 
+=method vcpu
+
+REST action for vcpu
+
+=cut
+
 sub vcpu :Path('/vcpu') :Args(1) ActionClass('REST') {
   my ($self, $c, $hostname) = @_;
 
@@ -48,6 +62,12 @@ sub vcpu :Path('/vcpu') :Args(1) ActionClass('REST') {
     'Access-Control-Allow-Origin' => '*',
   );
 }
+
+=method vcpu_GET
+
+Implement GET verb on vcpu REST action
+
+=cut
 
 sub vcpu_GET {
   my ($self, $c) = @_;
@@ -82,7 +102,9 @@ sub vcpu_GET {
             );
 }
 
-=head3 VCPU WebSocket TEST
+=method VCPU WebSocket TEST
+
+Test of the VCPU WebSocket interface
 
 =cut
 
