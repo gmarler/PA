@@ -1,12 +1,13 @@
 package PA::Schema::Result::Fsoplat;
 
+use strict;
+use warnings;
+use v5.20;
+
 # VERSION
 #
 # Filesystem Operations Latency Table
 #
-use v5.20;
-use strict;
-use warnings;
 
 use base 'DBIx::Class::Core';
 use Data::Dumper;

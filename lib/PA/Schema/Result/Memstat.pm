@@ -1,9 +1,9 @@
 package PA::Schema::Result::Memstat;
 
-# VERSION
-
 use strict;
 use warnings;
+
+# VERSION
 
 use base 'DBIx::Class::Core';
 

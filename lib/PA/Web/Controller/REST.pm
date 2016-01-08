@@ -86,18 +86,24 @@ sub vcpu_GET {
 
 =cut
 
-sub start : ChainedParent
- PathPart('echo') CaptureArgs(0) { }
-
-sub index :Chained('start') PathPart('') Args(0)
-{
-  my ($self, $c) = @_;
-  my $url = $c->uri_for_action($self->action_for('ws'));
-
-  $url->scheme('ws');
-  $c->stash(websocket_url => $url);
-  $c->forward($c->view('HTML'));
-}
+#
+# NOTE:
+# Commented out below because it was redefining 'index' above - clear this up
+# later
+#
+#
+# sub start : ChainedParent
+#  PathPart('echo') CaptureArgs(0) { }
+# 
+# sub index :Chained('start') PathPart('') Args(0)
+# {
+#   my ($self, $c) = @_;
+#   my $url = $c->uri_for_action($self->action_for('ws'));
+# 
+#   $url->scheme('ws');
+#   $c->stash(websocket_url => $url);
+#   $c->forward($c->view('HTML'));
+# }
 
 
 =encoding utf8

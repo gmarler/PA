@@ -7,7 +7,8 @@ use warnings;
 
 use parent 'DBIx::Class::Candy';
 
-use base { 'PA::Schema::Result' }
+sub base { 'PA::Schema::Result' }
+
 sub perl_version { 20 }
 sub autotable { 1 }
 

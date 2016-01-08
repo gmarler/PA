@@ -1,9 +1,11 @@
 package PA::Schema::ResultSet::Host;
 
+use strict;
+use warnings;
+use 5.20.0;
+
 # VERSION
 
-use 5.20.0;
-use warnings;
 use parent 'PA::Schema::ResultSet';
 
 sub search_by_name { $_[0]->search({ $_[0]->me . name => $_[1] }) }

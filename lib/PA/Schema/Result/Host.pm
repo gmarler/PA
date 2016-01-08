@@ -1,9 +1,9 @@
 package PA::Schema::Result::Host;
 
-# VERSION
-
 use strict;
 use warnings;
+
+# VERSION
 
 use base 'DBIx::Class::Core';
 
