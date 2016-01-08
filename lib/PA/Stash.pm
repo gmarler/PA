@@ -105,8 +105,8 @@ has 'rootdir' =>
   ( is       => 'ro',
     isa      => 'Str',
     required => 1,
-    builder  => _build_rootdir,
-    clearer  => _clear_rootdir,
+    builder  => '_build_rootdir',
+    clearer  => '_clear_rootdir',
   );
 
 sub _build_rootdir {
@@ -128,9 +128,9 @@ after _build_rootdir => sub {
   my ($self) = shift;
 
   my $stages = [
-    loadInit,
-    loadbuckets,
-    loadFini,
+    'loadInit',
+    'loadbuckets',
+    'loadFini',
   ];
 
   PA::run_stages($stages, undef,

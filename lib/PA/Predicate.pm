@@ -345,7 +345,7 @@ sub pred_validate_semantics {
   $self->pred_walk($func, $pred);
 }
 
-=method pred_print_red( $pred, $key )
+=method pred_print_rel( $pred, $key )
 
 Prints out the value of a relational predicate.
 This should print as:
@@ -488,6 +488,8 @@ sub pred_contains_field {
 
   my $found = 0;
 
+  ## no critic
+
   no strict "refs";
   $self->pred_walk(
     sub {
@@ -496,6 +498,9 @@ sub pred_contains_field {
         $found = 1;
       }
     }, $pred);
+  use strict "refs";
+
+  ## use critic
 
   return $found;
 }
