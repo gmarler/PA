@@ -118,6 +118,8 @@ sub BUILD {
   $self->client;
   say "Building loop";
   $self->loop;
+  say "Building mdb";
+  $self->mdb;
   say "Building timer";
   $self->timer;
 }
