@@ -44,6 +44,7 @@ my $loop = IO::Async::Loop->new();
 $client_ctor_args{loop} = $loop;
 
 my $client = PA::AMQP::Client->new( %client_ctor_args );
+
 my $kstats = PA::Capture::kstat->new(
   # TODO: Don't need loop if we've got client with loop within it
   loop              => $loop,
@@ -51,7 +52,7 @@ my $kstats = PA::Capture::kstat->new(
   kstats_to_collect => $kstats_to_collect,
 );
 
-#my $vmstat = PA::Capture::vmstat->new();
+# my $vmstat = PA::Capture::vmstat->new();
 
 my $dtrace_script = q\
 this string fstype;
@@ -146,9 +147,9 @@ fbt::fop_open:entry
 my $dtrace_options = [ [ qw( dynvarsize   32m ) ],
                        [ qw( cleanrate  137Hz ) ],
                      ];
+
 my $dtrace_capture =
   PA::Capture::DTrace->new( client         => $client,
-    # loop           => $loop,
                             dtrace_script  => $dtrace_script,
                             stat_name      => 'fsop_lat',
                             dtrace_options => $dtrace_options );
@@ -157,7 +158,6 @@ my $dtrace_capture =
 #   PA::Capture::mdb::memstat->new( client         => $client,
 #                                   stat_name      => 'memstat',
 #                                 );
-
 
 say "AMQP SERVER: " . $client->amqp_server;
 $loop->run();
