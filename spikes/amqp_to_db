@@ -85,7 +85,10 @@ $loop->add( $fsop_lat_handler );
 
 my @pending_futures;
 
-while (my $dhref = $mq->recv(45000)) {
+#
+# Wait forever
+#
+while (my $dhref = $mq->recv(0)) {
   my ($host_id, $host_record);
   #say $dhref->{body};
   #say Dumper( [ $dhref ] );
