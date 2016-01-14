@@ -191,7 +191,7 @@ while (my $dhref = $mq->recv(0)) {
           $stat_ref->{$memstat_type}->{$submeta};
       }
     }
-    say Dumper( \%memstat_data );
+    # say Dumper( \%memstat_data );
     my $new_memstat = $host_record->create_related('memstat_rs',
       {
         timestamp => DateTime->from_epoch( epoch => $stat_ref->{timestamp},
