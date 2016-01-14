@@ -277,9 +277,10 @@ sub insert_arcstat {
     if (exists $renamed_fields->{$f}) {
       $renamed_f = $renamed_fields->{$f};
     }
-    if (not defined($stat_ref->{$renamed_f //= $f})) {
-      say "WARNING: $f not defined";
-    }
+    # NOTE: This doesn't seem to work as expected
+    # if (not defined($stat_ref->{$renamed_f //= $f})) {
+    #   say "WARNING: $f not defined";
+    # }
     $columns{$f} = $stat_ref->{$f};
   }
   foreach my $old_fname (keys %$renamed_fields) {
