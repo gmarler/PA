@@ -7,6 +7,12 @@ use v5.20;
 # VERSION
 # PODNAME: pa_client - the Performance Analytics Client
 
+use FindBin qw($Bin);
+
+# This would normally be .../../lib, but we install modules in a slightly
+# different place in /bb/pm/...
+use lib "$Bin/../lib/perl5";
+
 use Getopt::Long;
 use JSON::MaybeXS;
 use DateTime::TimeZone   qw();
