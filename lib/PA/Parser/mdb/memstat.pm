@@ -110,6 +110,12 @@ sub _parse_interval {
     $memstat_data{total}->{pct_of_total} = 100;
   }
 
+  # Handle case where 'Defdump prealloc' may not be output - just zero it out
+  if (not exists $memstat_data{'defdump_prealloc'}) {
+    @{$memstat_data{'defdump_prealloc'}}{ qw(page_count bytes pct_of_total) } =
+      (0, 0, 0);
+  }
+
   return \%memstat_data;
 }
 
