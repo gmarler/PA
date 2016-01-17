@@ -1,24 +1,287 @@
 #!/usr/bin/env perl
 
+package PA::Parser;
+
 use strict;
 use warnings;
+use v5.20;
+
+use Moose::Role;
+use namespace::autoclean;
+use IO::File                     qw();
+use DateTime::Format::Strptime   qw();
+use DateTime::Set                qw();
+use DateTime::Span               qw();
+use Fcntl                        qw(SEEK_SET);
+use Moose::Util::TypeConstraints;
+
+#
+# These are the methods objects which use this role must implement
+#
+requires '_build_dt_regex';
+requires '_build_strptime_pattern';
+requires '_parse_interval';
+
+
+# Define these, so we can use them in type unions below as needed
+class_type 'IO::Handle';
+class_type 'IO::File';
+class_type 'IO::All::File';
+class_type 'IO::Uncompress::Bunzip2';
+
+# If we're parsing from a continuous datastream or file, rather than reading
+# interval by interval
+has 'datastream' => ( is       => 'rw',
+                      isa      => 'IO::Handle | IO::File | IO::All::File | IO::Uncompress::Bunzip2',
+                      required => 0,
+                    );
+
+# The Date/Time regex, should be universal across all *stat and other
+# data gathering applications
+has 'dt_regex' => (
+  is      => 'ro',
+  isa     => 'RegexpRef',
+  lazy    => 1,
+  builder => '_build_dt_regex',
+);
+
+has 'strptime_pattern' => (
+  is      => 'ro',
+  isa     => 'Str',
+  lazy    => 1,
+  builder => '_build_strptime_pattern',
+);
+
+# Regex used to pull individual records from the input, breaking them up into
+# a datetime stamp, and the raw data (as $1 and $2)
+has 'regex'    => ( is => 'rw', isa => 'RegexpRef',
+                    lazy => 1, # Must be lazy because it depends on dt_regex
+                    default => sub {
+                                 my $self = shift;
+                                 my $dt_regex = $self->dt_regex;
+                               qr{(
+                                    $dt_regex   # date-timestamp
+                                    (?:.+?)     # all data after date-timestamp
+                                  )
+                                  # Up to, but not including, the next date/timestamp
+                                  # (?= (?: $self->dt_regex | \z ) )
+                                  (?= (?: $dt_regex ) )
+                                 }smx;
+                               },
+                  );
+
+# regex to use at EOF
+# NOTE It's not clear we even need this anymore - will re-evaluate during a
+#      later refactoring session
+has 'regex_eof' => ( is => 'rw', isa => 'RegexpRef',
+                     lazy => 1, # Must be lazy because it depends on dt_regex
+                     default => sub {
+                                  my $self = shift;
+                                  my $dt_regex = $self->dt_regex;
+                                qr{(
+                                     $dt_regex   # date-timestamp
+                                     (?:.+?)     # all data after date-timestamp
+                                   )
+                                   # Up to, but not including, the next date/timestamp
+                                   (?= (?: $dt_regex | \z ) )
+                                  }smx;
+                                },
+                   );
+
+
+sub parse_interval {
+  my ($self, $interval_output) = @_;
+
+  #my ($dt_regex) = $self->dt_regex;
+  #my ($regex)    = $self->regex;
+
+  return $self->_parse_interval($interval_output);
+}
+
+
+package PA::Parser::mdb::memstat;
+
+use strict;
+use warnings;
+use v5.20;
+
+# VERSION
+
+use Moose;
+use namespace::autoclean;
+use Data::Dumper
+
+with 'PA::Parser';
+
+sub _build_dt_regex {
+  # this data is extracted from mdb's dcmd of the following form:
+  # time::print -d ! sed -e 's/^0t//'
+  # which *should be* epoch secs
+  return qr{^
+            (?: \d+     # Epoch secs
+                \n
+            )
+           }smx;
+}
+
+sub _build_strptime_pattern {
+  return "%s";
+}
+
+
+=head2 _parse_interval
+
+Parse data for a single time interval
+
+=cut
+
+sub _parse_interval {
+  my ($self,$data) = @_;
+
+  my (%memstat_data);
+
+  # TODO: Total doesn't yet work, so fix it, as it doesn't have the
+  #       pct_of_total column
+  my $memstat_regex =
+    qr{^ (?: (?<pgtype>(?:Page\sSummary|---)) [^\n]+ \n |   # memstat data headers
+             (?<pgtype>(?:Kernel|Defdump\sprealloc|Guest|ZFS\sMetadata|
+                          ZFS\sFile\sData|Anon|Exec\sand\slibs|Page\scache|
+                          Free\s\(cachelist\)|Free\s\(freelist\)|
+                          In\stemporary\suse))          \s+
+             (?<pgcount>\d+)               \s+
+             (?<bytes>\d+(?:\.\d+)?(?:[kMG])?)  \s+
+             (?<pct_of_total>\d+)\%
+             \n
+         ) |
+         (?: (?<pgtype>Total) \s+
+             (?<pgcount>\d+)  \s+
+             (?<bytes>\d+(?:\.\d+)?(?:k|M|G|)?) \n )
+      }smx;
+
+  while ($data =~ m{ $memstat_regex }gsmx ) {
+    # Skip headers
+    next if ($+{pgtype} =~ m{^(?:Page\sSummary|In\stemporary\suse|---)$} );
+
+    my ($page_type,$page_count,$bytes,$pct_of_total) =
+      @+{ qw(pgtype pgcount bytes pct_of_total) };
+
+    # Fix $page_type names so they can be used as hash keys
+    $page_type = lc($page_type);
+    $page_type =~ s/[()]//g;
+    $page_type =~ s/\s+/_/g;  # Replace spaces with underscores
+
+    $memstat_data{$page_type} = { };
+
+    if ($bytes =~ m/(?<size>\d+(?:\.\d+)?)(?<unit>k|M|G|)$/) {
+      $bytes = $+{size};
+      if ($+{unit} eq '') { # must be in bytes, nothing to do
+      } elsif ($+{unit} eq 'k') {
+        $bytes *= 1024;
+      } elsif ($+{unit} eq 'M') {
+        $bytes *= 1024 * 1024;
+      } elsif ($+{unit} eq 'G') {
+        $bytes *= 1024 * 1024 * 1024;
+      }
+      $bytes = int($bytes);  # Eliminate possible "fractional" bytes
+    }
+
+    @{$memstat_data{$page_type}}{ qw(page_count bytes pct_of_total) } =
+      ($page_count, $bytes, $pct_of_total);
+
+    # Clean up undefined "Total"'s percent of total, which is 100%
+    $memstat_data{total}->{pct_of_total} = 100;
+  }
+
+  return \%memstat_data;
+}
+
+
+__PACKAGE__->meta->make_immutable;
+
+
+
+package PA::Capture::mdb::memstat;
+
+use strict;
+use warnings;
+use v5.20;
+
+use Moose;
+use MooseX::Types::Moose qw(Str Int Undef HashRef ArrayRef);
+use Moose::Util::TypeConstraints;
+use namespace::autoclean;
+use PA::Parser::mdb::memstat;
+
+has [ 'parser' ] => (
+  is      => 'ro',
+  isa     => 'PA::Parser::mdb::memstat',
+  default => sub {
+    return PA::Parser::mdb::memstat->new;
+  },
+);
+
+=method extract
+
+Given output from mdb's ::memstat dcmd, return a hashref datas tructure
+containing the salient info
+
+=cut
+
+sub extract {
+  my ($self,$interval) = @_;
+
+  return $self->parser->parse_interval($interval);
+}
+
+
+
+package main;
+
+use strict;
+use warnings;
+use v5.20;
 
 use IO::Async::Loop;
+use IO::Async::Timer::Periodic;
+use Solaris::mdb;
+use Data::Dumper;
 
 my $loop = IO::Async::Loop->new;
 
-$loop->open_child(
-  command => [ "/usr/bin/mdb", "-k" ];
+# NOTE: This will only be possible when IO::Async can work with ptys
+#
+# $loop->open_child(
+#   command => [ "/usr/bin/mdb", "-k" ];
+#
+#   stdout => {
+#     on_read => sub {
+#       my $stream, $buffref, $eof ) = @_;
+#     },
+#   },
+#
+#   stdin  => {
+#     on_read => sub {
+#     },
+#   },
+#
+# );
 
-  stdout => {
-    on_read => sub {
-      my $stream, $buffref, $eof ) = @_;
-    },
+# ::memstat can take a while on the largest machines, so give a nice timeout
+my $mdb     = Solaris::mdb->new( timeout => 30 );
+my $capture = PA::Capture::mdb::memstat->new;
+
+my $timer = IO::Async::Timer::Periodic->new(
+  interval       => 30,
+  on_tick  => sub {
+    my $out = $mdb->capture_dcmd("time::print -d ! sed -e 's/^0t//' ; ::memstat");
+    say $out;
+
+    my $dhref = $capture->extract($out);
+    say Dumper( $dhref );
   },
-
-  stdin  => {
-    on_read => sub {
-    },
-  },
-
 );
+
+$timer->start;
+$loop->add($timer);
+
+$loop->run;
