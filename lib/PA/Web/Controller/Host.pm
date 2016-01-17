@@ -2,6 +2,8 @@ package PA::Web::Controller::Host;
 use Moose;
 use namespace::autoclean;
 
+# VERSION
+
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 use JSON::MaybeXS;
@@ -18,8 +20,13 @@ Catalyst Controller.
 
 =cut
 
+# Make sure we always avoid this message by setting a default type:
+# [info] Could not find a serializer for an empty content-type
+__PACKAGE__->config(default => 'application/json');
 
-=head2 host_list
+=method host_list
+
+First step in chain that extracts a list of hosts as a REST entity
 
 =cut
 
@@ -30,6 +37,12 @@ sub host_list : Path('/host') :Args(0) : ActionClass('REST') {
     'Access-Control-Allow-Origin' => '*',
   );
 }
+
+=method host_list_GET
+
+Implement GET verb for host_list REST query
+
+=cut
 
 sub host_list_GET {
   my ($self, $c) = @_;

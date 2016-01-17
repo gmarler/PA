@@ -17,14 +17,14 @@ use Catalyst::Runtime 5.80;
 #                 directory
 
 use Catalyst qw/
-    -Debug
     ConfigLoader
     Static::Simple
 /;
+#   -Debug
 
 extends 'Catalyst';
 
-our $VERSION = '0.01';
+# VERSION
 
 # Configure the application.
 #

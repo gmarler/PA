@@ -30,11 +30,23 @@ has 'directory'  => ( is       => 'ro',
                     );
 
 
+=method get( $type, $instance )
+
+Get the specified type and instance for the metdata
+
+=cut
+
 sub get {
   my ($self, $type, $instance) = @_;
 
   return $self->metadata->{$type}->{$instance};
 }
+
+=method list( $type )
+
+List the metadata for the given type
+
+=cut
 
 sub list {
   my ($self, $type) = @_;
@@ -43,6 +55,12 @@ sub list {
 
   return \@list;
 }
+
+=method list_types
+
+List the types for the given metadata
+
+=cut
 
 sub list_types {
   my ($self) = shift;

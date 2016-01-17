@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+
+use v5.18;
+use strict;
+use warnings;
+
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
+use Try::Tiny;
+use PA::Schema;
+use Data::Dumper;
+
+use JSON::MaybeXS;
+use DateTime             qw();
+use DateTime::Format::Pg qw();
+use Data::Dumper;
+use Getopt::Long;
+
+my $connect_info = { dsn => 'DBI:Pg:dbname=template1;host=localhost;port=15432', user => 'postgres', password => '' };
+
+my $schema = PA::Schema->connect(
+  $connect_info
+);
+
+my $hosts_rs = $schema->resultset( 'Host' );
+my $fsoplat_rs = $schema->resultset( 'Fsoplat' );
+
+#my @fsoplats = $hosts_rs->search_related('fsoplat_rs', { 'host_fk' => 7 })->all();
+my $rs = $schema->resultset('Fsoplat')->search;
+
+while(my $fsoplat = $rs->next) {
+  say Dumper( $fsoplat->latrange );
+}
+
+exit;
+
+
+

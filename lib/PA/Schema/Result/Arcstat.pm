@@ -3,6 +3,8 @@ package PA::Schema::Result::Arcstat;
 use strict;
 use warnings;
 
+# VERSION
+
 use base 'DBIx::Class::Core';
 
 __PACKAGE__->load_components(qw/ InflateColumn::DateTime /);

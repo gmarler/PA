@@ -1,7 +1,11 @@
 package PA::Schema::ResultSet::Arcstat;
 
-use 5.20.0;
+use strict;
 use warnings;
+use 5.20.0;
+
+# VERSION
+
 use parent 'PA::Schema::ResultSet';
 
 #sub search_by_name {
@@ -9,6 +13,12 @@ use parent 'PA::Schema::ResultSet';
 #}
 
 #sub find_by_name { $_[0]->search_by_name($_[1])->single }
+
+=method search_by_host
+
+Search for Arcstat data by host
+
+=cut
 
 sub search_by_host {
   my ($rs,$host_id) = @_;
@@ -18,6 +28,12 @@ sub search_by_host {
       'me.host_fk' => $host_id,
     });
 }
+
+=method search_by_host_sorted
+
+Search for ARC stat data by host, sorted by ascending timestamp
+
+=cut
 
 sub search_by_host_sorted {
   my ($rs,$host_id) = @_;
@@ -31,6 +47,12 @@ sub search_by_host_sorted {
     }
   );
 }
+
+=method host_hit_rate
+
+Get the hit rate for the given host
+
+=cut
 
 sub host_hit_rate {
   my ($rs,$host_id) = @_;
@@ -77,6 +99,12 @@ sub host_hit_rate {
   );
 }
 
+
+=method stat_rate( $stat )
+
+Extract rate per time interval for the specific ARC statistic
+
+=cut
 
 sub stat_rate {
   my ($rs,$stat) = @_;
@@ -161,6 +189,12 @@ sub stat_rate {
 # Ending queries are all the same except for an additional predicate to ensure
 # that only date/times *later than* the beginning one are selected.
 
+=method avail_dates
+
+Extract the list of dates for which ARC statistics are available
+
+=cut
+
 sub avail_dates {
   my ($rs) = @_;
 
@@ -177,6 +211,12 @@ sub avail_dates {
     },
   );
 }
+
+=method avail_hours_for_date
+
+Given a date, return the list of hours that have ARC stat data available
+
+=cut
 
 sub avail_hours_for_date {
   my ($rs,$selected_date) = @_;
@@ -196,6 +236,14 @@ sub avail_hours_for_date {
     },
   );
 }
+
+
+=method avail_mins_for_date_hour
+
+Given a date and an hour, return list of minutes for which ARC stat data is
+available.
+
+=cut
 
 sub avail_mins_for_date_hour {
   my ($rs,$selected_date,$selected_HH) = @_;

@@ -2,6 +2,8 @@ package PA::Web::Controller::REST;
 use Moose;
 use namespace::autoclean;
 
+# VERSION
+
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 use Net::AMQP::RabbitMQ;
@@ -20,14 +22,25 @@ Catalyst Controller.
 
 =cut
 
+# Make sure we always avoid this message by setting a default type:
+# [info] Could not find a serializer for an empty content-type
+__PACKAGE__->config(default => 'application/json');
 
-=head2 index
+=method index
+
+Start of REST query
 
 =cut
 
 sub index :Path :Args(0) ActionClass('REST') {
     my ( $self, $c ) = @_;
 }
+
+=method index_GET
+
+Implement GET verb on REST request
+
+=cut
 
 sub index_GET {
   my ($self, $c) = @_;
@@ -38,6 +51,12 @@ sub index_GET {
 }
 
 
+=method vcpu
+
+REST action for vcpu
+
+=cut
+
 sub vcpu :Path('/vcpu') :Args(1) ActionClass('REST') {
   my ($self, $c, $hostname) = @_;
 
@@ -46,6 +65,12 @@ sub vcpu :Path('/vcpu') :Args(1) ActionClass('REST') {
     'Access-Control-Allow-Origin' => '*',
   );
 }
+
+=method vcpu_GET
+
+Implement GET verb on vcpu REST action
+
+=cut
 
 sub vcpu_GET {
   my ($self, $c) = @_;
@@ -80,22 +105,30 @@ sub vcpu_GET {
             );
 }
 
-=head3 VCPU WebSocket TEST
+=method VCPU WebSocket TEST
+
+Test of the VCPU WebSocket interface
 
 =cut
 
-sub start : ChainedParent
- PathPart('echo') CaptureArgs(0) { }
-
-sub index :Chained('start') PathPart('') Args(0)
-{
-  my ($self, $c) = @_;
-  my $url = $c->uri_for_action($self->action_for('ws'));
-
-  $url->scheme('ws');
-  $c->stash(websocket_url => $url);
-  $c->forward($c->view('HTML'));
-}
+#
+# NOTE:
+# Commented out below because it was redefining 'index' above - clear this up
+# later
+#
+#
+# sub start : ChainedParent
+#  PathPart('echo') CaptureArgs(0) { }
+# 
+# sub index :Chained('start') PathPart('') Args(0)
+# {
+#   my ($self, $c) = @_;
+#   my $url = $c->uri_for_action($self->action_for('ws'));
+# 
+#   $url->scheme('ws');
+#   $c->stash(websocket_url => $url);
+#   $c->forward($c->view('HTML'));
+# }
 
 
 =encoding utf8

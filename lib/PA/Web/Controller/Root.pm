@@ -2,6 +2,8 @@ package PA::Web::Controller::Root;
 use Moose;
 use namespace::autoclean;
 
+# VERSION
+
 BEGIN { extends 'Catalyst::Controller' }
 
 #

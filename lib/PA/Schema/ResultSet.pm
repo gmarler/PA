@@ -1,7 +1,10 @@
 package PA::Schema::ResultSet;
 
-use 5.20.0;
+use strict;
 use warnings;
+use 5.20.0;
+
+# VERSION
 
 use parent 'DBIx::Class::ResultSet';
 
