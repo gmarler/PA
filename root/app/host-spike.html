@@ -8,8 +8,7 @@
 
   <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="../bower_components/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
-
-  <!--<link href="../assets/css/PA.css" rel="stylesheet">-->
+  <link href="../assets/css/PA.css" rel="stylesheet">
 
 </head>
 <body ng-app="PA">
@@ -39,11 +38,23 @@
   </div>
 </script>
 
+<script type="text/ng-template" id="subsystems.html">
+  <a href="#" class="logo">PA</a>
+  <ul class="nav nav-sidebar"  ng-controller="SubsystemsCtrl">
+    <li ng-repeat="subsystem in subsystems" ng-click="subsystemSelected(subsystem)">
+      <a href="#">
+        {{subsystem.name}}
+      </a>
+    </li>
+  </ul>
+</script>
+
 
 <div class="container-fluid">
   <div class="row">
 
     <div class="col-md-2 sidebar">
+      <div subsystems></div>
     </div>
 
     <div class="col-md-offset-2 col-md-10 main">

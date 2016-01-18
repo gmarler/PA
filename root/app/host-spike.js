@@ -17,24 +17,6 @@ angular.module('PA', [
       }
     };
   })
-  .factory('Hosts', function () {
-    console.log("Creating Hosts Factory");
-    var Hosts = [
-      {"id": 1, "name": "nydevsol10", "time_zone": "America/New_York"},
-      {"id": 2, "name": "sundev51", "time_zone": "America/New_York"},
-      {"id": 3, "name": "p315", "time_zone": "Europe/London"},
-      {"id": 4, "name": "solperf1", "time_zone": "America/New_York"}
-    ];
-
-    return Hosts;
-  })
-  .factory('Subsystems', function () {
-    var Subsystems = [
-      {"name": "CPU"}
-    ];
-
-    return Subsystems;
-  })
   .factory('HostService', ['$http', function ($http) {
     var urlBase = 'http://nydevsol10.dev.bloomberg.com:5000';
     var HostService = {};
@@ -43,6 +25,22 @@ angular.module('PA', [
     };
 
     return HostService;
+  }])
+  .factory('SubsystemsService', [ function() {
+    var SubsystemsService = {};
+
+    var Subsystems = [
+      {"name": "CPU"},
+      {"name": "Memory"},
+      {"name": "Filesystems"},
+      {"name": "Network"}
+    ];
+
+    SubsystemsService.getSubsystems = function () {
+      return Subsystems;
+    };
+
+    return SubsystemsService;
   }])
   .controller('HostCtrl', ['$scope', 'HostService', function ($scope, HostService) {
     // $scope.hosts = HostService;
@@ -64,5 +62,25 @@ angular.module('PA', [
         console.log('Unable to load subject data: ' + error.message);
       });
 
+  }])
+  .directive("subsystems", function () {
+    return {
+      restrict: "A",
+      require: ['hostinfo'],
+      templateUrl: "subsystems.html",
+      link: function (scope, element, attrs, ctrls) {
+
+      }
+    };
+  })
+  .controller('SubsystemsCtrl', ['$scope', 'SubsystemsService', function($scope, SubsystemsService) {
+    console.log("Ran the Subsystems Controller");
+    $scope.selectedSubsystem = undefined;
+
+    $scope.subsystems = SubsystemsService.getSubsystems();
+
+    $scope.selectSubsystem = function(subsystemobj) {
+      $scope.selectedSubsystem = subsystemobj;
+    };
   }])
 ;
