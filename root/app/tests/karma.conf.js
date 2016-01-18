@@ -5,7 +5,7 @@ module.exports = function(config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
-    basePath: '../',
+    basePath: '',
 
 
     // frameworks to use
@@ -15,6 +15,13 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      '../../bower_components/jquery/dist/jquery.min.js',
+      '../../bower_components/bootstrap/dist/js/bootstrap.min.js',
+      '../../bower_components/angular/angular.min.js',
+      '../../bower_components/angular-mocks/angular-mocks.js',
+      '../../bower_components/lodash/lodash.js',
+      '../host-spike.js',
+      'unit/**/*.spec.js'
     ],
 
 
