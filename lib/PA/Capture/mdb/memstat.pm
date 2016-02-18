@@ -11,16 +11,21 @@ use MooseX::Types::Moose qw(Str Int Undef HashRef ArrayRef);
 use Moose::Util::TypeConstraints;
 use namespace::autoclean;
 use IO::Async::Loop;
+use IO::Async::Timer::Periodic;
 use Future;
-use Solaris::mdb;
-use PA::Parser::mdb::memstat;
+use Solaris::mdb                  qw();
+use PA::Parser::mdb::memstat      qw();
+use DateTime                      qw();
+use DateTime::TimeZone            qw();
+use Data::Dumper;
 
+# with 'PA::Capture::LogToFile';
 with 'MooseX::Log::Log4perl';
 
 #############################################################################
 # Attributes
 #############################################################################
-#
+
 has [ 'parser' ] => (
   is      => 'ro',
   isa     => 'PA::Parser::mdb::memstat',
@@ -62,6 +67,12 @@ has [ 'timer' ] => (
   lazy     => 1,
 );
 
+has [ 'logger' ] => (
+  is       => 'ro',
+  isa      => 'Log::Log4perl::Logger',
+  builder  => '_build_logger',
+);
+
 #
 # This is the statistic name to send with the MQ routing key, so we can identify
 # what kind of DTrace capture data this is; as in, for what metric.  May need to
@@ -73,13 +84,22 @@ has [ 'stat_name' ] => (
   required => 1,
 );
 
+sub _build_logger {
+  my ($self) = @_;
+
+  # Ensure we're in the right logging category, so the right data goes to the
+  # file
+  return $self->log(__PACKAGE__);
+}
+
 sub _build_timer {
   my ($self) = @_;
 
-  say "BUILDING TIMER";
+  $self->log->debug( "BUILDING TIMER" );
   my ($loop)              = $self->loop;
   my ($client)            = $self->client;
   my ($mdb)               = $self->mdb;
+  my ($logger)            = $self->logger;
 
   my $timer = IO::Async::Timer::Periodic->new(
     interval   => 30,
@@ -96,6 +116,8 @@ sub _build_timer {
       # Wait for all of the publishing futures to complete
       my $publishing_future = Future->wait_all( @publish_futures );
       $publishing_future->get;
+      my $logging_output = $self->_format_for_logging($dhref);
+      $logger->info( $logging_output );
     },
   );
 
@@ -114,13 +136,15 @@ Build our object in the proper sequence
 sub BUILD {
   my ($self) = @_;
 
-  say "Building client";
+  my $logger = $self->logger;
+
+  $logger->debug( "Building client" );
   $self->client;
-  say "Building loop";
+  $logger->debug( "Building loop" );
   $self->loop;
-  say "Building mdb";
+  $logger->debug( "Building mdb" );
   $self->mdb;
-  say "Building timer";
+  $logger->debug( "Building timer" );
   $self->timer;
 }
 
@@ -138,6 +162,41 @@ sub extract {
   return $self->parser->parse_interval($interval);
 }
 
+=method _format_for_logging
 
+Format the extracted data for logging to a file
+
+=cut
+
+sub _format_for_logging {
+  my ($self, $dhref) = @_;
+
+  my $total_output;
+  my $header = "# SUBSYSTEM:RAM SIZE IN BYTES:% OF TOTAL RAM";
+  my (@fields) = qw( kernel zfs_metadata zfs_file_data anon exec_and_libs
+                     page_cache free_cachelist free_freelist );
+
+  # NOTE: We can use the timestamp here, and convert it into a datetime in the
+  # local time zone because we're gathering from the data from this host, not
+  # some remote host.
+  my ($timestamp) = $dhref->{timestamp};
+  my ($timestamp_text) =
+    DateTime->from_epoch( epoch     => $timestamp,
+                          time_zone =>
+                            DateTime::TimeZone->new( name => "local"),
+                        )->strftime("%F %H:%M:%S");
+
+  $total_output .= $timestamp_text . "\n";
+  $total_output .= $header . "\n";
+
+  foreach my $field (@fields) {
+    my $href = $dhref->{$field};
+    my $field_name = uc($field);
+    my $line = "$field_name:" . $href->{bytes} . ":" . $href->{pct_of_total};
+    $total_output .= $line . "\n";
+  }
+
+  return $total_output;
+}
 
 1;

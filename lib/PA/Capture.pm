@@ -3,8 +3,6 @@ package PA::Capture;
 use strict;
 use warnings;
 
-# VERSION
-
-
+use v5.20;
 
 1;

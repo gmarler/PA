@@ -5,7 +5,7 @@ use warnings;
 use v5.20;
 
 # VERSION
-# PODNAME: pa_client - the Performance Analytics Client
+# PODNAME: pa_client_memstat - the Performance Analytics Client for memstat alone
 
 use FindBin qw($Bin);
 
@@ -13,17 +13,55 @@ use FindBin qw($Bin);
 # different place in /bb/pm/...
 use lib "$Bin/../lib/perl5";
 
+use Moose;
 use Getopt::Long;
 use JSON::MaybeXS;
 use DateTime::TimeZone   qw();
 use Net::Async::AMQP;
 use IO::Async::Loop;
 use Data::Dumper;
-use Solaris::mdb;
 use PA::AMQP::Client;
-use PA::Capture::kstat;
-use PA::Capture::DTrace;
 use PA::Capture::mdb::memstat;
+
+with 'MooseX::Log::Log4perl';
+
+my $log_conf = q{
+log4perl.category               = DEBUG, Screen, FWR
+
+log4perl.appender.Screen        = \
+     Log::Log4perl::Appender::ScreenColoredLevels
+log4perl.appender.Screen.layout = \
+     Log::Log4perl::Layout::PatternLayout
+log4perl.appender.Screen.layout.ConversionPattern = \
+     %m%n
+
+log4perl.appender.FWR           = Log::Dispatch::FileWriteRotate
+log4perl.appender.FWR.dir       = /tmp
+log4perl.appender.FWR.histories = 7
+log4perl.appender.FWR.prefix    = pa_client_memstat
+log4perl.appender.FWR.period    = daily
+log4perl.appender.FWR.layout    = \
+     Log::Log4perl::Layout::PatternLayout
+log4perl.appender.FWR.layout.ConversionPattern = \
+     %m%n
+
+log4perl.category.PA.Capture.mdb.memstat = INFO, FWR_memstat
+
+log4perl.appender.FWR_memstat           = Log::Dispatch::FileWriteRotate
+log4perl.appender.FWR_memstat.dir       = /tmp
+log4perl.appender.FWR_memstat.histories = 7
+log4perl.appender.FWR_memstat.prefix    = memstat
+log4perl.appender.FWR_memstat.period    = daily
+log4perl.appender.FWR_memstat.layout    = \
+     Log::Log4perl::Layout::PatternLayout
+log4perl.appender.FWR_memstat.layout.ConversionPattern = \
+     %m%n
+};
+
+Log::Log4perl::init(\$log_conf);
+
+my $logger = Log::Log4perl::get_logger();
+$logger->error("YEAH!");
 
 # This spike shows how PA clients starting up will initially post host specific
 # information, so that it can be received and pre-inserted into the back end
@@ -32,15 +70,8 @@ use PA::Capture::mdb::memstat;
 my %client_ctor_args;
 my $amqp_server;
 
-my $kstats_to_collect =
-  [
-    [ qw( unix    0      system_pages) ],
-    [ qw( unix    0      dnlcstats) ],
-    [ qw( zfs     0      arcstats) ],
-  ];
-
 GetOptions( "amqp=s" => \$amqp_server )
-  or die("ERROR in command line args");
+  or $logger->logdie("ERROR in command line args");
 
 if ($amqp_server) {
   $client_ctor_args{amqp_server} = $amqp_server;
@@ -56,5 +87,6 @@ my $memstat_capture =
                                   stat_name      => 'memstat',
                                 );
 
-say "AMQP SERVER: " . $client->amqp_server;
+$logger->info( "AMQP SERVER: " . $client->amqp_server );
 $loop->run();
+
