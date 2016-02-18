@@ -180,11 +180,7 @@ sub _format_for_logging {
   # local time zone because we're gathering from the data from this host, not
   # some remote host.
   my ($timestamp) = $dhref->{timestamp};
-  my ($timestamp_text) =
-    DateTime->from_epoch( epoch     => $timestamp,
-                          time_zone =>
-                            DateTime::TimeZone->new( name => "local"),
-                        )->strftime("%F %H:%M:%S");
+  my ($timestamp_text) = "EPOCH: " . $timestamp;
 
   $total_output .= $timestamp_text . "\n";
   $total_output .= $header . "\n";
