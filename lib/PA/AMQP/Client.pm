@@ -14,6 +14,7 @@ use IO::Async::Loop             qw();
 use DateTime::TimeZone          qw();
 use Net::Async::AMQP            qw();
 use JSON::MaybeXS               qw();
+use Data::Dumper;
 
 with 'MooseX::Log::Log4perl';
 
@@ -54,7 +55,7 @@ has [ 'mq' ] => (
 
 has [ 'amqp_channel' ] => (
   is       => 'rw',
-  isa      => Undef | 'Net::Async::AMQP::Channel',
+  isa      => 'Maybe[Net::Async::AMQP::Channel]',
   default  => undef,
 );
 
@@ -125,6 +126,14 @@ sub _build_mq {
   $loop->add(
     my $mq = Net::Async::AMQP->new()
   );
+
+  $mq->bus->subscribe_to_event(
+    connected => sub {
+      say Dumper( \@_ );
+      say "Connection detected";
+    }
+  );
+
   $mq->connect(
     host    => $self->amqp_server,
     user    => $self->mq_user,
@@ -151,6 +160,27 @@ sub _build_mq {
     },
     sub { say "FAILED TO OPEN CHANNEL"; }
   )->get;
+
+  $mq->bus->subscribe_to_event(
+    heartbeat_failure => sub {
+      my ($ev, $last) = @_;
+      say "Heartbeat failure detected";
+    }
+  );
+  $mq->bus->subscribe_to_event(
+    unexpected_frame => sub {
+      my ($ev, $type, $frame) = @_;
+      say "Unexpected Frame type $type received: $frame";
+    }
+  );
+
+  my ($channel) = $self->amqp_channel();
+  $channel->bus->subscribe_to_event(
+    close => sub {
+      say "CHANNEL CLOSED - @_";
+      eval { shift->unsubscribe; }
+    }
+  );
 
   return $mq;
 }
