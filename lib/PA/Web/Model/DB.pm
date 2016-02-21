@@ -1,6 +1,11 @@
 package PA::Web::Model::DB;
 
 use strict;
+use warnings;
+use v5.20;
+
+# VERSION
+
 use base 'Catalyst::Model::DBIC::Schema';
 
 __PACKAGE__->config(

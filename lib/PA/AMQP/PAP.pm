@@ -2,6 +2,7 @@ package PA::AMQP::PAP;
 
 use strict;
 use warnings;
+use v5.20;
 
 # VERSION
 #
@@ -13,6 +14,7 @@ use PA;
 
 with 'MooseX::Log::Log4perl';
 
+#
 # This hash describes all known message types and subtypes.  Message types
 # with no subtype object have no subtypes.  The value at each subtype is a
 # coderef for further processing.
@@ -40,7 +42,7 @@ my $pap_message_types = {
     abort                   => &pap_validate,
     data_delete             => &pap_validate,
     data_get                => &pap_validate,
-    data_put                => &pap_validate
+    data_put                => &pap_validate,
   },
   notify => {
     aggregator_online       => &pap_validate,
@@ -48,9 +50,10 @@ my $pap_message_types = {
     config_reset            => &pap_validate,
     instrumenter_error      => &pap_dispatch,
     instrumenter_online     => &pap_validate,
-    log                     => &pap_validate
+    log                     => &pap_validate,
   },
-  data                      => &pap_dispatch,
+  # TODO: This probably needs to point to a href too, not just a CODEREF
+  # data                      => &pap_dispatch,
 };
 
 
@@ -190,11 +193,11 @@ has [ 'amqp_key_all' ] => (
   },
 );
 
-# 
+#
 # Each instrumentation gets its own key, which exactly one aggregator
 # subscribes to.  This facilitates distribution of instrumentation data
 # processing across multiple aggregators.
-# 
+#
 has [ 'amqp_key_base_instrumentation' ] => (
   is       => 'ro',
   isa      => 'Str',
@@ -258,7 +261,7 @@ sub broker {
   my ($self) = @_;
 
   if (not exists $ENV{AMQP_HOST}) {
-    die "Environment variable $AMQP_HOST not defined";
+    die "Environment variable AMQP_HOST not defined";
   }
 
   my $broker_conf = {};
@@ -273,6 +276,28 @@ sub broker {
   }
 
   return $broker_conf;
+}
+
+=method $self->pap_dispatch()
+
+NOTE: This is a placeholder, just to get this module to past testing.  It may
+not even belong here, but in a Role or similar, so look at this in the future
+
+=cut
+
+sub pap_dispatch {
+  return;
+}
+
+=method $self->pap_validate()
+
+NOTE: This is a placeholder, just to get this module to past testing.  It may
+not even belong here, but in a Role or similar, so look at this in the future
+
+=cut
+
+sub pap_validate {
+  return;
 }
 
 

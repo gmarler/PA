@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Performance Analytics Host Component Spike</title>
+
+  <link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../bower_components/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+  <link href="../assets/css/PA.css" rel="stylesheet">
+
+</head>
+<body ng-app="PA">
+<script type="text/ng-template" id="hostinfo.html">
+  <div class="panel-heading">
+    Host Info
+  </div>
+
+  <div class="panel-body" ng-controller="HostCtrl">
+
+    <label>Name:</label>
+
+    <button id="selected_host" class="btn btn-primary dropdown-toggle btn-sm" type="button"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+      {{ selectedHostName }} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu">
+      <li ng-repeat="host in hosts" ng-click="hostSelected(host)">
+        <a href="#">
+          {{host.name}}
+        </a>
+      </li>
+    </ul>
+
+    <label>Time Zone:</label> <span id="host_time_zone" class="label label-info">{{ selectedHostTimeZone }}</span>
+
+  </div>
+</script>
+
+<script type="text/ng-template" id="subsystems.html">
+  <a href="#" class="logo">PA</a>
+  <ul class="nav nav-sidebar"  ng-controller="SubsystemsCtrl">
+    <li ng-repeat="subsystem in subsystems" ng-click="subsystemSelected(subsystem)">
+      <a href="#">
+        {{subsystem.name}}
+      </a>
+    </li>
+  </ul>
+</script>
+
+
+<div class="container-fluid">
+  <div class="row">
+
+    <div class="col-md-2 sidebar">
+      <div subsystems></div>
+    </div>
+
+    <div class="col-md-offset-2 col-md-10 main">
+      <div class="panel panel-primary">
+        <div hostinfo></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="../bower_components/angular/angular.min.js"></script>
+<script src="../bower_components/lodash/lodash.min.js"></script>
+<script src="host-spike.js"></script>
+</body>
+</html>

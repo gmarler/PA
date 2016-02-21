@@ -3,6 +3,8 @@ package PA::Schema::Result::Host;
 use strict;
 use warnings;
 
+# VERSION
+
 use base 'DBIx::Class::Core';
 
 __PACKAGE__->table('host');
@@ -33,7 +35,12 @@ __PACKAGE__->has_many(
   {'foreign.host_fk' => 'self.host_id'} );
 
 __PACKAGE__->has_many(
-  'floplat_rs'  => 'PA::Schema::Result::Fsoplat',
+  'fsoplat_rs'  => 'PA::Schema::Result::Fsoplat',
   {'foreign.host_fk' => 'self.host_id'} );
+
+__PACKAGE__->has_many(
+  'memstat_rs'  => 'PA::Schema::Result::Memstat',
+  {'foreign.host_fk' => 'self.host_id'} );
+
 
 1;

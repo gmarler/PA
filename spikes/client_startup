@@ -1,228 +1,186 @@
 #!/usr/bin/env perl
 
-package PA::AMQP::Client;
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
+# To capture output from *stat commands
+package PA::Capture::Stat;
+
+
+
+
+
+
+
+# To capture output from DTrace scripts
+package PA::Capture::DTrace;
 
 use v5.20;
 
 use Moose;
-use MooseX::Types::Moose qw(Str Int Undef HashRef);
+use MooseX::Types::Moose qw(Str Int Undef HashRef ArrayRef);
 use Moose::Util::TypeConstraints;
 use namespace::autoclean;
-use IO::Async::Loop             qw();
-use DateTime::TimeZone          qw();
-use Net::Async::AMQP            qw();
-use JSON::MaybeXS               qw();
+use Solaris::kstat;
+use DTrace::Consumer;
+use IO::Async::Loop;
+use Future;
+use Data::Dumper;
+use PA::AMQP::Client;
+use JSON::MaybeXS;
 
 with 'MooseX::Log::Log4perl';
-
-class_type 'Net::Async::AMQP', { class => 'Net::Async::AMQP' };
-class_type 'Net::Async::AMQP::Channel';
-class_type 'IO::Async::Loop';
 
 #############################################################################
 # Attributes
 #############################################################################
 
+has [ 'client' ] => (
+  is       => 'ro',
+  isa      => 'PA::AMQP::Client',
+  required => 1,
+);
+
 has [ 'loop' ] => (
   is       => 'ro',
   isa      => 'IO::Async::Loop',
   default  => sub {
-                say "BUILDING PA::AMQP::Client loop";
+                say "BUILDING " . __PACKAGE__ . " loop";
                 return IO::Async::Loop->new;
               },
 );
 
-#
-# The sequence # of the data sent for each particular routing_key
-#
-has [ 'sent_sequence' ] => (
-  is       => 'rw',
-  isa      => HashRef,
+has [ 'dtc' ] => (
+  is       => 'ro',
+  isa      => 'DTrace::Consumer',
   default  => sub {
-                return {};
+                say "BUILDING DTrace::Consumer";
+                my $dtc = DTrace::Consumer->new;
+                return $dtc;
               },
 );
 
-has [ 'mq' ] => (
+has [ 'dtrace_options' ] => (
   is       => 'ro',
-  isa      => 'Net::Async::AMQP',
+  isa      => 'ArrayRef',
+  default  => sub {
+                return [ ];
+              },
+);
+
+has [ 'timer' ] => (
+  is       => 'ro',
+  isa      => 'IO::Async::Timer::Periodic',
+  builder  => '_build_timer',
   lazy     => 1,
-  builder  => '_build_mq',
-);
- 
-has [ 'amqp_channel' ] => (
-  is       => 'rw',
-  isa      => Undef | 'Net::Async::AMQP::Channel',
-  default  => undef,
 );
 
-
-has [ 'local_tz' ] => (
-  is       => 'ro',
-  isa      => 'DateTime::TimeZone',
-  default  => sub {
-                DateTime::TimeZone->new( name => 'local' );
-              },
-);
-
-has [ 'amqp_server' ] => (
+has [ 'dtrace_script' ] => (
   is       => 'ro',
   isa      => 'Str',
-  default  => sub {
-                return "localhost";
-              },
-);
-
-has [ 'mq_user' ] => (
-  is       => 'ro',
-  isa      => 'Str',
-  default  => sub {
-                return "solperf";
-              },
-);
-
-has [ 'mq_password' ] => (
-  is       => 'ro',
-  isa      => 'Str',
-  default  => sub {
-                return "solperf";
-              },
-);
-
-has [ 'exchange_name' ] => (
-  is       => 'ro',
-  isa      => 'Str',
-  default  => sub {
-                return "topic_stat";
-              },
-);
-
-has [ 'client_hostname' ] => (
-  is       => 'ro',
-  isa      => 'Str',
-  default  => sub {
-                my $hostname = qx{/bin/uname -n};
-                chomp($hostname);
-                return $hostname;
-              },
+  required => 1,
 );
 
 has [ 'json_encoder' ] => (
   is       => 'ro',
-  isa      => 'Object',
+  isa      => 'Cpanel::JSON::XS',
   default  => sub {
                 return JSON::MaybeXS->new->ascii;
               },
 );
 
+#
+# This is the statistic name to send with the MQ routing key, so we can identify
+# what kind of DTrace capture data this is; as in, for what metric.  May need to
+# refine this going forward, or redo in other terms.
+#
+has [ 'stat_name' ] => (
+  is       => 'ro',
+  isa      => 'Str',
+  required => 1,
+);
 
-sub _build_mq {
+
+sub _build_timer {
   my ($self) = @_;
 
-  my $loop = $self->loop;
-  $loop->add(
-    my $mq = Net::Async::AMQP->new()
-  );
-  $mq->connect(
-    host    => $self->amqp_server,
-    user    => $self->mq_user,
-    pass    => $self->mq_password,
-    vhost   => '/',
-  )->then(
-    sub {
-      say "CONNECT SUCCEEDED";
-      shift->open_channel;
-    },
-    sub { say "CONNECT FAILED!" }
-  )->then(
-    sub {
-      my ($channel) = shift;
-      say "OPENED CHANNEL " . $channel->id;
-      # Store channel for later use
-      $self->amqp_channel($channel);
-      Future->needs_all(
-        $channel->exchange_declare(
-          type     => 'topic',
-          exchange => $self->exchange_name,
-        )
-      );
-    },
-    sub { say "FAILED TO OPEN CHANNEL"; }
-  )->get;
+  say "BUILDING TIMER";
+  my ($dtc)               = $self->dtc;
+  my ($loop)              = $self->loop;
+  my ($client)            = $self->client;
+  my ($prog)              = $self->dtrace_script;
+  my ($coder)             = $self->json_encoder;
 
-  return $mq;
+  $dtc->strcompile($prog);
+  $dtc->go();
+
+  my $timer = IO::Async::Timer::Periodic->new(
+    interval => 1,
+    on_tick  => sub {
+
+      my $agg = {};
+
+      $dtc->aggwalk(
+        sub {
+          my ($id, $key, $val) = @_;
+
+          if (not exists( $agg->{$id} ) ) {
+            $agg->{$id} = {};
+          }
+
+          my $merged_key = join ':', @$key;
+          $agg->{$id}->{$merged_key} = $val;
+        }
+      );
+
+      my %reduced_agg;
+      $reduced_agg{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+      $reduced_agg{interval_data}  = [ ];
+      foreach my $aggid (keys %$agg) {
+        push @{$reduced_agg{interval_data}}, $agg->{$aggid};
+      }
+
+      my @publish_futures;
+      my ($routing_key) = $client->client_hostname . "." . $self->stat_name;
+      push @publish_futures, $client->send($routing_key, \%reduced_agg);
+
+      # Wait for all of the publishing futures to complete
+      my $publishing_future = Future->wait_all( @publish_futures );
+      $publishing_future->get;
+    },
+  );
+
+  $timer->start;
+  $loop->add($timer);
+
+  return $timer;
 }
 
-# Use BUILD to specify the order in which attributes are initialized
 sub BUILD {
   my ($self) = @_;
 
+  say "Building client";
+  $self->client;
   say "Building loop";
   $self->loop;
-  say "Building amqp_server";
-  $self->amqp_server;
-  say "Building mq_user";
-  $self->mq_user;
-  say "Building mq_password";
-  $self->mq_password;
-  say "Building exchange_name";
-  $self->exchange_name;
-  say "Building mq";
-  $self->mq;
-  say "Registering host";
-  $self->register_host;
-}
-
-
-sub send {
-  my ($self, $routing_key, $d_href) = @_;
-
-  my ($ch) = $self->amqp_channel;
-  my ($coder) = $self->json_encoder;
-  my ($exchange_name) = $self->exchange_name;
-
-  # Increment Sequence for this routing_key
-  if (not exists($self->sent_sequence->{$routing_key})) {
-    $self->sent_sequence->{$routing_key} = 0;
+  my ($dtc) = $self->dtc;
+  say "Applying DTrace options (if any)";
+  my (@dtrace_options) = @{$self->dtrace_options};
+  if (@dtrace_options) {
+    foreach my $option (@dtrace_options) {
+      say "Setting option $option->[0] to $option->[1]";
+      $dtc->setopt(@$option) or die "Unable to set $option";
+    }
+  } else {
+    say "No DTrace options to set";
   }
-  $d_href->{sequence} = ++$self->sent_sequence->{$routing_key};
-
-  my ($future) =
-  $ch->publish(exchange      => $exchange_name,
-               routing_key   => $routing_key,
-               type          => "text/plain",
-               expiration    => 60000,
-               delivery_mode => 1,           # delivery_mode => 2 is persistent
-               payload       => $coder->encode( $d_href ),
-             );
-  return $future;
+  say "Building timer";
+  $self->timer;
 }
 
 
-=head2 register_host
 
-When the PA client first starts up, it needs to notify the server of it's
-existence.  If the host has never been registered before, the server registers
-it.  If it has been registered before, all is well.
-
-=cut
-
-sub register_host {
-  my ($self) = @_;
-  my (@publish_futures);
-  my ($routing_key) = $self->client_hostname . ".register_host";
-
-  my ($data_href) = {
-    time_zone => $self->local_tz->name,
-  };
-  say "REGISTERING: " . $self->client_hostname;
-
-  push @publish_futures, $self->send($routing_key, $data_href);
-
-  # Wait for all (one) of the publishing futures to complete
-  my $publishing_future = Future->wait_all( @publish_futures );
-  $publishing_future->get;
-}
 
 
 package PA::Capture::kstat;
@@ -256,7 +214,7 @@ has [ 'loop' ] => (
   is       => 'ro',
   isa      => 'IO::Async::Loop',
   default  => sub {
-                say "BUILDING PA::Capture::kstat loop";
+                say "BUILDING " . __PACKAGE__ . " loop";
                 return IO::Async::Loop->new;
               },
 );
@@ -274,7 +232,7 @@ has [ 'kstats_to_collect' ] => (
   is       => 'ro',
   isa      => ArrayRef[ ArrayRef ],
   default  => sub {
-                [ 
+                [
                   [ "unix", 0, "system_pages" ],
                 ];
               },
@@ -392,6 +350,9 @@ use IO::Async::Loop;
 use Data::Dumper;
 use PA::AMQP::Client;
 use PA::Capture::kstat;
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
 
 # This spike shows how PA clients starting up will initially post host specific
 # information, so that it can be received and pre-inserted into the back end
@@ -418,12 +379,115 @@ my $loop = IO::Async::Loop->new();
 $client_ctor_args{loop} = $loop;
 
 my $client = PA::AMQP::Client->new( %client_ctor_args );
-my $kstats = PA::Capture::kstat->new( 
+my $kstats = PA::Capture::kstat->new(
   # TODO: Don't need loop if we've got client with loop within it
-  loop              => $loop,      
+  loop              => $loop,
   client            => $client,
   kstats_to_collect => $kstats_to_collect,
 );
+
+#my $vmstat = PA::Capture::vmstat->new();
+
+my $dtrace_script = q\
+this string fstype;
+
+fbt::fop_read:entry,
+fbt::fop_write:entry,
+fbt::fop_ioctl:entry,
+fbt::fop_access:entry,
+fbt::fop_getattr:entry,
+fbt::fop_setattr:entry,
+fbt::fop_lookup:entry,
+fbt::fop_create:entry,
+fbt::fop_remove:entry,
+fbt::fop_link:entry,
+fbt::fop_rename:entry,
+fbt::fop_mkdir:entry,
+fbt::fop_rmdir:entry,
+fbt::fop_readdir:entry,
+fbt::fop_symlink:entry,
+fbt::fop_readlink:entry,
+fbt::fop_fsync:entry,
+fbt::fop_getpage:entry,
+fbt::fop_putpage:entry,
+fbt::fop_map:entry,
+fbt::fop_open:entry
+/((self->vnode0 == NULL))/{
+	self->vnode0 = arg0;
+	self->depth0 = stackdepth;
+	self->latency0 = timestamp;
+}
+
+fbt::fop_open:return
+/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof((*((vnode_t**)self->vnode0))->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "dev" || this->fstype == "dev fs" || this->fstype == "proc" || this->fstype == "lofs" || this->fstype == "tmpfs" || this->fstype == "nfs")))/{
+	@[((probefunc + 4)),this->fstype] = llquantize((timestamp - self->latency0), 10, 3, 11, 100);
+}
+
+fbt::fop_read:return,
+fbt::fop_write:return,
+fbt::fop_ioctl:return,
+fbt::fop_access:return,
+fbt::fop_getattr:return,
+fbt::fop_setattr:return,
+fbt::fop_lookup:return,
+fbt::fop_create:return,
+fbt::fop_remove:return,
+fbt::fop_link:return,
+fbt::fop_rename:return,
+fbt::fop_mkdir:return,
+fbt::fop_rmdir:return,
+fbt::fop_readdir:return,
+fbt::fop_symlink:return,
+fbt::fop_readlink:return,
+fbt::fop_fsync:return,
+fbt::fop_getpage:return,
+fbt::fop_putpage:return,
+fbt::fop_map:return
+/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof(((vnode_t*)self->vnode0)->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "dev" || this->fstype == "dev fs" || this->fstype == "proc" || this->fstype == "lofs" || this->fstype == "tmpfs" || this->fstype == "nfs")))/{
+	@[((probefunc + 4)),this->fstype] = llquantize((timestamp - self->latency0), 10, 3, 11, 100);
+}
+
+fbt::fop_read:return,
+fbt::fop_write:return,
+fbt::fop_ioctl:return,
+fbt::fop_access:return,
+fbt::fop_getattr:return,
+fbt::fop_setattr:return,
+fbt::fop_lookup:return,
+fbt::fop_create:return,
+fbt::fop_remove:return,
+fbt::fop_link:return,
+fbt::fop_rename:return,
+fbt::fop_mkdir:return,
+fbt::fop_rmdir:return,
+fbt::fop_readdir:return,
+fbt::fop_symlink:return,
+fbt::fop_readlink:return,
+fbt::fop_fsync:return,
+fbt::fop_getpage:return,
+fbt::fop_putpage:return,
+fbt::fop_map:return,
+fbt::fop_open:entry
+/((self->depth0 == stackdepth))/{
+	(self->vnode0) = 0;
+	(self->depth0) = 0;
+	(self->latency0) = 0;
+}
+
+\;
+
+
+# Capture Filesystem Operation Latency data
+my $dtrace_options = [ [ qw( dynvarsize   32m ) ],
+                       [ qw( cleanrate  137Hz ) ],
+                     ];
+my $dtrace_capture =
+  PA::Capture::DTrace->new( client         => $client,
+    # loop           => $loop,
+                            dtrace_script  => $dtrace_script,
+                            stat_name      => 'fsop_lat',
+                            dtrace_options => $dtrace_options );
+
 
 say "AMQP SERVER: " . $client->amqp_server;
 $loop->run();

@@ -59,9 +59,22 @@ my $arity_numeric  = 'numeric-decomposition';
 # frequently, and all values for "granularity" must be a multiple of this.
 my $granularity_min = 5;
 
+=method sdc_config
+
+A configuration method we're not using at the moment, returns undef
+
+=cut
+
 sub sdc_config {
   return;  # We don't do this, so undefined
 }
+
+=method sys_info
+
+Returns system related info derived from uname() for use throughout the PA
+subsystem.
+
+=cut
 
 sub sys_info {
   my ($agentname, $agentversion) = @_;
@@ -76,7 +89,7 @@ sub sys_info {
   }
 
   return {
-    agent_name => $agentname,
+    agent_name    => $agentname,
     agent_version => $agentversion,
     os_name       => $uname->{sysname},
     os_release    => $uname->{release},
@@ -88,6 +101,12 @@ sub sys_info {
   };
 }
 
+=method deep_equal($obj1, $obj2)
+
+Does a deep comparison for equality between the given data structures
+
+=cut
+
 sub deep_equal {
   my ($lhs, $rhs) = @_;
 
@@ -96,23 +115,39 @@ sub deep_equal {
   return $c->Cmp;
 }
 
+=method deep_copy($obj)
+
+Does a deep copy/clone of the given object
+
+=cut
+
 sub deep_copy {
   my ($obj) = @_;
- 
+
   my $clone = clone($obj);
   return $clone;
 }
+
+=method deep_copy_into
+
+Currently unimplemented.
+
+=cut
 
 sub deep_copy_into {
   confess "Not implemented yet";
 }
 
-# Raise exception with a reasonable message if the specified key does not
-# exist in the object.  If 'prototype' is specified, raise exception
-# if the type of $href->{key} doesn't match the TYPE of 'prototype'.
-#
-#   Returns $href->{key}
-#
+=method field_exists($href, $key, $prototype);
+
+Raise exception with a reasonable message if the specified key does not
+exist in the object.  If 'prototype' is specified, raise exception
+if the type of $href->{key} doesn't match the TYPE of 'prototype'.
+
+  Returns $href->{key}
+
+=cut
+
 sub field_exists {
   my ($href, $key, $prototype) = @_;
 
@@ -127,9 +162,12 @@ sub field_exists {
   return $href->{key};
 }
 
-#
-# Returns true IFF the given href is empty.
-#
+=method is_empty(href)
+
+Returns true IFF the given href is empty.
+
+=cut
+
 sub is_empty {
   my ($href) = @_;
 
@@ -139,14 +177,23 @@ sub is_empty {
   return 1;
 }
 
-#
-# Returns the number of keys in a given href.
-#
+=method num_props($href)
+
+Returns the number of keys in a given href.
+
+=cut
+
 sub num_props {
   my ($href) = @_;
 
   return scalar (keys %$href);
 }
+
+=method do_pad($chr, $width, $left, $str)
+
+Performs space padding to the given width, using the given $chr (character)
+
+=cut
 
 sub do_pad {
   my ($chr, $width, $left, $str) = @_;
@@ -163,7 +210,12 @@ sub do_pad {
   return $ret;
 }
 
-# Given a time duration in millisecs, format it appropriately for output
+=method format_duration($time_in_ms)
+
+Given a time duration in millisecs, format it appropriately for output
+
+=cut
+
 sub format_duration {
   my ($time_in_ms) = @_;
 
@@ -199,9 +251,12 @@ sub format_duration {
   return $str;
 }
 
-#
-# Return true if the input string starts with the specified prefix.
-#
+=method starts_with($str, $prefix)
+
+Return true if the input string starts with the specified prefix.
+
+=cut
+
 sub starts_with {
   my ($str, $prefix) = @_;
 
@@ -217,14 +272,23 @@ sub starts_with {
   }
 }
 
+=method noop()
+
+Just what it says on the tin
+
+=cut
+
 sub noop { }
 
-#
-# Given a customer identifier and per-customer instrumentation identifier,
-# return the fully quanlified instrumentation id.  If custid is undefined, it
-# is assumed that instid refers to the global scope.  For details, see
-# the block comment at the top of this file on cfg_insts.
-#
+=method qualified_id($custid, $instid)
+
+Given a customer identifier and per-customer instrumentation identifier,
+return the fully quanlified instrumentation id.  If custid is undefined, it
+is assumed that instid refers to the global scope.  For details, see
+the block comment at the top of this file on cfg_insts.
+
+=cut
+
 sub qualified_id {
   my ($custid, $instid) = @_;
 
@@ -235,7 +299,12 @@ sub qualified_id {
   return "cust:$custid;$instid";
 }
 
-# function to walk an array and see if it conatins a given field.
+=method array_contains($aref, $field)
+
+function to walk an array and see if it conatins a given field.
+
+=cut
+
 sub array_contains {
   my ($arr, $field) = @_;
 
@@ -246,6 +315,12 @@ sub array_contains {
   }
 }
 
+=method array_merge($aref1, $aref2)
+
+Given 2 array refs, return an aref that merges them
+
+=cut
+
 sub array_merge {
   my ($orig, $addl) = @_;
 
@@ -255,31 +330,40 @@ sub array_merge {
   return \@merged;
 }
 
+=method http_param
+
+Unimplemented
+
+=cut
+
 sub http_param {
   confess "Not implemented yet";
 }
 
+=method run_stages($stages, $arg, $callback)
 
-# run_stages() is given an array "stages" of functions, an initial argument
-# "arg", and a callback "callback".  Each stage represents some task,
-# asynchronous or not, which should be completed before the next stage is
-# started.  Each stage is invoked with the result of the previous stage
-# and can abort this process if it encounters an error.  When all stages
-# have completed, "callback" is invoked with the error and results
-# of the last stage that was run.
-#
-# More precisely: the first function of "stages" may be invoked during
-# run_stages() or immediately after (asynchronously).  Each stage is
-# invoked as stage(arg, callback), where "arg" is the result of the
-# previous stage (or the "arg" specified to run_stages(), for the first
-# stage) and "callback" should be invoked when the stage is complete.
-# "callback" should be invoked as callback->(err, result), where "err"
-# is a non-null instance of Error iff an error was encountered and null
-# otherwise, and "result" is an arbitrary object to be passed to the
-# next stage.  The "callback" given to run_stages() is invoked after
-# the last stage has been run with the arguments given to that
-# stage's completion callback.
-#
+run_stages() is given an array "stages" of functions, an initial argument
+"arg", and a callback "callback".  Each stage represents some task,
+asynchronous or not, which should be completed before the next stage is
+started.  Each stage is invoked with the result of the previous stage
+and can abort this process if it encounters an error.  When all stages
+have completed, "callback" is invoked with the error and results
+of the last stage that was run.
+
+More precisely: the first function of "stages" may be invoked during
+run_stages() or immediately after (asynchronously).  Each stage is
+invoked as stage(arg, callback), where "arg" is the result of the
+previous stage (or the "arg" specified to run_stages(), for the first
+stage) and "callback" should be invoked when the stage is complete.
+"callback" should be invoked as callback->(err, result), where "err"
+is a non-null instance of Error iff an error was encountered and null
+otherwise, and "result" is an arbitrary object to be passed to the
+next stage.  The "callback" given to run_stages() is invoked after
+the last stage has been run with the arguments given to that
+stage's completion callback.
+
+=cut
+
 sub run_stages {
   my ($stages, $arg, $callback) = @_;
 
@@ -305,8 +389,13 @@ sub run_stages {
   $next->(undef, $arg);
 }
 
-# given an object and one of its methods, return a function that invokes that
-# method in the context of the specified object.
+=method wrap_method($obj, $method)
+
+Given an object and one of its methods, return a function that invokes that
+method in the context of the specified object.
+
+=cut
+
 sub wrap_method {
   my ($obj, $method) = @_;
 
@@ -315,11 +404,22 @@ sub wrap_method {
   }
 }
 
+=method run_parallel
+
+Unimplemented
+
+=cut
+
 sub run_parallel {
   confess "Not implemented yet";
 }
 
-# Returns true if the given string ends with the given suffix.
+=method ends_with($str, $suffix)
+
+Returns true if the given string ends with the given suffix.
+
+=cut
+
 sub ends_with {
   my ($str, $suffix) = @_;
 
@@ -329,6 +429,12 @@ sub ends_with {
     return 0;
   }
 }
+
+=method substitute
+
+Unimplemented
+
+=cut
 
 sub substitute {
   confess "Not implemented yet";

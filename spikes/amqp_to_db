@@ -16,6 +16,7 @@ use DateTime             qw();
 use Data::Dumper;
 use Net::AMQP::RabbitMQ;
 use IO::Async::Loop      qw();
+use IO::Async::Function  qw();
 use Getopt::Long;
 
 my %recvd_seq;
@@ -76,7 +77,18 @@ say "TAG: $tag";
 
 $SIG{'INT'} = sub { exit(0); };
 
-while (my $dhref = $mq->recv(10000)) {
+my $fsop_lat_handler = IO::Async::Function->new(
+  code => \&fsop_lat_organize,
+);
+
+$loop->add( $fsop_lat_handler );
+
+my @pending_futures;
+
+#
+# Wait forever
+#
+while (my $dhref = $mq->recv(0)) {
   my ($host_id, $host_record);
   #say $dhref->{body};
   #say Dumper( [ $dhref ] );
@@ -85,7 +97,7 @@ while (my $dhref = $mq->recv(10000)) {
   if (exists($recvd_seq{$dhref->{routing_key}})) {
     my ($next_seq) = $recvd_seq{$dhref->{routing_key}} + 1;
     if ($stat_ref->{sequence} != $next_seq) {
-      my ($gap) = $stat_ref->{sequence} - $recvd_seq{$dhref->{routing_key}};
+      my ($gap) = $stat_ref->{sequence} - $recvd_seq{$dhref->{routing_key}} - 1;
       say "$dhref->{routing_key}: EXPECTED SEQ $next_seq, RECEIVED $stat_ref->{sequence}, GAP SIZE $gap";
       # Update sequence to the latest received
       $recvd_seq{$dhref->{routing_key}} = $stat_ref->{sequence};
@@ -130,6 +142,65 @@ while (my $dhref = $mq->recv(10000)) {
     insert_arcstat($host_record, $stat_ref);
   }
 
+
+  if ($stat_type eq "fsop_lat") {
+    my @fsop_data;
+    #my @next_pending_futures;
+    #say "PENDING FUTURES: " . scalar(@pending_futures);
+    #foreach my $pf (@pending_futures) {
+    #  if ($pf->is_done) {
+    #    $pf->get;
+    #  } else {
+    #    push @next_pending_futures, $pf;
+    #  }
+    #}
+
+    # @pending_futures = @next_pending_futures;
+
+    my $fsop_data_aref =
+      $fsop_lat_handler->call(
+        args => [ $stat_ref, $host_record ],
+      )->on_done(
+        sub {
+          my $ret_aref = shift;
+          #say Dumper( $ret_aref );
+          return $ret_aref;
+        }
+      )->on_fail(
+        sub {
+          say "CANNOT HANDLE Filesystem Latency DATA! - $_[0]";
+        }
+      )->get;
+      #push @pending_futures, $f;
+
+      push @fsop_data,
+        [ qw( host_fk timestamp fsop fstype latrange count ) ];
+      push @fsop_data, @$fsop_data_aref;
+      #say Dumper( \@fsop_data );
+      $schema->resultset('Fsoplat')->populate( \@fsop_data );
+  }
+
+  if ($stat_type eq "memstat") {
+    my %memstat_data;
+    my @memstat_types = qw( defdump_prealloc zfs_file_data free_cachelist kernel
+                            anon exec_and_libs page_cache zfs_metadata
+                            free_freelist total );
+    foreach my $memstat_type (@memstat_types) {
+      foreach my $submeta (keys %{$stat_ref->{$memstat_type}}) {
+        $memstat_data{"${memstat_type}_${submeta}"} =
+          $stat_ref->{$memstat_type}->{$submeta};
+      }
+    }
+    # say Dumper( \%memstat_data );
+    my $new_memstat = $host_record->create_related('memstat_rs',
+      {
+        timestamp => DateTime->from_epoch( epoch => $stat_ref->{timestamp},
+                                           time_zone => 'UTC' ),
+        %memstat_data,
+      }
+    );
+  }
+
   #say "ACKNOWLEGING: $dhref->{delivery_tag}";
   $mq->ack( 1, $dhref->{delivery_tag}, 1 );
   #if (not exists($recvd_seq2{$dhref->{routing_key}})) {
@@ -137,6 +208,31 @@ while (my $dhref = $mq->recv(10000)) {
   #}
   #push @{$recvd_seq2{$dhref->{routing_key}}}, $stat_ref->{sequence};
 }
+
+
+sub fsop_lat_organize {
+  my ($stat_ref, $host_record) = @_;
+  my $stat_href = $stat_ref->{interval_data}->[0];
+  my $timestamp = DateTime->from_epoch( epoch => $stat_ref->{timestamp},
+                                        time_zone => 'UTC' ),
+  my $host_id   = $host_record->id;
+  my $ret_aref = [];
+
+  foreach my $fsop_fstype (keys %$stat_href) {
+    my ($fsop, $fstype) = $fsop_fstype =~ m{([^:]+):(.+)};
+    my $latencies = $stat_href->{$fsop_fstype};
+    foreach my $lat_range_count (@$latencies) {
+      # "deflate" the latency range into something the DB will understand as a
+      # string
+      my $lat_range = "[ $lat_range_count->[0]->[0], $lat_range_count->[0]->[1] ]";
+      my $count     = $lat_range_count->[1];
+      push @$ret_aref, [ $host_id, $timestamp, $fsop, $fstype, $lat_range, $count ];
+    }
+  }
+
+  return $ret_aref;
+}
+
 
 sub register_host {
   my ($schema, $hostname, $hostreg_ref) = @_;
@@ -181,9 +277,10 @@ sub insert_arcstat {
     if (exists $renamed_fields->{$f}) {
       $renamed_f = $renamed_fields->{$f};
     }
-    if (not defined($stat_ref->{$renamed_f //= $f})) {
-      say "WARNING: $f not defined";
-    }
+    # NOTE: This doesn't seem to work as expected
+    # if (not defined($stat_ref->{$renamed_f //= $f})) {
+    #   say "WARNING: $f not defined";
+    # }
     $columns{$f} = $stat_ref->{$f};
   }
   foreach my $old_fname (keys %$renamed_fields) {

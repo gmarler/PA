@@ -17,14 +17,14 @@ use Catalyst::Runtime 5.80;
 #                 directory
 
 use Catalyst qw/
-    -Debug
     ConfigLoader
     Static::Simple
 /;
+#   -Debug
 
 extends 'Catalyst';
 
-our $VERSION = '0.01';
+# VERSION
 
 # Configure the application.
 #
@@ -40,7 +40,19 @@ __PACKAGE__->config(
     # Disable deprecated behavior needed by old applications
     disable_component_resolution_regex_fallback => 1,
     enable_catalyst_header => 1, # Send X-Catalyst header
+    'Plugin::Static::Simple' => {
+        logging => 1,
+        dirs => [
+            'static',
+            'app',
+            'assets',
+            'bower_components',
+            'data',
+            #qr/^(images|css)/,
+        ],
+    }
 );
+
 
 # Start the application
 __PACKAGE__->setup();
