@@ -14,6 +14,7 @@ use IO::Async::Loop             qw();
 use DateTime::TimeZone          qw();
 use Net::Async::AMQP            qw();
 use JSON::MaybeXS               qw();
+use Future::Utils               qw(try_repeat try_repeat_until_success);
 
 with 'MooseX::Log::Log4perl';
 
@@ -32,6 +33,12 @@ has [ 'loop' ] => (
                 say "BUILDING PA::AMQP::Client loop";
                 return IO::Async::Loop->new;
               },
+);
+
+has [ 'is_connected' ] => (
+  is       => 'rw',
+  isa      => 'Bool',
+  default  => 0,
 );
 
 #
@@ -117,6 +124,11 @@ has [ 'json_encoder' ] => (
               },
 );
 
+has [ 'retry_interval' ] => (
+  is       => 'ro',
+  isa      => 'Int',
+  default  => 30,    # Seconds
+);
 
 sub _build_mq {
   my ($self) = @_;
@@ -125,33 +137,15 @@ sub _build_mq {
   $loop->add(
     my $mq = Net::Async::AMQP->new()
   );
-  $mq->connect(
-    host    => $self->amqp_server,
-    user    => $self->mq_user,
-    pass    => $self->mq_password,
-    vhost   => '/',
-  )->then(
-    sub {
-      say "CONNECT SUCCEEDED";
-      shift->open_channel;
-    },
-    sub { say "CONNECT FAILED!" }
-  )->then(
-    sub {
-      my ($channel) = shift;
-      say "OPENED CHANNEL " . $channel->id;
-      # Store channel for later use
-      $self->amqp_channel($channel);
-      Future->needs_all(
-        $channel->exchange_declare(
-          type     => 'topic',
-          exchange => $self->exchange_name,
-        )
-      );
-    },
-    sub { say "FAILED TO OPEN CHANNEL"; }
-  )->get;
 
+  $mq->bus->subscribe_to_event(
+    # If we get to a close event, we will have already initialized a
+    # Net::Async::AMQP object earlier, so we're just re-connecting.
+    close => sub {
+      say "closed by remote";
+      my $reconnected_f = $self->_try_connect()->get;
+    }
+  );
   return $mq;
 }
 
@@ -176,6 +170,8 @@ sub BUILD {
   $self->exchange_name;
   say "Building mq";
   $self->mq;
+  say "Connecting to AMQP Server";
+  my $connect_f = $self->_try_connect()->get;
   say "Registering host";
   $self->register_host;
 }
@@ -240,6 +236,61 @@ sub register_host {
   $publishing_future->get;
 }
 
+sub _try_connect {
+  my ($self) = shift;
+  my ($mq) = $self->mq;
+  my ($retry_interval) = $self->retry_interval;
+
+  my $eventual_f =
+  try_repeat_until_success {
+    my $trial_f =
+      $mq->connect(
+        host      => $self->amqp_server,
+        user      => $self->mq_user,
+        pass      => $self->mq_password,
+        vhost     => '/',
+        # NOTE: on_closed never seems to fire...
+        on_closed =>
+          sub {
+            say "CONNECTION CLOSED";
+          },
+      )->then(
+        sub {
+          say "CONNECT SUCCEEDED";
+          $self->is_connected(1);
+          shift->open_channel;
+        },
+        sub {
+          say "CONNECT FAILED! - RETRYING AGAIN IN $retry_interval SECONDS";
+          sleep($retry_interval);
+          Future->fail('CONNECT FAILED');
+        }
+      )->then(
+        sub {
+          my ($channel) = shift;
+          say "OPENED CHANNEL " . $channel->id;
+          # Store channel for later use
+          $self->amqp_channel($channel);
+          Future->needs_all(
+            $channel->exchange_declare(
+              type     => 'topic',
+              exchange => $self->exchange_name,
+            )
+          );
+          Future->done;
+        },
+        sub {
+          say "FAILED TO OPEN CHANNEL RETRYING AGAIN IN $retry_interval SECONDS";
+          sleep($retry_interval);
+          Future->fail('CHANNEL OPEN FAILED');
+        }
+      );
+
+      return $trial_f;
+  };
+
+  return $eventual_f;
+}
 
 
 1;

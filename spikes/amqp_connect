@@ -1,0 +1,44 @@
+#!/usr/bin/env perl
+
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
+package main;
+use v5.20;
+use strict;
+use warnings;
+
+use Getopt::Long;
+use JSON::MaybeXS;
+use DateTime::TimeZone   qw();
+use Net::Async::AMQP;
+use IO::Async::Loop;
+use Data::Dumper;
+use PA::AMQP::Client;
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
+# This spike shows how PA clients starting up will initially post host specific
+# information, so that it can be received and pre-inserted into the back end
+# database before the host begins to send information.
+
+my %client_ctor_args;
+my $amqp_server;
+
+GetOptions( "amqp=s" => \$amqp_server )
+  or die("ERROR in command line args");
+
+if ($amqp_server) {
+  $client_ctor_args{amqp_server} = $amqp_server;
+}
+
+my $loop = IO::Async::Loop->new();
+$client_ctor_args{loop} = $loop;
+
+my $client = PA::AMQP::Client->new( %client_ctor_args );
+say "AMQP SERVER: " . $client->amqp_server;
+$loop->run();
+
+
