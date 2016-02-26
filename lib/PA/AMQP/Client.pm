@@ -143,6 +143,7 @@ sub _build_mq {
     # Net::Async::AMQP object earlier, so we're just re-connecting.
     close => sub {
       say "closed by remote";
+      $self->is_connected(0);
       my $reconnected_f = $self->_try_connect()->get;
     }
   );
@@ -189,25 +190,29 @@ broken or data is being lost.
 sub send {
   my ($self, $routing_key, $d_href) = @_;
 
-  my ($ch) = $self->amqp_channel;
-  my ($coder) = $self->json_encoder;
+  my ($ch)            = $self->amqp_channel;
+  my ($coder)         = $self->json_encoder;
   my ($exchange_name) = $self->exchange_name;
 
-  # Increment Sequence for this routing_key
-  if (not exists($self->sent_sequence->{$routing_key})) {
-    $self->sent_sequence->{$routing_key} = 0;
-  }
-  $d_href->{sequence} = ++$self->sent_sequence->{$routing_key};
+  if ($self->is_connected) {
+    # Increment Sequence for this routing_key
+    if (not exists($self->sent_sequence->{$routing_key})) {
+      $self->sent_sequence->{$routing_key} = 0;
+    }
+    $d_href->{sequence} = ++$self->sent_sequence->{$routing_key};
 
-  my ($future) =
-  $ch->publish(exchange      => $exchange_name,
-               routing_key   => $routing_key,
-               type          => "text/plain",
-               expiration    => 60000,
-               delivery_mode => 1,           # delivery_mode => 2 is persistent
-               payload       => $coder->encode( $d_href ),
-             );
-  return $future;
+    my ($future) =
+    $ch->publish(exchange      => $exchange_name,
+                 routing_key   => $routing_key,
+                 type          => "text/plain",
+                 expiration    => 60000,
+                 delivery_mode => 1,           # delivery_mode => 2 is persistent
+                 payload       => $coder->encode( $d_href ),
+               );
+    return $future;
+  } else {
+    return Future->done;
+  }
 }
 
 
@@ -280,8 +285,8 @@ sub _try_connect {
           Future->done;
         },
         sub {
-          say "FAILED TO OPEN CHANNEL RETRYING AGAIN IN $retry_interval SECONDS";
-          sleep($retry_interval);
+          say "FAILED TO OPEN CHANNEL";
+          #sleep($retry_interval);
           Future->fail('CHANNEL OPEN FAILED');
         }
       );

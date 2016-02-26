@@ -14,6 +14,7 @@ use JSON::MaybeXS;
 use DateTime::TimeZone   qw();
 use Net::Async::AMQP;
 use IO::Async::Loop;
+use IO::Async::Timer::Periodic;
 use Data::Dumper;
 use PA::AMQP::Client;
 use FindBin qw($Bin);
@@ -39,6 +40,26 @@ $client_ctor_args{loop} = $loop;
 
 my $client = PA::AMQP::Client->new( %client_ctor_args );
 say "AMQP SERVER: " . $client->amqp_server;
+
+my $iteration = 1;
+my $timer = IO::Async::Timer::Periodic->new(
+  interval   => 1,
+  on_tick    => sub {
+    my $junk_href = { junk_iteration => $iteration++, };
+
+    my @publish_futures;
+    my ($routing_key) = $client->client_hostname . "." . "junk_stat";
+    push @publish_futures, $client->send($routing_key, $junk_href);
+
+    # Wait for all of the publishing futures to complete
+    my $publishing_future = Future->wait_all( @publish_futures );
+    $publishing_future->get;
+  },
+);
+
+$timer->start;
+$loop->add($timer);
+
 $loop->run();
 
 
