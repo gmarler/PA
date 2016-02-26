@@ -138,6 +138,7 @@ sub _build_mq {
     my $mq = Net::Async::AMQP->new()
   );
 
+  # Event bus method of registering for closure of connection to AMQP Server
   $mq->bus->subscribe_to_event(
     # If we get to a close event, we will have already initialized a
     # Net::Async::AMQP object earlier, so we're just re-connecting.
@@ -147,6 +148,20 @@ sub _build_mq {
       my $reconnected_f = $self->_try_connect()->get;
     }
   );
+
+  # IO::Async-ish method of registering for closure of connection to AMQP
+  # Server.  I happen to prefer this one, but it doesn't quite seem to work as
+  # expected. Perhaps it needs to be called after the connection is already
+  # opened, unlike the bus event variant, which registers the callback
+  # irregardless of the state (or even existence) of the connection.
+  #$mq->on_closed(
+  #  sub {
+  #    say "CONNECTION TO AMQP SERVER CLOSED: @_";
+  #    $self->is_connected(0);
+  #    my $reconnected_f = $self->_try_connect()->get;
+  #  }
+  #);
+
   return $mq;
 }
 
@@ -254,11 +269,6 @@ sub _try_connect {
         user      => $self->mq_user,
         pass      => $self->mq_password,
         vhost     => '/',
-        # NOTE: on_closed never seems to fire...
-        on_closed =>
-          sub {
-            say "CONNECTION CLOSED";
-          },
       )->then(
         sub {
           say "CONNECT SUCCEEDED";
