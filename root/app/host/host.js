@@ -5,9 +5,9 @@
     'pa.models.host'
   ])
 
-  .controller('HostCtrl', function (HostModel ) {
+  .controller('HostCtrl', function (HostModel) {
     var hostCtrl = this;
-    
+
     HostModel.getHosts()
       .then(function(result) {
         hostCtrl.hosts = result;
@@ -20,12 +20,6 @@
         restrict: 'AE',
         templateUrl: 'app/host/host.tmpl.html',
         replace:     true
-        //controller:  function ($stateParams, SubsystemsModel) {
-        //  var subsystemsCtrl = this;
-        //
-        //  subsystemsCtrl.subsystems               = SubsystemsModel.getSubsystems();
-        //  console.log(subsystemsCtrl.subsystems);
-        //}
       };
     }
   )
