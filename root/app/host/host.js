@@ -19,7 +19,7 @@
       return {
         restrict: 'AE',
         templateUrl: 'app/host/host.tmpl.html',
-        replace:     true
+        replace:     false
       };
     }
   )
