@@ -7,11 +7,7 @@
 
   .controller('HostCtrl', function (HostModel ) {
     var hostCtrl = this;
-
-    //hostCtrl.currentHostID       = $stateParams.host.id;
-    //hostCtrl.currentHostName     = $stateParams.host.name;
-    //hostCtrl.currentHostTimeZone = $stateParams.host.time_zone;
-
+    
     HostModel.getHosts()
       .then(function(result) {
         hostCtrl.hosts = result;
