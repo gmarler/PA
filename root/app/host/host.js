@@ -5,13 +5,13 @@
     'pa.models.host'
   ])
 
-  .controller('HostCtrl', function (HostModel) {
-    var hostCtrl = this;
+  .controller('HostController', function (HostModel) {
+    var vm = this;
 
     HostModel.getHosts()
       .then(function(result) {
-        hostCtrl.hosts = result;
-        console.log(hostCtrl.hosts)
+        vm.hosts = result;
+        console.log(vm.hosts)
       });
   })
 

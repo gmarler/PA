@@ -15,7 +15,9 @@
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
            aria-expanded="false">Select Host <span class="caret"></span></a>
         <ul class="dropdown-menu">
-
+          <li ng-repeat="host in vm.hosts">
+            <a href="#">{{host.name}}</a>
+          </li>
         </ul>
       </li>
       <li class="navbar-text">TimeZone</li>
