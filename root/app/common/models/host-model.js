@@ -4,7 +4,7 @@ angular.module('pa.models.host', [
   .service('HostModel', function ($http) {
     var model = this,
         URLS = {
-          FETCH: '../data/hosts.json'
+          FETCH: 'data/hosts.json'
         },
         hosts;
 

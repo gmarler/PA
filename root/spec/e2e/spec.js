@@ -9,6 +9,7 @@ describe('initial test', function() {
   });
 });
 
+// Use Page Object Pattern
 var PAHomepage = function() {
   this.get = function() {
     browser.get('/');

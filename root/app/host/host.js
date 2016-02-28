@@ -1,19 +1,11 @@
-angular.module('pa.host', [
-  'pa.models.host'
-])
-  .config(function($stateProvider) {
-    $stateProvider
-      .state('pa.host', {
-        url: '/',
-        views: {
-          'host@': {
-            controller: 'HostCtrl as hostCtrl',
-            templateUrl: 'host/host.tmpl.html'
-          }
-        }
-      })
-  })
-  .controller('HostCtrl', function ($stateParams, HostModel ) {
+(function() {
+  'use strict';
+
+  angular.module('pa.host', [
+    'pa.models.host'
+  ])
+
+  .controller('HostCtrl', function (HostModel ) {
     var hostCtrl = this;
 
     //hostCtrl.currentHostID       = $stateParams.host.id;
@@ -26,4 +18,21 @@ angular.module('pa.host', [
         console.log(hostCtrl.hosts)
       });
   })
-;
+
+  .directive('hostInfo', function() {
+      return {
+        restrict: 'AE',
+        templateUrl: 'app/host/host.tmpl.html',
+        replace:     true
+        //controller:  function ($stateParams, SubsystemsModel) {
+        //  var subsystemsCtrl = this;
+        //
+        //  subsystemsCtrl.subsystems               = SubsystemsModel.getSubsystems();
+        //  console.log(subsystemsCtrl.subsystems);
+        //}
+      };
+    }
+  )
+  ;
+
+})();
