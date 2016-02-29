@@ -13,47 +13,16 @@
     <ul class="nav navbar-nav">
       <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-           aria-expanded="false">Select Host <span class="caret"></span></a>
+           aria-expanded="false">{{ selectedHostName }} <span class="caret"></span></a>
         <ul class="dropdown-menu">
-          <li ng-repeat="host in vm.hosts">
+          <li ng-repeat="host in vm.hosts" ng-click="hostSelected(host)">
             <a href="#">{{host.name}}</a>
           </li>
         </ul>
       </li>
       <li class="navbar-text">TimeZone</li>
-      <li class="navbar-text">NO HOST SELECTED</li>
+      <li id="host_time_zone" class="navbar-text">{{ selectedHostTimeZone }}</li>
     </ul>
   </div>
 
 </nav>
-
-
-<!--<div class="row">-->
-<!--<div class="col-md-1">-->
-  <!--<h3>Host Info</h3>-->
-<!--</div>-->
-<!--<div class="col-md-2">-->
-  <!--<div class="row">-->
-    <!--<div class="col-md-4">-->
-      <!--<h3>Name</h3>-->
-    <!--</div>-->
-    <!--<div class="col-md-5">-->
-      <!--<h3>-->
-        <!--<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">-->
-          <!--Select Hostname <span class="caret"></span>-->
-        <!--</button>-->
-        <!--<ul class="dropdown-menu">-->
-          <!--<li ng-repeat="host in hostCtrl.hosts">-->
-            <!--<a href="#">-->
-              <!--{{host.name}}-->
-            <!--</a>-->
-          <!--</li>-->
-        <!--</ul>-->
-      <!--</h3>-->
-    <!--</div>-->
-  <!--</div>-->
-<!--</div>-->
-<!--<div class="col-md-3">-->
-  <!--<h3>Time Zone <span class="label label-info">America/New_York</span></h3>-->
-<!--</div>-->
-<!--</div>-->
