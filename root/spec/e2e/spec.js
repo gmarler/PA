@@ -90,5 +90,10 @@ describe('PA HomePage', function() {
     var selected = pahomepage.getSelectedHostTimeZone();
 
     expect(selected).toContain("N / A");
-  })
+  });
+
+  it('should display proper host and time zone upon selection', function() {
+    
+  });
+
 });
