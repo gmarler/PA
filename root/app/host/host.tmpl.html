@@ -1,0 +1,29 @@
+<nav class="navbar navbar-default" role="navigation">
+
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#nav-toggle">
+       <span class="icon-bar"></span>
+       <span class="icon-bar"></span>
+       <span class="icon-bar"></span>
+    </button>
+    <a href="#" class="navbar-brand">Performance Analytics for Solaris</a>
+  </div>
+
+  <div class="collapse navbar-collapse" id="nav-toggle">
+    <ul class="nav navbar-nav">
+      <li class="dropdown">
+        <a id="host-selected"
+           href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+           aria-expanded="false">{{ selectedHostName }} <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li ng-repeat="host in vm.hosts" ng-click="hostSelected(host)">
+            <a href="#">{{host.name}}</a>
+          </li>
+        </ul>
+      </li>
+      <li class="navbar-text">TimeZone</li>
+      <li id="host_time_zone" class="navbar-text">{{ selectedHostTimeZone }}</li>
+    </ul>
+  </div>
+
+</nav>

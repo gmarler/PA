@@ -61,7 +61,6 @@ log4perl.appender.FWR_memstat.layout.ConversionPattern = \
 Log::Log4perl::init(\$log_conf);
 
 my $logger = Log::Log4perl::get_logger();
-$logger->error("YEAH!");
 
 # This spike shows how PA clients starting up will initially post host specific
 # information, so that it can be received and pre-inserted into the back end

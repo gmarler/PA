@@ -20,6 +20,7 @@ use DateTime::TimeZone            qw();
 use Data::Dumper;
 
 # with 'PA::Capture::LogToFile';
+#
 with 'MooseX::Log::Log4perl';
 
 #############################################################################
@@ -145,6 +146,7 @@ sub BUILD {
   $logger->debug( "Building mdb" );
   $self->mdb;
   $logger->debug( "Building timer" );
+
   $self->timer;
 }
 
