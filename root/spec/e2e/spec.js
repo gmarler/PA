@@ -41,6 +41,19 @@ var PAHomepage = function() {
   //
   //   return result;
   // };
+
+  this.getDropdownSelectedHost = function() {
+    var e = element(by.id('host-selected'));
+
+    return e.getText();
+  };
+
+  this.getSelectedHostTimeZone = function() {
+    var e = element(by.id('host_time_zone'));
+
+    return e.getText();
+  };
+
 };
 
 describe('PA HomePage', function() {
@@ -66,4 +79,16 @@ describe('PA HomePage', function() {
   //   // expect(pahomepage.getFirstHostname()).toEqual('nydevsol10');
   //   expect(pahomepage.getFirstHostname().getText()).toContain('nydevsol11');
   // });
+
+  it('should start with unselected host from dropdown menu', function() {
+    var selected = pahomepage.getDropdownSelectedHost();
+
+    expect(selected).toContain("Select Hostname");
+  });
+
+  it('should start with unselected time zone', function() {
+    var selected = pahomepage.getSelectedHostTimeZone();
+
+    expect(selected).toContain("N / A");
+  })
 });
