@@ -14,6 +14,7 @@ use IO::Async::Loop             qw();
 use DateTime::TimeZone          qw();
 use Net::Async::AMQP            qw();
 use JSON::MaybeXS               qw();
+use Future::Utils               qw(try_repeat try_repeat_until_success);
 
 with 'MooseX::Log::Log4perl';
 
@@ -32,6 +33,12 @@ has [ 'loop' ] => (
                 say "BUILDING PA::AMQP::Client loop";
                 return IO::Async::Loop->new;
               },
+);
+
+has [ 'is_connected' ] => (
+  is       => 'rw',
+  isa      => 'Bool',
+  default  => 0,
 );
 
 #
@@ -117,6 +124,11 @@ has [ 'json_encoder' ] => (
               },
 );
 
+has [ 'retry_interval' ] => (
+  is       => 'ro',
+  isa      => 'Int',
+  default  => 30,    # Seconds
+);
 
 sub _build_mq {
   my ($self) = @_;
@@ -125,32 +137,30 @@ sub _build_mq {
   $loop->add(
     my $mq = Net::Async::AMQP->new()
   );
-  $mq->connect(
-    host    => $self->amqp_server,
-    user    => $self->mq_user,
-    pass    => $self->mq_password,
-    vhost   => '/',
-  )->then(
-    sub {
-      say "CONNECT SUCCEEDED";
-      shift->open_channel;
-    },
-    sub { say "CONNECT FAILED!" }
-  )->then(
-    sub {
-      my ($channel) = shift;
-      say "OPENED CHANNEL " . $channel->id;
-      # Store channel for later use
-      $self->amqp_channel($channel);
-      Future->needs_all(
-        $channel->exchange_declare(
-          type     => 'topic',
-          exchange => $self->exchange_name,
-        )
-      );
-    },
-    sub { say "FAILED TO OPEN CHANNEL"; }
-  )->get;
+
+  # Event bus method of registering for closure of connection to AMQP Server
+  $mq->bus->subscribe_to_event(
+    # If we get to a close event, we will have already initialized a
+    # Net::Async::AMQP object earlier, so we're just re-connecting.
+    close => sub {
+      say "closed by remote";
+      $self->is_connected(0);
+      my $reconnected_f = $self->_try_connect()->get;
+    }
+  );
+
+  # IO::Async-ish method of registering for closure of connection to AMQP
+  # Server.  I happen to prefer this one, but it doesn't quite seem to work as
+  # expected. Perhaps it needs to be called after the connection is already
+  # opened, unlike the bus event variant, which registers the callback
+  # irregardless of the state (or even existence) of the connection.
+  #$mq->on_closed(
+  #  sub {
+  #    say "CONNECTION TO AMQP SERVER CLOSED: @_";
+  #    $self->is_connected(0);
+  #    my $reconnected_f = $self->_try_connect()->get;
+  #  }
+  #);
 
   return $mq;
 }
@@ -176,6 +186,8 @@ sub BUILD {
   $self->exchange_name;
   say "Building mq";
   $self->mq;
+  say "Connecting to AMQP Server";
+  my $connect_f = $self->_try_connect()->get;
   say "Registering host";
   $self->register_host;
 }
@@ -193,25 +205,29 @@ broken or data is being lost.
 sub send {
   my ($self, $routing_key, $d_href) = @_;
 
-  my ($ch) = $self->amqp_channel;
-  my ($coder) = $self->json_encoder;
+  my ($ch)            = $self->amqp_channel;
+  my ($coder)         = $self->json_encoder;
   my ($exchange_name) = $self->exchange_name;
 
-  # Increment Sequence for this routing_key
-  if (not exists($self->sent_sequence->{$routing_key})) {
-    $self->sent_sequence->{$routing_key} = 0;
-  }
-  $d_href->{sequence} = ++$self->sent_sequence->{$routing_key};
+  if ($self->is_connected) {
+    # Increment Sequence for this routing_key
+    if (not exists($self->sent_sequence->{$routing_key})) {
+      $self->sent_sequence->{$routing_key} = 0;
+    }
+    $d_href->{sequence} = ++$self->sent_sequence->{$routing_key};
 
-  my ($future) =
-  $ch->publish(exchange      => $exchange_name,
-               routing_key   => $routing_key,
-               type          => "text/plain",
-               expiration    => 60000,
-               delivery_mode => 1,           # delivery_mode => 2 is persistent
-               payload       => $coder->encode( $d_href ),
-             );
-  return $future;
+    my ($future) =
+    $ch->publish(exchange      => $exchange_name,
+                 routing_key   => $routing_key,
+                 type          => "text/plain",
+                 expiration    => 60000,
+                 delivery_mode => 1,           # delivery_mode => 2 is persistent
+                 payload       => $coder->encode( $d_href ),
+               );
+    return $future;
+  } else {
+    return Future->done;
+  }
 }
 
 
@@ -240,6 +256,56 @@ sub register_host {
   $publishing_future->get;
 }
 
+sub _try_connect {
+  my ($self) = shift;
+  my ($mq) = $self->mq;
+  my ($retry_interval) = $self->retry_interval;
+
+  my $eventual_f =
+  try_repeat_until_success {
+    my $trial_f =
+      $mq->connect(
+        host      => $self->amqp_server,
+        user      => $self->mq_user,
+        pass      => $self->mq_password,
+        vhost     => '/',
+      )->then(
+        sub {
+          say "CONNECT SUCCEEDED";
+          $self->is_connected(1);
+          shift->open_channel;
+        },
+        sub {
+          say "CONNECT FAILED! - RETRYING AGAIN IN $retry_interval SECONDS";
+          sleep($retry_interval);
+          Future->fail('CONNECT FAILED');
+        }
+      )->then(
+        sub {
+          my ($channel) = shift;
+          say "OPENED CHANNEL " . $channel->id;
+          # Store channel for later use
+          $self->amqp_channel($channel);
+          Future->needs_all(
+            $channel->exchange_declare(
+              type     => 'topic',
+              exchange => $self->exchange_name,
+            )
+          );
+          Future->done;
+        },
+        sub {
+          say "FAILED TO OPEN CHANNEL";
+          #sleep($retry_interval);
+          Future->fail('CHANNEL OPEN FAILED');
+        }
+      );
+
+      return $trial_f;
+  };
+
+  return $eventual_f;
+}
 
 
 1;

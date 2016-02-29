@@ -1,12 +1,14 @@
-angular.module('pa.models.host', [
+(function() {
+  'use strict';
 
-])
+  angular.module('pa.models.host', [])
+
   .service('HostModel', function ($http) {
     var model = this,
-        URLS = {
-          FETCH: '../data/hosts.json'
-        },
-        hosts;
+      URLS = {
+        FETCH: 'data/hosts.json'
+      },
+      hosts;
 
     function extract(result) {
       return result.data;
@@ -18,7 +20,10 @@ angular.module('pa.models.host', [
     }
 
     model.getHosts = function () {
-      return $http.get(URLS.FETCH).then(cacheHosts);;
+      return $http.get(URLS.FETCH).then(cacheHosts);
     }
   })
-;
+
+  ;
+
+})();

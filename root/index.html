@@ -1,14 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="pa">
 <head>
   <meta charset="UTF-8">
-  <title>Initial Protractor Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Performance Analytics for Solaris</title>
+  <link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/css/PA.css" rel="stylesheet">
 </head>
-<body ng-app="PA">
+<body>
 
-  <script src="bower_components/angular/angular.min.js"></script>
-  <script src="app/pa-app.js"></script>
+  <div class="container-fluid">
 
+    <div host-info ng-controller="HostController as vm"></div>
+
+    <!--<div class="row" ng-controller="SubsystemsCtrl">-->
+      <!--<div class="col-md-10" subsystem-navbar></div>-->
+    <!--</div>-->
+  </div>
 
   <script src="bower_components/jquery/dist/jquery.min.js"></script>
   <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -18,10 +26,14 @@
   <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
   <script src="bower_components/bootstrap-ui-datetime-picker/dist/datetime-picker.min.js"></script>
 
+  <!-- Main AngularJS App -->
   <script src="app/pa-app.js"></script>
+  <!-- AngularJS Components -->
   <script src="app/host/host.js"></script>
-  <script src="app/subsystems/subsystems.js"></script>
+  <!--<script src="app/subsystems/subsystems.js"></script>-->
+  <!-- Models/Services -->
   <script src="app/common/models/host-model.js"></script>
-  <script src="app/common/models/subsystems-model.js"></script>
+  <!--<script src="app/common/models/subsystems-model.js"></script>-->
+
 </body>
 </html>

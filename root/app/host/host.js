@@ -1,29 +1,39 @@
-angular.module('pa.host', [
-  'pa.models.host'
-])
-  .config(function($stateProvider) {
-    $stateProvider
-      .state('pa.host', {
-        url: '/',
-        views: {
-          'host@': {
-            controller: 'HostCtrl as hostCtrl',
-            templateUrl: 'host/host.tmpl.html'
-          }
-        }
-      })
-  })
-  .controller('HostCtrl', function ($stateParams, HostModel ) {
-    var hostCtrl = this;
+(function() {
+  'use strict';
 
-    //hostCtrl.currentHostID       = $stateParams.host.id;
-    //hostCtrl.currentHostName     = $stateParams.host.name;
-    //hostCtrl.currentHostTimeZone = $stateParams.host.time_zone;
+  angular.module('pa.host', [
+    'pa.models.host'
+  ])
+
+  .controller('HostController', function (HostModel) {
+    var vm = this;
 
     HostModel.getHosts()
       .then(function(result) {
-        hostCtrl.hosts = result;
-        console.log(hostCtrl.hosts)
+        vm.hosts = result;
+        console.log(vm.hosts)
       });
   })
-;
+
+  .directive('hostInfo', function() {
+      return {
+        restrict: 'AE',
+        templateUrl: 'app/host/host.tmpl.html',
+        replace:     false,
+        link: function (scope, element, attrs) {
+          scope.selectedHostName     = "Select Hostname";
+          scope.selectedHostTimeZone = "N / A";
+          scope.selectedHostId       = undefined;
+
+          scope.hostSelected = function (hostobj) {
+            scope.selectedHostName     = hostobj.name;
+            scope.selectedHostTimeZone = hostobj.time_zone;
+            scope.selectedHostId       = hostobj.id;
+          }
+        }
+      };
+    }
+  )
+  ;
+
+})();
