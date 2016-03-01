@@ -61,3 +61,8 @@
   padding-top:   0px;
   padding-left: 10px;
 }
+
+/* Navbars should have no bottom margin */
+.navbar {
+  margin-bottom: 0;
+}

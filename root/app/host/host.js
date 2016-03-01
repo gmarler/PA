@@ -17,7 +17,7 @@
 
   .directive('hostInfo', function() {
       return {
-        restrict: 'AE',
+        restrict:    'AE',
         templateUrl: 'app/host/host.tmpl.html',
         replace:     false,
         link: function (scope, element, attrs) {

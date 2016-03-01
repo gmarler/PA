@@ -20,7 +20,7 @@ describe('PA Services Tests', function() {
   });
 
   it('HostService getHosts should make a GET request', function() {
-    url = 'http://nydevsol10.dev.bloomberg.com:5000/host';
+    url = 'http://PAserver.example.com:5000/host';
 
     $httpBackend.when('GET', url).respond(
       [

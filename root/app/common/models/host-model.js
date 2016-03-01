@@ -5,10 +5,10 @@
 
   .service('HostModel', function ($http) {
     var model = this,
-      URLS = {
-        FETCH: 'data/hosts.json'
-      },
-      hosts;
+        hosts,
+        URLS = {
+          FETCH: 'data/hosts.json'
+        };
 
     function extract(result) {
       return result.data;

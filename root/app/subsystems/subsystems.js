@@ -1,30 +1,28 @@
-
 (function() {
   'use strict';
 
   angular.module('pa.subsystems', [
-      'pa.models.subsystems'
-    ])
+    'pa.models.subsystems'
+  ])
+    
+  .controller('SubsystemsCtrl', function (SubsystemsModel) {
+    var vm = this;
 
-    .controller('SubsystemsCtrl', function (SubsystemsModel) {
-      var subsystemsCtrl = this;
+    SubsystemsModel.getSubsystems()
+      .then(function(result) {
+        vm.subsystems = result;
+        console.log(vm.subsystems);
+      });
 
-      subsystemsCtrl.subsystems = SubsystemsModel.getSubsystems();
-      console.log(subsystemsCtrl.subsystems);
-    })
+  })
 
-    .directive('subsystemNavbar', function () {
-      return {
-        restrict: 'AE',
-        templateUrl: 'app/subsystems/subsystems.tmpl.html'
-        //controller:  function ($stateParams, SubsystemsModel) {
-        //  var subsystemsCtrl = this;
-        //
-        //  subsystemsCtrl.subsystems               = SubsystemsModel.getSubsystems();
-        //  console.log(subsystemsCtrl.subsystems);
-        //}
-      };
-    })
+  .directive('subsystemNavbar', function () {
+    return {
+      restrict:    'AE',
+      templateUrl: 'app/subsystems/subsystems.tmpl.html',
+      replace:     false
+    };
+  })
   ;
 
 })();

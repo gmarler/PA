@@ -2,8 +2,8 @@
   'use strict';
 
   angular.module('pa', [
-    'pa.host'
-    //, 'pa.subsystems'
+    'pa.host',
+    'pa.subsystems'
   ]);
 
 })();
