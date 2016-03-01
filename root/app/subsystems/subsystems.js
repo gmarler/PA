@@ -8,8 +8,12 @@
   .controller('SubsystemsCtrl', function (SubsystemsModel) {
     var vm = this;
 
-    vm.subsystems = SubsystemsModel.getSubsystems();
-    console.log(vm.subsystems);
+    SubsystemsModel.getSubsystems()
+      .then(function(result) {
+        vm.subsystems = result;
+        console.log(vm.subsystems);
+      });
+
   })
 
   .directive('subsystemNavbar', function () {

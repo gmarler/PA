@@ -1,7 +1,7 @@
 [
-  {"name": "CPU"},
-  {"name": "Filesystem"},
-  {"name": "Network"},
-  {"name": "Memory"},
-  {"name": "Kernel Stacks"}
+  {"id": 1, "name": "CPU"},
+  {"id": 2, "name": "MEMORY"},
+  {"id": 3, "name": "FILESYSTEM"},
+  {"id": 4, "name": "NETWORK"},
+  {"id": 5, "name": "KERNEL STACKS"}
 ]

@@ -2,20 +2,22 @@
   'use strict';
 
   angular.module('pa.models.subsystems', [])
-    .service('SubsystemsModel', function () {
-      var model = this,
-        subsystems = [
-          {"id": 1, "name": "CPU"},
-          {"id": 2, "name": "MEMORY"},
-          {"id": 3, "name": "FILESYSTEM"},
-          {"id": 4, "name": "NETWORK"},
-          {"id": 5, "name": "KERNEL STACKS"}
-        ];
 
-      model.getSubsystems = function () {
-        return subsystems;
-      }
-    })
+  .service('SubsystemsModel', function ($http) {
+    var model = this,
+        subsystems,
+        URLS = {
+          FETCH: 'data/subsystems.json'
+        };
+
+    function extract(result) {
+      return result.data;
+    }
+
+    model.getSubsystems = function () {
+      return $http.get(URLS.FETCH).then(extract);
+    }
+  })
   ;
 
 })();
