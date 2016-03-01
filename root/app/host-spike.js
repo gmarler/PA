@@ -18,7 +18,7 @@ angular.module('PA', [
     };
   })
   .factory('HostService', ['$http', function ($http) {
-    var urlBase = 'http://nydevsol10.dev.bloomberg.com:5000';
+    var urlBase = 'http://PAserver.example.com:5000';
     var HostService = {};
     HostService.getHosts = function () {
       return $http.get(urlBase + '/host');
@@ -75,6 +75,8 @@ angular.module('PA', [
   })
   .controller('SubsystemsCtrl', ['$scope', 'SubsystemsService', function($scope, SubsystemsService) {
     console.log("Ran the Subsystems Controller");
+    console.log("Selected Host: " + $scope.selectedHostName);
+
     $scope.selectedSubsystem = undefined;
 
     $scope.subsystems = SubsystemsService.getSubsystems();
