@@ -59,6 +59,7 @@ if ($amqp_server) {
 }
 
 if (not defined($logdir)) {
+  $logger->warn("Logging to $logdir");
   $logdir = "/tmp";  # Default to /tmp
 }
 
