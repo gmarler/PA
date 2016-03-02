@@ -75,7 +75,7 @@ my $log_appender = Log::Log4perl::Appender->new(
                         "Log::Dispatch::FileWriteRotate",
                         dir          => $logdir,
                         histories    => 7,
-                        prefix       => "pa_client_memstat",
+                        prefix       => "memstat",
                         period       => "daily",
                       );
 
