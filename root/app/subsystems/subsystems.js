@@ -5,7 +5,7 @@
     'pa.models.subsystems'
   ])
     
-  .controller('SubsystemsCtrl', function (SubsystemsModel) {
+  .controller('SubsystemsController', function (SubsystemsModel) {
     var vm = this;
 
     SubsystemsModel.getSubsystems()

@@ -1,0 +1,9 @@
+Engineering:
+- TimeZone calculations in PostgreSQL for date boundaries and times, or, return pure Epoch secs and
+  do all activities in
+
+User Stories:
+- HostService
+  - Get list of hosts from server
+  - Subsystems with Available Data for Host
+  - Metrics with Available Data for Subsystem on Host
