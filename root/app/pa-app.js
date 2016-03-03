@@ -3,7 +3,8 @@
 
   angular.module('pa', [
     'pa.host',
-    'pa.subsystems'
+    'pa.subsystems',
+    'ui.bootstrap'
   ]);
 
 })();
