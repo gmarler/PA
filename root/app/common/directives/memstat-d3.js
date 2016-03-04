@@ -71,6 +71,9 @@
             return (key !== "timestamp" && key !== "total_bytes" && key !== "guest"); }));
 
         data.forEach(function(d) {
+          // convert Epoch seconds timestamp into Epoch millisec timestamp so it can be converted
+          // into a Javascript Date object.
+          // WARNING: This will be in the local timezone of the browser you load this into!
           d.timestamp = new Date((d.timestamp * 1000));
           // console.log(d);
         });
