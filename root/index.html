@@ -12,11 +12,13 @@
   <div class="container-fluid">
 
     <div host-info ng-controller="HostController as vm"></div>
-    <div subsystem-navbar ng-controller="SubsystemsCtrl as vm"></div>
+    <div subsystem-navbar ng-controller="SubsystemsController as vm"></div>
+    <div subsystem-metrics-navbar ng-controller="SubsystemsController as vm"></div>
 
-    <!--<div class="row" ng-controller="SubsystemsCtrl">-->
-      <!--<div class="col-md-10" subsystem-navbar></div>-->
-    <!--</div>-->
+    <div style="display:inline-block; min-height:290px" ng-controller="DatepickerDemoController" ng-click="today()">
+      <uib-datepicker ng-model="dt" class="well well-sm" datepicker-options="inlineOptions">
+      </uib-datepicker>
+    </div>
   </div>
 
   <script src="bower_components/jquery/dist/jquery.min.js"></script>
@@ -26,6 +28,7 @@
   <script src="bower_components/d3/d3.min.js"></script>
   <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
   <script src="bower_components/bootstrap-ui-datetime-picker/dist/datetime-picker.min.js"></script>
+  <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
 
   <!-- Main AngularJS App -->
   <script src="app/pa-app.js"></script>
