@@ -38,12 +38,19 @@ sub search_by_host_sorted {
       'me.host_fk' => $host_id,
     },
     { order_by => 'timestamp ASC',
-      columns  => [ 'timestamp', 
-                    'free_cachelist_bytes', 'defdump_prealloc_bytes',
-                    'exec_and_libs_bytes', 'free_freelist_bytes',
-                    'zfs_file_data_bytes', 'anon_bytes', 'page_cache_bytes',
-                    'zfs_metadata_bytes', 'kernel_bytes', 'total_bytes',
-                  ],
+      columns  => [
+        # Turn the PostgreSQL timestamp into epoch seconds
+        {
+          'timestamp' => 
+          \[
+            'EXTRACT(epoch from timestamp) AS timestamp'
+          ],
+        },
+        'free_cachelist_bytes', 'defdump_prealloc_bytes',
+        'exec_and_libs_bytes', 'free_freelist_bytes',
+        'zfs_file_data_bytes', 'anon_bytes', 'page_cache_bytes',
+        'zfs_metadata_bytes', 'kernel_bytes', 'total_bytes',
+      ],
     }
   );
 }

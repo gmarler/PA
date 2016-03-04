@@ -1,6 +1,8 @@
 package PA::Web::Controller::Host;
+use v5.20;
 use Moose;
 use namespace::autoclean;
+use Data::Dumper;
 
 # VERSION
 
@@ -58,6 +60,39 @@ sub host_list_GET {
   # $c->stash->{'host_list'} = \%host_list;
   $self->status_ok( $c, entity => \%host_list );
 }
+
+=method host_memstat
+
+First step in chain that extracts the memstat of a host as a REST entity
+
+=cut
+
+sub host_memstat : Path('/host/memstat') :Args(0) : ActionClass('REST') {
+  my ( $self, $c ) = @_;
+
+  $c->response->headers->header(
+    'Access-Control-Allow-Origin' => '*',
+  );
+}
+
+=method host_memstat_GET
+
+Implement GET verb for host_memstat REST query
+
+=cut
+
+sub host_memstat_GET {
+  my ($self, $c) = @_;
+
+  my @memstat_rows;
+  my $memstat_rs = $c->model('DB::Memstat')->search_by_host_sorted(10);
+  while (my $memstat_row = $memstat_rs->next) {
+    my %cols = $memstat_row->get_columns;
+    push @memstat_rows, \%cols;
+  }
+  $self->status_ok( $c, entity => \@memstat_rows );
+}
+
 
 
 =encoding utf8
