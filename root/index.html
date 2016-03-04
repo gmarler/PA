@@ -15,10 +15,14 @@
     <div subsystem-navbar ng-controller="SubsystemsController as vm"></div>
     <div subsystem-metrics-navbar ng-controller="SubsystemsController as vm"></div>
 
-    <div style="display:inline-block; min-height:290px" ng-controller="DatepickerDemoController" ng-click="today()">
+    <div style="display:inline-block" ng-controller="DatepickerDemoController" ng-click="today()">
+      <!--
       <uib-datepicker ng-model="dt" class="well well-sm" datepicker-options="inlineOptions">
       </uib-datepicker>
+      -->
     </div>
+
+    <div memstat-d3></div>
   </div>
 
   <script src="bower_components/jquery/dist/jquery.min.js"></script>
@@ -38,6 +42,7 @@
   <!-- Models/Services -->
   <script src="app/common/models/host-model.js"></script>
   <script src="app/common/models/subsystems-model.js"></script>
+  <script src="app/common/directives/memstat-d3.js"></script>
 
 </body>
 </html>
