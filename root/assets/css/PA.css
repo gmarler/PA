@@ -66,3 +66,22 @@
 .navbar {
   margin-bottom: 0;
 }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.memtype text {
+  text-anchor: end;
+}
+
+.tooltip-container {
+  position:         absolute;
+  pointer-events:   none;
+  padding:          2px 4px 2px 6px;
+  background-color: #eee;
+  border:           solid 1px #aaa;
+}
