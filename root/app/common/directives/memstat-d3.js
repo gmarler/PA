@@ -66,7 +66,15 @@
         // - The Epoch timestamp
         // - The Guest data (since it's currently always 0)
         // - The Total
-        color.domain(d3.keys(data[0])
+        //
+        // Specify the order in which we stack the data in the graph, from the Y axis up
+        // NOTE: We're currently excluding: Guest and defump_prealloc
+        var keys_in_order = [ "kernel_bytes", "exec_and_libs_bytes", "anon_bytes", "page_cache_bytes",
+                              "zfs_metadata_bytes", "zfs_file_data_bytes", "free_cachelist_bytes",
+                              "free_freelist_bytes" ];
+        //color.domain(d3.keys(data[0])
+        // Define the color map domain in key order
+        color.domain(keys_in_order
           .filter(function(key) {
             return (key !== "timestamp" && key !== "total_bytes" && key !== "guest"); }));
 
@@ -79,7 +87,7 @@
         });
 
         var memtypes = stack(color.domain().map(function(name) {
-          console.log(name);
+          // console.log(name);
           return {
             name: name,
             values: data.map(function(d) {
