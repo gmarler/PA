@@ -135,14 +135,16 @@
           .attr("dy", ".35em")
           .attr('font-size', '14px')
           .text(function(d) {
-            var regex1 = /^(.)/;
-            var regex2 = /_/g;
-            var regex3 = /zfs/gi
+            var regex1 = /_bytes$/;
+            var regex2 = /^(.)/;
+            var regex3 = /_/g;
+            var regex4 = /zfs/gi
             var cvt_name = d.name;
-            cvt_name = cvt_name.replace(regex1,function (s) { return s.toUpperCase(); });
-            cvt_name = cvt_name.replace(regex2, " ");
+            cvt_name = cvt_name.replace(regex1, "");
+            cvt_name = cvt_name.replace(regex2,function (s) { return s.toUpperCase(); });
+            cvt_name = cvt_name.replace(regex3, " ");
             // cvt_name = cvt_name.replace(/\_(.)/g, function (s = $1) { return s.toUpperCase() });
-            cvt_name = cvt_name.replace(regex3,function (s) { return s.toUpperCase(); });
+            cvt_name = cvt_name.replace(regex4,function (s) { return s.toUpperCase(); });
             return cvt_name;
           });
 
