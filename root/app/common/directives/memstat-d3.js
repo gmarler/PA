@@ -16,7 +16,8 @@
     return directive;
 
     function link(scope,element,attrs) {
-      var margin = {top: 20, right: 20, bottom: 30, left: 50};
+      // Bottom margin makes room for the lengthy and rotated timestamps
+      var margin = {top: 20, right: 20, bottom: 120, left: 75};
       var width  = parseInt(d3.select('body').style('width'));
       width      = width - margin.left - margin.right;
       // var height = parseInt(d3.select('body').style('height'));
@@ -35,7 +36,9 @@
 
       var xAxis = d3.svg.axis()
         .scale(x)
-        .orient("bottom");
+        .orient("bottom")
+        .ticks(20)
+        .tickFormat(d3.time.format("%Y-%m-%d %X"));
 
       var yAxis = d3.svg.axis()
         .scale(y)
@@ -146,7 +149,14 @@
         svg.append("g")
           .attr("class", "x axis")
           .attr("transform", "translate(0," + height + ")")
-          .call(xAxis);
+          .call(xAxis)
+          .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                return "rotate(-55)"
+                });
 
         svg.append("g")
           .attr("class", "y axis")
