@@ -26,7 +26,7 @@ use PA::Capture::mdb::memstat;
 with 'MooseX::Log::Log4perl';
 
 my $log_conf = q{
-log4perl.category               = INFO, Screen
+log4perl.category.PA            = INFO, Screen
 
 log4perl.appender.Screen        = \
      Log::Log4perl::Appender::ScreenColoredLevels
@@ -82,6 +82,25 @@ my $log_appender = Log::Log4perl::Appender->new(
 $log_appender->layout($log_layout);
 $logfile_logger->add_appender($log_appender);
 $logfile_logger->level('INFO');
+
+#
+# Set up the logger specifically for Solaris::mdb, so it goes
+# to a file, with debug level data.
+#
+my $mdb_logfile_logger = Log::Log4perl::get_logger('Solaris::mdb');
+my $mdb_log_layout = Log::Log4perl::Layout::PatternLayout->new("%m%n");
+
+my $mdb_log_appender = Log::Log4perl::Appender->new(
+                        "Log::Dispatch::FileWriteRotate",
+                        dir          => $logdir,
+                        histories    => 7,
+                        prefix       => "Solaris::mdb",
+                        period       => "daily",
+                      );
+
+$mdb_log_appender->layout($mdb_log_layout);
+$mdb_logfile_logger->add_appender($mdb_log_appender);
+$mdb_logfile_logger->level('DEBUG');
 
 #
 # Now we're back to setting up this client
