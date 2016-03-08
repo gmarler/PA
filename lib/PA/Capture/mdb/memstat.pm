@@ -56,7 +56,7 @@ has [ 'mdb' ] => (
   lazy     => 1,
   default  => sub {
                 # ::memstat can take a while on the largest machines, so give a nice timeout
-                my $mdb = Solaris::mdb->new( timeout => 30 );
+                my $mdb = Solaris::mdb->new( timeout => 45 );
                 return $mdb;
               },
 );
