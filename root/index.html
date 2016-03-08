@@ -15,11 +15,17 @@
     <div subsystem-navbar ng-controller="SubsystemsController as vm"></div>
     <div subsystem-metrics-navbar ng-controller="SubsystemsController as vm"></div>
 
-    <div style="display:inline-block" ng-controller="DatepickerDemoController" ng-click="today()">
-      <!--
-      <uib-datepicker ng-model="dt" class="well well-sm" datepicker-options="inlineOptions">
-      </uib-datepicker>
-      -->
+    <div class="col-md-2" style="display:inline-block" ng-controller="DatepickerDemoController">
+      <p class="input-group">
+        <input type="text" uib-datepicker-popup ng-model="dt" class="form-control"
+               is-open="popup.opened" datepicker-options="dateOptions" ng-required="true"
+               close-text="Close" />
+        <span class="input-group-btn">
+          <button type="button" class="btn btn-default" ng-click="open()">
+            <i class="glyphicon glyphicon-calendar"></i>
+          </button>
+        </span>
+      </p>
     </div>
 
     <div memstat-d3></div>

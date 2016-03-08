@@ -37,11 +37,12 @@
     };
 
     $scope.dateOptions = {
-      dateDisabled: disabled,
-      formatYear: 'yy',
-      maxDate: new Date(2020, 5, 22),
+      // dateDisabled: disabled,
+      // formatYear: 'yy',
+      // maxDate: new Date(2020, 5, 22),
       minDate: new Date(),
-      startingDay: 1
+      startingDay: 1,
+      customClass: testCustomClass
     };
 
     // Disable weekend selection
@@ -58,12 +59,8 @@
 
     $scope.toggleMin();
 
-    $scope.open1 = function() {
-      $scope.popup1.opened = true;
-    };
-
-    $scope.open2 = function() {
-      $scope.popup2.opened = true;
+    $scope.open = function() {
+      $scope.popup.opened = true;
     };
 
     $scope.setDate = function(year, month, day) {
@@ -74,11 +71,7 @@
     $scope.format = $scope.formats[0];
     $scope.altInputFormats = ['M!/d!/yyyy'];
 
-    $scope.popup1 = {
-      opened: false
-    };
-
-    $scope.popup2 = {
+    $scope.popup = {
       opened: false
     };
 
@@ -113,6 +106,11 @@
       }
 
       return '';
+    }
+
+    function testCustomClass(data) {
+      console.log("testCustomClass:");
+      console.log(data);
     }
   })
 
