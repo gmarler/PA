@@ -41,8 +41,9 @@
       // formatYear: 'yy',
       // maxDate: new Date(2020, 5, 22),
       minDate: new Date(),
-      startingDay: 1,
-      customClass: testCustomClass
+      startingDay: 0,
+      dateDisabled: testDisable
+      // customClass: testCustomClass
     };
 
     // Disable weekend selection
@@ -111,6 +112,18 @@
     function testCustomClass(data) {
       console.log("testCustomClass:");
       console.log(data);
+    }
+
+    function testDisable(data) {
+      console.log("testDisable: " + data);;
+      var date = data.date,
+          mode = data.mode;
+      var avail = [ '2016-03-01', '2016-03-09' ];
+      console.log("DATE: " + moment(date).format('YYYY-MM-DD'));
+      console.log("MODE: " + mode);
+      var result = _.includes(avail, moment(date).format('YYYY-MM-DD'));
+      console.log("Is it? " + result);
+      return ! _.includes(avail, moment(date).format('YYYY-MM-DD'));
     }
   })
 
