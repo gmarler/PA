@@ -66,8 +66,10 @@ sub search_by_host_on_date {
   my ($schema) = $rs->result_source->schema;
 
   $schema->resultset('Memstat')->search({
-      'me.host_fk' => $host_id,
-      # \[ 'DATE(me.timestamp) = ?', '2016-03-10' ],
+      -and => [
+        'me.host_fk' => $host_id,
+        \[ 'DATE(timestamp AT TIME ZONE \'' . $time_zone . '\') = ?', $date ],
+      ]
     },
     { order_by => 'timestamp ASC',
       columns  => [
@@ -75,8 +77,7 @@ sub search_by_host_on_date {
         {
           'timestamp' =>
           \[
-            'EXTRACT(epoch from timestamp AT TIME ZONE \'' .
-            $time_zone . '\') AS timestamp'
+            'EXTRACT(epoch from timestamp) AS timestamp'
           ],
         },
         'free_cachelist_bytes', 'defdump_prealloc_bytes',
