@@ -37,11 +37,13 @@
     };
 
     $scope.dateOptions = {
-      dateDisabled: disabled,
-      formatYear: 'yy',
-      maxDate: new Date(2020, 5, 22),
+      // dateDisabled: disabled,
+      // formatYear: 'yy',
+      // maxDate: new Date(2020, 5, 22),
       minDate: new Date(),
-      startingDay: 1
+      startingDay: 0,
+      dateDisabled: testDisable
+      // customClass: testCustomClass
     };
 
     // Disable weekend selection
@@ -58,12 +60,8 @@
 
     $scope.toggleMin();
 
-    $scope.open1 = function() {
-      $scope.popup1.opened = true;
-    };
-
-    $scope.open2 = function() {
-      $scope.popup2.opened = true;
+    $scope.open = function() {
+      $scope.popup.opened = true;
     };
 
     $scope.setDate = function(year, month, day) {
@@ -74,11 +72,7 @@
     $scope.format = $scope.formats[0];
     $scope.altInputFormats = ['M!/d!/yyyy'];
 
-    $scope.popup1 = {
-      opened: false
-    };
-
-    $scope.popup2 = {
+    $scope.popup = {
       opened: false
     };
 
@@ -113,6 +107,23 @@
       }
 
       return '';
+    }
+
+    function testCustomClass(data) {
+      console.log("testCustomClass:");
+      console.log(data);
+    }
+
+    function testDisable(data) {
+      console.log("testDisable: " + data);;
+      var date = data.date,
+          mode = data.mode;
+      var avail = [ '2016-03-01', '2016-03-09' ];
+      console.log("DATE: " + moment(date).format('YYYY-MM-DD'));
+      console.log("MODE: " + mode);
+      var result = _.includes(avail, moment(date).format('YYYY-MM-DD'));
+      console.log("Is it? " + result);
+      return ! _.includes(avail, moment(date).format('YYYY-MM-DD'));
     }
   })
 
