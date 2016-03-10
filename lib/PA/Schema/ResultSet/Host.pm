@@ -8,6 +8,11 @@ use 5.20.0;
 
 use parent 'PA::Schema::ResultSet';
 
+my $subsystems = {
+  'cpu' => [ ],
+  'memory' => [ 'Memstat' ],
+};
+
 =method search_by_name
 
 Search for host by its hostname

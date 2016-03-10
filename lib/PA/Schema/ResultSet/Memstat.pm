@@ -41,9 +41,42 @@ sub search_by_host_sorted {
       columns  => [
         # Turn the PostgreSQL timestamp into epoch seconds
         {
-          'timestamp' => 
+          'timestamp' =>
           \[
             'EXTRACT(epoch from timestamp) AS timestamp'
+          ],
+        },
+        'free_cachelist_bytes', 'defdump_prealloc_bytes',
+        'exec_and_libs_bytes', 'free_freelist_bytes',
+        'zfs_file_data_bytes', 'anon_bytes', 'page_cache_bytes',
+        'zfs_metadata_bytes', 'kernel_bytes', 'total_bytes',
+      ],
+    }
+  );
+}
+
+=method search_by_host_on_date
+
+Search for memstat data by host, on a particular date, in a particular time zone
+
+=cut
+
+sub search_by_host_on_date {
+  my ($rs,$host_id, $date, $time_zone) = @_;
+  my ($schema) = $rs->result_source->schema;
+
+  $schema->resultset('Memstat')->search({
+      'me.host_fk' => $host_id,
+      # \[ 'DATE(me.timestamp) = ?', '2016-03-10' ],
+    },
+    { order_by => 'timestamp ASC',
+      columns  => [
+        # Turn the PostgreSQL timestamp into epoch seconds
+        {
+          'timestamp' =>
+          \[
+            'EXTRACT(epoch from timestamp AT TIME ZONE \'' .
+            $time_zone . '\') AS timestamp'
           ],
         },
         'free_cachelist_bytes', 'defdump_prealloc_bytes',

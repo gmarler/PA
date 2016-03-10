@@ -94,6 +94,57 @@ sub host_memstat_GET {
 }
 
 
+# This is the beginning of our chain
+sub host : PathPart('host') Chained('/') CaptureArgs(1) {
+  my ( $self, $c, $hostname ) = @_;
+
+  my $host = $c->model('DB::Host')->find_by_name($hostname);
+
+  say "HOSTNAME:  " . $host->name;
+  say "TIME_ZONE: " . $host->time_zone;
+
+  $c->stash->{ hostname }  = $host->name;
+  $c->stash->{ hostid }    = $host->host_id;
+  $c->stash->{ time_zone } = $host->time_zone;
+}
+
+sub subsystem : PathPart('subsystem') Chained('host') CaptureArgs(1) {
+  my ( $self, $c, $subsystem ) = @_;
+
+  my ($subsystems) = {
+    memstat => 'Memstat',
+  };
+
+  say "SUBSYSTEM: $subsystem";
+
+  $c->stash->{ subsystem } = $subsystem;
+  $c->stash->{ resultset } = $subsystems->{$subsystem};
+  say "RESULTSET NAME: " . $c->stash->{ resultset };
+}
+
+sub date : PathPart('date') Chained('subsystem') Args(1) {
+  my ( $self, $c, $date ) = @_;
+
+  my @rows;
+  my $resultset = $c->stash->{ resultset };
+  my $hostid    = $c->stash->{ hostid };
+  my $time_zone = $c->stash->{ time_zone };
+
+  say "RESULTSET: $resultset";
+  say "HOSTID:    $hostid";
+  say "TIME_ZONE: $time_zone";
+
+  my $subsystem_rs = $c->model('DB::' . $resultset)
+                       ->search_by_host_on_date($hostid, $date, $time_zone);
+
+  while (my $row = $subsystem_rs->next) {
+    my %cols = $row->get_columns;
+    push @rows, \%cols;
+  }
+
+  $self->status_ok( $c, entity => \@rows );
+}
+
 
 =encoding utf8
 
