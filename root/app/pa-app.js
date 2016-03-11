@@ -4,7 +4,8 @@
   angular.module('pa', [
     'pa.host',
     'pa.subsystems',
-    'ui.bootstrap'
+    'ui.bootstrap',
+    'pa.services.host'
   ]);
 
 })();

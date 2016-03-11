@@ -2,13 +2,14 @@
   'use strict';
 
   angular
-    .module('pa.services.host')
+    .module('pa.services.host', [])
     .factory('HostService', HostService);
 
   HostService.$inject = [ '$http' ];
 
   function HostService($http) {
     var hosts,
+        memstats,
         URLS = {
           FETCH:   'data/hosts.json',
           MEMSTAT: 'data/memstat.json'
@@ -16,11 +17,12 @@
 
     var service = {
       hosts:        hosts,
-      URLS:         URLs,
+      URLS:         URLS,
 
       extract:      extract,
       cacheHosts:   cacheHosts,
-      getHosts:     getHosts
+      getHosts:     getHosts,
+      getMemstat:   getMemstat
     };
 
     return service;
@@ -41,11 +43,13 @@
 
     function getMemstat() {
       return $http.get(URLS.MEMSTAT)
-        .then(getMemstatComplete(response))
-        .catch(getMemstatFailed);
+                  .then(getMemstatComplete)
+                  .catch(getMemstatFailed);
 
       function getMemstatComplete(response) {
-        return response.data.results;
+        memstats = extract(response);
+        // console.log(memstats);
+        return memstats;
       }
 
       function getMemstatFailed(error) {
