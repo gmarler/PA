@@ -7,34 +7,43 @@
 
   memstatD3.$inject = [ 'HostService' ];
 
+  memstatD3Controller.inject = [ '$scope' ];
+
+  function memstatD3Controller($scope, $element, $attrs, HostService) {
+    var vm = this;
+
+    HostService.getMemstat()
+      .then(function(result) {
+        vm.d3data = result;
+      });
+  }
+
   function memstatD3() {
     var directive = {
-      restrict:  'AE',
-      // templateUrl: 'app/host/host.tmpl.html',
-      replace:   true,
-      link:      link,
+      restrict:         'AE',
+      // templateUrl:   'app/host/host.tmpl.html',
+      replace:          true,
+      link:             link,
       scope:     {
-        d3data:     '@'
+        d3data:     '='
       },
-      controller: memstatD3Controller
+      controller:        memstatD3Controller,
+      controllerAs:     'vm',
+      bindToController: true // because the scope is isolated
     };
 
     return directive;
 
-    function memstatD3Controller($scope, $element, $attrs, HostService) {
-      HostService.getMemstat()
-                 .then(function(result) {
-                   $scope.d3data = result;
-                   // console.log($scope.d3data)
-                 });
-    };
+    function link(scope, element, attrs, vm) {
+      var d3data = vm.d3data;
 
-    function link(scope,element,attrs) {
       console.log(scope);
-
-      attrs.$observe('scope.d3data', function(value) {
-        console.log(scope.d3data);
-      });
+      console.log(scope.vm);
+      console.log(vm);
+      console.log(vm.d3data);
+      console.log("LINK: scope.vm.d3data = " + scope.vm.d3data);
+      console.log("LINK: vm.d3data = " + vm.d3data);
+      console.log("LINK: scope.d3data = " + scope.d3data);
 
       // Bottom margin makes room for the lengthy and rotated timestamps
       var margin = {top: 20, right: 20, bottom: 120, left: 75};
