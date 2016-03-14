@@ -13,6 +13,7 @@
         URLS = {
           FETCH:   'data/hosts.json',
           MEMSTAT: 'data/memstat.json'
+          // MEMSTAT: 'http://$server:$port/host/$hostname/subsystem/$subsystem/date/$date'
         };
 
     var service = {
