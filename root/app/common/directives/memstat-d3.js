@@ -7,15 +7,29 @@
 
   memstatD3.$inject = [ 'HostService' ];
 
-  memstatD3Controller.inject = [ '$scope' ];
+  memstatD3Controller.inject = [ '$scope', '$interval', '$window' ];
 
-  function memstatD3Controller($scope, $element, $attrs, HostService) {
+  function memstatD3Controller($scope, $element, $attrs, HostService, $interval, $window) {
     var vm = this;
 
+    // Allow window resizing
+    $window.addEventListener('resize', function() {
+      $scope.$broadcast('vm.windowResize');
+    });
+
+    // Grab the data when we start ...
     HostService.getMemstat()
-      .then(function(result) {
+      .then(function (result) {
         vm.d3data = result;
       });
+
+    // ... update every 30 seconds thereafter
+    $interval(function() {
+      HostService.getMemstat()
+        .then(function (result) {
+          vm.d3data = result;
+        });
+    }, 30000);
   }
 
   function memstatD3() {
@@ -89,7 +103,9 @@
       var svg = d3.select(element[0])
         .append("svg")
           .attr("width", width)
-          .attr("height", height + margin.top + margin.bottom)
+          .attr("height", height + margin.top + margin.bottom);
+
+      var chart = svg
           .append("g")
           .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -109,7 +125,7 @@
         //
 
         // clear the elements inside of the directive
-        svg.selectAll('*').remove();
+        chart.selectAll('*').remove();
 
         // if 'd3data' is undefined, exit
         if (!newd3data) {
@@ -137,7 +153,7 @@
         x.domain(d3.extent(newd3data, function(d) { return d.timestamp; }));
 
         var memtype =
-          svg.selectAll(".memtype")
+          chart.selectAll(".memtype")
              .data(memtypes)
              .enter()
              .append("g")
@@ -184,7 +200,7 @@
             return cvt_name;
           });
 
-        svg.append("g")
+        chart.append("g")
            .attr("class", "x axis")
            .attr("transform", "translate(0," + height + ")")
            .call(xAxis)
@@ -196,11 +212,21 @@
                 return "rotate(-55)"
             });
 
-        svg.append("g")
+        chart.append("g")
           .attr("class", "y axis")
           .call(yAxis);
 
+        resize();
       });
+
+      function resize() {
+        console.log("RESIZING!");
+        console.log("WIDTH: " + element[0].clientWidth);
+        svg.attr("width",  element[0].clientWidth);
+        svg.attr("height", element[0].clientWidth); //It's a square
+      }
+
+      scope.$on('vm.windowResize',resize);
     }
   }
 

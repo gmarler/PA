@@ -10,10 +10,16 @@
   function HostService($http) {
     var hosts,
         memstats,
+        server    = "some.server.host",
+        port      = "5000",
+        hostname  = "n322",
+        subsystem = "memstat",
+        date      = "2016-03-14",
         URLS = {
           FETCH:   'data/hosts.json',
-          MEMSTAT: 'data/memstat.json'
-          // MEMSTAT: 'http://$server:$port/host/$hostname/subsystem/$subsystem/date/$date'
+          // MEMSTAT: 'data/memstat.json'
+          MEMSTAT: 'http://' + server + ':' + port + '/host/' + hostname + '/subsystem/' +
+                    subsystem + '/date/' + date
         };
 
     var service = {

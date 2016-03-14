@@ -6,7 +6,7 @@
       'pa.models.host'
     ])
 
-    .controller('HostController', function (HostModel) {
+    .controller('HostController', function ($scope, HostModel) {
       var vm = this;
 
       HostModel.getHosts()
@@ -14,6 +14,11 @@
           vm.hosts = result;
           console.log(vm.hosts)
         });
+
+      $scope.$watch('vm.pa_server', function(newValue, oldValue) {
+        console.log("NEW VALUE for vm.pa_server!");
+        if (newValue !== oldValue) HostModel.setPAServer(newValue);
+      });
     })
 
     .directive('hostInfo', hostInfo);
