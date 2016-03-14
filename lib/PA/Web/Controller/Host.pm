@@ -98,6 +98,10 @@ sub host_memstat_GET {
 sub host : PathPart('host') Chained('/') CaptureArgs(1) {
   my ( $self, $c, $hostname ) = @_;
 
+  $c->response->headers->header(
+    'Access-Control-Allow-Origin' => '*',
+  );
+
   my $host = $c->model('DB::Host')->find_by_name($hostname);
 
   say "HOSTNAME:  " . $host->name;
