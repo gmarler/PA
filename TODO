@@ -15,3 +15,7 @@
 * AngularJS Client
   * Allow Specifying Web/DB server IP/hostname to interact with, for WebStorm dev purposes
   * Dropdown datepicker for host/subsystem/metric/date selection
+
+  * d3-memstat Directive
+    * Create a legend for the stacked graph colors, rather than laying the labels on shifting stacks
+    * Fix up HostService to get the right data off the scope to make calls into the REST API
