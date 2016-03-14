@@ -99,7 +99,9 @@
           return (key !== "timestamp" && key !== "total_bytes" && key !== "guest"); }));
 
       // whenever the bound 'd3data' expression changes, execute this
-      scope.$watch('d3data', function (newd3data, oldd3data) {
+      scope.$watch('vm.d3data', function (newd3data, oldd3data) {
+        // console.log("GOT NEW DATA!");
+        console.log(vm);
         // Don't graph:
         // - The Epoch timestamp
         // - The Guest data (since it's currently always 0)
