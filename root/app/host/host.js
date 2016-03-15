@@ -13,13 +13,15 @@
 
       $scope.$watch('PAServer', function() {
         HostService.setPAServer($scope.PAServer);
+
+        HostService.getHosts()
+          .then(function(result) {
+            vm.hosts = result;
+            console.log(vm.hosts)
+          });
       });
 
-      HostService.getHosts()
-        .then(function(result) {
-          vm.hosts = result;
-          console.log(vm.hosts)
-        });
+
     })
 
     .directive('hostInfo', hostInfo);

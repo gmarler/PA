@@ -12,7 +12,7 @@
         memstats,
         PAServer  = "localhost",
         port      = "5000",
-        hostname  = "n322",
+        hostname  = "nysbldo8",
         subsystem = "memstat",
         date      = moment().format('YYYY-MM-DD'),
         URLS = {
@@ -72,7 +72,22 @@
     }
 
     function getHosts() {
-      return $http.get(URLS.FETCH).then(cacheHosts);
+      var hostsURL = buildHostsURL();
+      // return $http.get(URLS.FETCH).then(cacheHosts);
+
+      return $http.get(hostsURL)
+        .then(getHostsComplete)
+        .catch(getHostsFailed);
+
+      function getHostsComplete(response) {
+        hosts = extract(response);
+        // console.log(memstats);
+        return hosts;
+      }
+
+      function getHostsFailed(error) {
+        console.log("ERROR: XHR Failed for getHosts." + error.data);
+      }
     }
 
     function getMemstat() {
@@ -93,6 +108,10 @@
       function getMemstatFailed(error) {
         console.log("ERROR: XHR Failed for getMemstat." + error.data);
       }
+    }
+
+    function buildHostsURL() {
+      return 'http://' + PAServer + ':' + port + '/hosts';
     }
 
     function buildMemstatURL() {
