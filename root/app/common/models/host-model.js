@@ -36,7 +36,7 @@
       return hosts;
     }
 
-    function getHosts(){
+    function getHosts() {
       return $http.get(URLS.FETCH).then(cacheHosts);
     }
   }

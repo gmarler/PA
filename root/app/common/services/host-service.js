@@ -9,8 +9,8 @@
 
   function HostService($http) {
     var hosts,
+        PAServer,
         memstats,
-        server    = "some.server.host",
         port      = "5000",
         hostname  = "n322",
         subsystem = "memstat",
@@ -18,23 +18,39 @@
         URLS = {
           FETCH:   'data/hosts.json',
           // MEMSTAT: 'data/memstat.json'
-          MEMSTAT: 'http://' + server + ':' + port + '/host/' + hostname + '/subsystem/' +
+          MEMSTAT: 'http://' + PAServer + ':' + port + '/host/' + hostname + '/subsystem/' +
                     subsystem + '/date/' + date
         };
 
     var service = {
-      hosts:        hosts,
-      URLS:         URLS,
+      hosts:          hosts,
+      URLS:           URLS,
+      PAServer:       PAServer,
+      hostname:       hostname,
+      subsystem:      subsystem,
+      date:           date,
 
-      extract:      extract,
-      cacheHosts:   cacheHosts,
-      getHosts:     getHosts,
-      getMemstat:   getMemstat
+      setPAServer:    setPAServer,
+      getPAServer:    getPAServer,
+      extract:        extract,
+      cacheHosts:     cacheHosts,
+      getHosts:       getHosts,
+      getMemstat:     getMemstat
     };
 
     return service;
 
     // FUNCTION DEFINITIONS
+
+    function setPAServer(server) {
+      console.log("Updating PA Server to: " + server)
+      PAServer = server;
+    }
+
+    function getPAServer() {
+      return PAServer;
+    }
+
     function extract(result) {
       return result.data;
     }
@@ -49,7 +65,11 @@
     }
 
     function getMemstat() {
-      return $http.get(URLS.MEMSTAT)
+      var myURL = buildMemstatURL();
+      console.log("URL: " + myURL);
+
+      // return $http.get(URLS.MEMSTAT)
+      return $http.get(myURL)
                   .then(getMemstatComplete)
                   .catch(getMemstatFailed);
 
@@ -62,6 +82,11 @@
       function getMemstatFailed(error) {
         console.log("ERROR: XHR Failed for getMemstat." + error.data);
       }
+    }
+
+    function buildMemstatURL() {
+      return 'http://' + PAServer + ':' + port + '/host/' + hostname + '/subsystem/' +
+             subsystem + '/date/' + date;
     }
 
   }

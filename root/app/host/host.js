@@ -3,22 +3,23 @@
 
   angular
     .module('pa.host', [
-      'pa.models.host'
+      'pa.services.host'
     ])
 
-    .controller('HostController', function ($scope, HostModel) {
+    .controller('HostController', function ($scope, HostService) {
       var vm = this;
 
-      HostModel.getHosts()
+      $scope.PAServer = "localhost";
+
+      $scope.$watch('PAServer', function() {
+        HostService.setPAServer($scope.PAServer);
+      });
+
+      HostService.getHosts()
         .then(function(result) {
           vm.hosts = result;
           console.log(vm.hosts)
         });
-
-      $scope.$watch('vm.pa_server', function(newValue, oldValue) {
-        console.log("NEW VALUE for vm.pa_server!");
-        if (newValue !== oldValue) HostModel.setPAServer(newValue);
-      });
     })
 
     .directive('hostInfo', hostInfo);
