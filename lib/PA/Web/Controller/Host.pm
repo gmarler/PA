@@ -61,6 +61,46 @@ sub host_list_GET {
   $self->status_ok( $c, entity => \%host_list );
 }
 
+=method hosts
+
+First step in chain that extracts a list of hosts as a REST entity in the
+preferred format.
+
+=cut
+
+sub hosts : Path('/hosts') :Args(0) : ActionClass('REST') {
+  my ( $self, $c ) = @_;
+
+  $c->response->headers->header(
+    'Access-Control-Allow-Origin' => '*',
+  );
+}
+
+=method hosts_GET
+
+Implement GET verb for hosts REST query
+
+=cut
+
+sub hosts_GET {
+  my ($self, $c) = @_;
+
+  my @host_list;
+
+  my $host_rs = $c->model('DB::Host')->search;
+  while ( my $host_row = $host_rs->next ) {
+    push @host_list,
+      { name      => $host_row->name,
+        id        => $host_row->host_id,
+        time_zone => $host_row->time_zone,
+      };
+  }
+
+  $self->status_ok( $c, entity => \@host_list );
+}
+
+
+
 =method host_memstat
 
 First step in chain that extracts the memstat of a host as a REST entity
