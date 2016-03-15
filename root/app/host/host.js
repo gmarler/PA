@@ -24,7 +24,7 @@
 
     .directive('hostInfo', hostInfo);
 
-  function hostInfo() {
+  function hostInfo(HostService) {
     var directive = {
       restrict:    'AE',
       templateUrl: 'app/host/host.tmpl.html',
@@ -47,6 +47,7 @@
 
         // set up info related to the host just selected
         scope.selectedHostName     = hostobj.name;
+        HostService.setHostname(hostobj.name);
         scope.selectedHostTimeZone = hostobj.time_zone;
         scope.selectedHostId       = hostobj.id;
       };
@@ -57,5 +58,7 @@
       }
     }
   }
+
+  hostInfo.$inject = [ 'HostService' ];
 
 })();

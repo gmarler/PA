@@ -9,12 +9,12 @@
 
   function HostService($http) {
     var hosts,
-        PAServer,
         memstats,
+        PAServer  = "localhost",
         port      = "5000",
         hostname  = "n322",
         subsystem = "memstat",
-        date      = "2016-03-14",
+        date      = moment().format('YYYY-MM-DD'),
         URLS = {
           FETCH:   'data/hosts.json',
           // MEMSTAT: 'data/memstat.json'
@@ -26,12 +26,15 @@
       hosts:          hosts,
       URLS:           URLS,
       PAServer:       PAServer,
+      port:           port,
       hostname:       hostname,
       subsystem:      subsystem,
       date:           date,
 
       setPAServer:    setPAServer,
       getPAServer:    getPAServer,
+      setHostname:    setHostname,
+      getHostname:    getHostname,
       extract:        extract,
       cacheHosts:     cacheHosts,
       getHosts:       getHosts,
@@ -49,6 +52,14 @@
 
     function getPAServer() {
       return PAServer;
+    }
+
+    function setHostname(newHostname) {
+      hostname = newHostname;
+    }
+
+    function getHostname() {
+      return hostname;
     }
 
     function extract(result) {
