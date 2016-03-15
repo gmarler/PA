@@ -3,13 +3,19 @@
 
   angular
     .module('pa.host', [
-      'pa.models.host'
+      'pa.services.host'
     ])
 
-    .controller('HostController', function (HostModel) {
+    .controller('HostController', function ($scope, HostService) {
       var vm = this;
 
-      HostModel.getHosts()
+      $scope.PAServer = "localhost";
+
+      $scope.$watch('PAServer', function() {
+        HostService.setPAServer($scope.PAServer);
+      });
+
+      HostService.getHosts()
         .then(function(result) {
           vm.hosts = result;
           console.log(vm.hosts)
@@ -18,7 +24,7 @@
 
     .directive('hostInfo', hostInfo);
 
-  function hostInfo() {
+  function hostInfo(HostService) {
     var directive = {
       restrict:    'AE',
       templateUrl: 'app/host/host.tmpl.html',
@@ -41,6 +47,7 @@
 
         // set up info related to the host just selected
         scope.selectedHostName     = hostobj.name;
+        HostService.setHostname(hostobj.name);
         scope.selectedHostTimeZone = hostobj.time_zone;
         scope.selectedHostId       = hostobj.id;
       };
@@ -51,5 +58,7 @@
       }
     }
   }
+
+  hostInfo.$inject = [ 'HostService' ];
 
 })();

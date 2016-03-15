@@ -1,14 +1,31 @@
 (function() {
   'use strict';
 
-  angular.module('pa.models.host', [])
+  angular
+    .module('pa.models.host', [])
+    .factory('HostModel', HostModel);
 
-  .service('HostModel', function ($http) {
-    var model = this,
-        hosts,
+  HostModel.$inject = [ '$http' ];
+
+  function HostModel( $http ) {
+    var hosts,
         URLS = {
           FETCH: 'data/hosts.json'
-        };
+        },
+        PAServer;
+
+    var service = {
+      hosts:        hosts,
+      URLS:         URLS,
+      PAServer:     PAServer,
+
+      extract:      extract,
+      cacheHosts:   cacheHosts,
+      getHosts:     getHosts,
+      setPAServer:  setPAServer,
+      getPAServer:  getPAServer
+    };
+
 
     function extract(result) {
       return result.data;
@@ -19,11 +36,9 @@
       return hosts;
     }
 
-    model.getHosts = function () {
+    function getHosts() {
       return $http.get(URLS.FETCH).then(cacheHosts);
     }
-  })
-
-  ;
+  }
 
 })();

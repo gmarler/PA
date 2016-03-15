@@ -12,7 +12,9 @@
       .then(function(result) {
         vm.subsystems = result;
         vm.subsystem_metrics = [
-          { name: "memstat" }
+          { name: "memstat" },
+          { name: "VM scan rate" },
+          { name: "freemem" }
         ];
         console.log(vm.subsystems);
       });
