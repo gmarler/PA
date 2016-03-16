@@ -24,12 +24,14 @@
       });
 
     // ... update every 30 seconds thereafter
-    $interval(function() {
-      HostService.getMemstat()
-        .then(function (result) {
-          vm.d3data = result;
-        });
-    }, 30000);
+    // Grab the intervalID so we can eliminate it if we so choose later
+    var intervalID =
+      $interval(function() {
+        HostService.getMemstat()
+          .then(function (result) {
+            vm.d3data = result;
+          });
+      }, 30000);
   }
 
   function memstatD3() {
