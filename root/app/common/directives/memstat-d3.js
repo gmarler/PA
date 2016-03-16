@@ -35,12 +35,14 @@
   function memstatD3() {
     // Define constants and helpers used for this directive
     // Bottom margin makes room for the lengthy and rotated timestamps
-    var margin = {top: 20, right: 20, bottom: 120, left: 75};
-    var width  = parseInt(d3.select('body').style('width'));
-    width      = width - margin.left - margin.right;
+    var margin = {top: 20, right: 100, bottom: 120, left: 75};
+    var width  = 960;
+    // var width  = parseInt(d3.select('body').style('width')) - 100;
+        width      = width - margin.left - margin.right;
     // var height = parseInt(d3.select('body').style('height'));
-    var height = 1000;
-    height     = height - margin.top - margin.bottom;
+    // var height = 1000;
+    var height = width;
+        height = height - margin.top - margin.bottom;
 
     // Specify the order in which we stack the data in the graph, from the Y axis up
     // NOTE: We're currently excluding: Guest and defump_prealloc
@@ -97,17 +99,17 @@
     return directive;
 
     function link(scope, element, attrs, vm) {
-      // initialization, done once per my-directive tag in template. If my-directive is within an
+      // initialization, done once per directive tag in template. If my-directive is within an
       // ng-repeat-ed template then it will be called every time ngRepeat creates a new copy of the template.
 
       var svg = d3.select(element[0])
         .append("svg")
-          .attr("width", width)
-          .attr("height", height + margin.top + margin.bottom);
+          .attr("width",  width  + margin.left + margin.right)
+          .attr("height", height + margin.top  + margin.bottom);
 
       var chart = svg
           .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // Define the color map domain in key order
       color.domain(keys_in_order
@@ -125,7 +127,7 @@
         //
 
         // clear the elements inside of the directive
-        chart.selectAll('*').remove();
+        // chart.selectAll('*').remove();
 
         // if 'd3data' is undefined, exit
         if (!newd3data) {
@@ -200,6 +202,7 @@
             return cvt_name;
           });
 
+        // Create X Axis g Element
         chart.append("g")
            .attr("class", "x axis")
            .attr("transform", "translate(0," + height + ")")
@@ -212,6 +215,7 @@
                 return "rotate(-55)"
             });
 
+        // Create Y Axis g Element
         chart.append("g")
           .attr("class", "y axis")
           .call(yAxis);

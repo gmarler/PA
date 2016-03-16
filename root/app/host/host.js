@@ -51,7 +51,9 @@
         scope.selectedHostName     = hostobj.name;
         HostService.setHostname(hostobj.name);
         scope.selectedHostTimeZone = hostobj.time_zone;
+        HostService.setHostTimeZone(hostobj.time_zone);
         scope.selectedHostId       = hostobj.id;
+        HostService.setHostID(hostobj.id);
       };
 
       scope.availSubsystemsForHost = function(hostobj) {

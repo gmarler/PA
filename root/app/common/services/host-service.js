@@ -13,6 +13,8 @@
         PAServer  = "localhost",
         port      = "5000",
         hostname  = "nysbldo8",
+        hostID,
+        hostTimeZone,
         subsystem = "memstat",
         date      = moment().format('YYYY-MM-DD'),
         URLS = {
@@ -23,22 +25,28 @@
         };
 
     var service = {
-      hosts:          hosts,
-      URLS:           URLS,
-      PAServer:       PAServer,
-      port:           port,
-      hostname:       hostname,
-      subsystem:      subsystem,
-      date:           date,
+      hosts:           hosts,
+      URLS:            URLS,
+      PAServer:        PAServer,
+      port:            port,
+      hostname:        hostname,
+      hostID:          hostID,
+      hostTimeZone:    hostTimeZone,
+      subsystem:       subsystem,
+      date:            date,
 
-      setPAServer:    setPAServer,
-      getPAServer:    getPAServer,
-      setHostname:    setHostname,
-      getHostname:    getHostname,
-      extract:        extract,
-      cacheHosts:     cacheHosts,
-      getHosts:       getHosts,
-      getMemstat:     getMemstat
+      setPAServer:     setPAServer,
+      getPAServer:     getPAServer,
+      setHostname:     setHostname,
+      getHostname:     getHostname,
+      setHostID:       setHostID,
+      getHostID:       getHostID,
+      setHostTimeZone: setHostTimeZone,
+      getHostTimeZone: getHostTimeZone,
+      extract:         extract,
+      cacheHosts:      cacheHosts,
+      getHosts:        getHosts,
+      getMemstat:      getMemstat
     };
 
     return service;
@@ -60,6 +68,22 @@
 
     function getHostname() {
       return hostname;
+    }
+
+    function setHostID(hostid) {
+      hostID = hostid;
+    }
+
+    function getHostID() {
+      return hostID;
+    }
+
+    function setHostTimeZone(timezone) {
+      hostTimeZone = timezone;
+    }
+
+    function getHostTimeZone() {
+      return hostTimeZone;
     }
 
     function extract(result) {
