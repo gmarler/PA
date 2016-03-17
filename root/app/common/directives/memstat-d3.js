@@ -37,7 +37,7 @@
   function memstatD3() {
     // Define constants and helpers used for this directive
     // Bottom margin makes room for the lengthy and rotated timestamps
-    var margin = {top: 20, right: 100, bottom: 120, left: 75};
+    var margin = {top: 20, right: 120, bottom: 120, left: 75};
     var width  = 960;
     // var width  = parseInt(d3.select('body').style('width')) - 100;
         width      = width - margin.left - margin.right;
@@ -104,6 +104,15 @@
       // initialization, done once per directive tag in template. If my-directive is within an
       // ng-repeat-ed template then it will be called every time ngRepeat creates a new copy of the template.
 
+      // This is the boolean that determines if we are doing this for the first time,
+      // where the elements get appended.  All subsequent updates to d3data will result in
+      // the enter/update/exit pattern for D3.
+      var first_run = true;
+      var memtypes,
+          memtype,
+          paths,
+          legend;
+
       var svg = d3.select(element[0])
         .append("svg")
           .attr("width",  width  + margin.left + margin.right)
@@ -117,6 +126,7 @@
       color.domain(keys_in_order
         .filter(function(key) {
           return (key !== "timestamp" && key !== "total_bytes" && key !== "guest"); }));
+
 
       // whenever the bound 'd3data' expression changes, execute this
       scope.$watch('vm.d3data', function (newd3data, oldd3data) {
@@ -144,7 +154,7 @@
           // console.log(d);
         });
 
-        var memtypes = stack(color.domain().map(function(name) {
+        memtypes = stack(color.domain().map(function(name) {
           // console.log(name);
           return {
             name: name,
@@ -156,14 +166,54 @@
 
         x.domain(d3.extent(newd3data, function(d) { return d.timestamp; }));
 
-        var memtype =
+        if (first_run) {
+          console.log("First Time Through memstat-d3 directive!");
+          // ...
+          legend = d3.select('svg').selectAll(".legend")
+            .data(color.domain().slice().reverse())
+            .enter()
+            .append("g")
+            .attr("class", "legend")
+            .attr("transform", function(d,i) { return "translate(0," + i * 20 + ")"; });
+
+          legend.append("rect")
+            .attr("x", width + margin.left + margin.right - 18)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", color);
+
+          legend.append("text")
+            .attr("x", width + margin.left + margin.right - 24)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .style("text-anchor", "end")
+            .text(function(d) {
+              var regex1 = /_bytes$/;
+              var regex2 = /^(.)/;
+              var regex3 = /_/g;
+              var regex4 = /zfs/gi
+              var cvt_name = d;
+              cvt_name = cvt_name.replace(regex1, "");
+              cvt_name = cvt_name.replace(regex2,function (s) { return s.toUpperCase(); });
+              cvt_name = cvt_name.replace(regex3, " ");
+              // cvt_name = cvt_name.replace(/\_(.)/g, function (s = $1) { return s.toUpperCase() });
+              cvt_name = cvt_name.replace(regex4,function (s) { return s.toUpperCase(); });
+              return cvt_name;
+            });
+
+          first_run = false;
+        } else {
+
+        }
+
+        memtype =
           chart.selectAll(".memtype")
              .data(memtypes)
              .enter()
              .append("g")
              .attr("class", "memtype");
 
-        var paths =
+        paths =
           memtype.append("path")
                  .attr("class", "area")
                  .attr("d", function(d) { return area(d.values); })
@@ -181,27 +231,6 @@
             d3.select(this)
               .attr('stroke-width', 0)
               .attr('fill', color(d.name));
-          });
-
-
-        memtype.append("text")
-          .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
-          .attr("transform", function(d) { return "translate(" + x(d.value.timestamp) + "," + y(d.value.y0 + d.value.y / 2) + ")"; })
-          .attr("x", -600)
-          .attr("dy", ".35em")
-          .attr('font-size', '14px')
-          .text(function(d) {
-            var regex1 = /_bytes$/;
-            var regex2 = /^(.)/;
-            var regex3 = /_/g;
-            var regex4 = /zfs/gi
-            var cvt_name = d.name;
-            cvt_name = cvt_name.replace(regex1, "");
-            cvt_name = cvt_name.replace(regex2,function (s) { return s.toUpperCase(); });
-            cvt_name = cvt_name.replace(regex3, " ");
-            // cvt_name = cvt_name.replace(/\_(.)/g, function (s = $1) { return s.toUpperCase() });
-            cvt_name = cvt_name.replace(regex4,function (s) { return s.toUpperCase(); });
-            return cvt_name;
           });
 
         // Create X Axis g Element
