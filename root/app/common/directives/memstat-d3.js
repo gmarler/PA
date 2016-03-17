@@ -174,7 +174,7 @@
             .enter()
             .append("g")
             .attr("class", "legend")
-            .attr("transform", function(d,i) { return "translate(0," + i * 20 + ")"; });
+            .attr("transform", function(d,i) { return "translate(0," + i * 25 + ")"; });
 
           legend.append("rect")
             .attr("x", width + margin.left + margin.right - 18)
