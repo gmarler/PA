@@ -224,6 +224,13 @@
         // binding.exit().style('background-color', 'red').remove();
         //
 
+        // JOIN
+        //var memtype_selection =
+        //  chart.selectAll(".memtype")
+        //       .data(memtypes);
+        //
+        //
+
         memtype =
           chart.selectAll(".memtype")
              .data(memtypes)
