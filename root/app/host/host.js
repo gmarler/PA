@@ -9,7 +9,7 @@
     .controller('HostController', function ($scope, HostService) {
       var vm = this;
 
-      $scope.PAServer = "localhost";
+      // $scope.PAServer = "localhost";
 
       $scope.$watch('PAServer', function() {
         HostService.setPAServer($scope.PAServer);

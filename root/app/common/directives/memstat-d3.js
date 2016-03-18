@@ -54,29 +54,32 @@
 
     var formatPercent = d3.format(".0%");
 
-    var x = d3.time.scale()
+    var xAxisGroup,
+        yAxisGroup;
+
+    var xAxisScale = d3.time.scale()
       .range([0, width]);
 
-    var y = d3.scale.linear()
+    var yAxisScale = d3.scale.linear()
       .range([height, 0]);
 
     var color = d3.scale.category20();
 
     var xAxis = d3.svg.axis()
-      .scale(x)
+      .scale(xAxisScale)
       .orient("bottom")
       .ticks(20)
       .tickFormat(d3.time.format("%Y-%m-%d %X"));
 
     var yAxis = d3.svg.axis()
-      .scale(y)
+      .scale(yAxisScale)
       .orient("left")
       .tickFormat(formatPercent);
 
     var area = d3.svg.area()
-      .x(function(d) { return x(d.timestamp); })
-      .y0(function(d) { return y(d.y0); })
-      .y1(function(d) { return y(d.y0 + d.y); });
+      .x(function(d) { return xAxisScale(d.timestamp); })
+      .y0(function(d) { return yAxisScale(d.y0); })
+      .y1(function(d) { return yAxisScale(d.y0 + d.y); });
 
     var stack = d3.layout.stack()
       .values(function(d) {
@@ -164,8 +167,12 @@
           };
         }));
 
-        x.domain(d3.extent(newd3data, function(d) { return d.timestamp; }));
+        // Recalculate the xAxisScale
+        xAxisScale
+          .domain(d3.extent(newd3data, function(d) { return d.timestamp; }));
 
+        // Only run this the first time through - to create things like SVG groupings
+        // the first time only
         if (first_run) {
           console.log("First Time Through memstat-d3 directive!");
           // ...
@@ -201,82 +208,117 @@
               return cvt_name;
             });
 
-          first_run = false;
-        } else {
+          // Create X Axis g Element
+          xAxisGroup =
+            chart.append("g")
+              .attr("class", "x axis")
+              .attr("transform", "translate(0," + height + ")")
+              .call(xAxis);
 
+          // Create Y Axis g Element
+          yAxisGroup =
+            chart.append("g")
+              .attr("class", "y axis")
+              .call(yAxis);
+
+          first_run = false;
         }
 
         // GENERAL UPDATE PATTERN
         // JOIN
         // var binding = svg.selectAll('div').data(data);
+        var memtypeSelection =
+          chart.selectAll(".memtype")
+               .data(memtypes);
+
         //
         // UPDATE
         // binding.style('background-color', 'blue');
+        // Apply the updated xAxisScale to the xAxis
+        xAxis.scale(xAxisScale);
+        // Update the xAxis
+        chart
+          .select(".x")
+          .transition()
+          .call(xAxis);
+
         //
         // ENTER
         // binding.enter().append('div');
+        memtypeSelection
+          .enter()
+          .append("g")
+          .append("path")
+          .attr("class", "area")
+          .attr("d", function(d) { return area(d.values); })
+          .style("fill", function(d) { return color(d.name); });
+
         //
         // UPDATE + ENTER
         // binding.style('width', function(d) { return d * 50 + 'px'; })
         //        .text(function(d) { return d; });
+        // Update X Axis Text
+        xAxisGroup
+          .selectAll("text")
+          .style("text-anchor", "end")
+          .attr("dx", "-.8em")
+          .attr("dy", ".15em")
+          .attr("transform", function(d) {
+            return "rotate(-55)"
+          });
+
+        // Y Axis Does not require updating in this case...
+
+        memtypeSelection
+          .attr("class", "memtype");
+
         //
         // EXIT
         // binding.exit().style('background-color', 'red').remove();
         //
+        memtypeSelection.exit().remove();
 
-        // JOIN
-        //var memtype_selection =
+
+        //memtype =
         //  chart.selectAll(".memtype")
-        //       .data(memtypes);
+        //     .data(memtypes)
+        //     .enter()
+        //     .append("g")
+        //     .attr("class", "memtype");
         //
+        //paths =
+        //  memtype.append("path")
+        //         .attr("class", "area")
+        //         .attr("d", function(d) { return area(d.values); })
+        //         .style("fill", function(d) { return color(d.name); });
         //
+        //// Highlight / unhighlight individual areas in the stack as we pass into and out of them
+        //paths
+        //  .on('mouseover', function (d) {
+        //    d3.select(this)
+        //      .attr('stroke-width', 3)
+        //      .attr('fill', d3.rgb(color(d.name)).brighter())
+        //      .attr('stroke', color(d.name));
+        //  })
+        //  .on('mouseout', function(d) {
+        //    d3.select(this)
+        //      .attr('stroke-width', 0)
+        //      .attr('fill', color(d.name));
+        //  });
+        //
+        //// Update X Axis
+        //xAxisGroup
+        //  .selectAll("text")
+        //  .style("text-anchor", "end")
+        //  .attr("dx", "-.8em")
+        //  .attr("dy", ".15em")
+        //  .attr("transform", function(d) {
+        //    return "rotate(-55)"
+        //  });
 
-        memtype =
-          chart.selectAll(".memtype")
-             .data(memtypes)
-             .enter()
-             .append("g")
-             .attr("class", "memtype");
+        // Y Axis Does not require updating in this case...
 
-        paths =
-          memtype.append("path")
-                 .attr("class", "area")
-                 .attr("d", function(d) { return area(d.values); })
-                 .style("fill", function(d) { return color(d.name); });
-
-        // Highlight / unhighlight individual areas in the stack as we pass into and out of them
-        paths
-          .on('mouseover', function (d) {
-            d3.select(this)
-              .attr('stroke-width', 3)
-              .attr('fill', d3.rgb(color(d.name)).brighter())
-              .attr('stroke', color(d.name));
-          })
-          .on('mouseout', function(d) {
-            d3.select(this)
-              .attr('stroke-width', 0)
-              .attr('fill', color(d.name));
-          });
-
-        // Create X Axis g Element
-        chart.append("g")
-           .attr("class", "x axis")
-           .attr("transform", "translate(0," + height + ")")
-           .call(xAxis)
-          .selectAll("text")
-            .style("text-anchor", "end")
-            .attr("dx", "-.8em")
-            .attr("dy", ".15em")
-            .attr("transform", function(d) {
-                return "rotate(-55)"
-            });
-
-        // Create Y Axis g Element
-        chart.append("g")
-          .attr("class", "y axis")
-          .call(yAxis);
-
-        resize();
+        // resize();
       });
 
       function resize() {

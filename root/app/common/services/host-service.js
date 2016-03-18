@@ -10,7 +10,7 @@
   function HostService($http) {
     var hosts,
         memstats,
-        PAServer  = "localhost",
+        PAServer,
         port      = "5000",
         hostname  = "nysbldo8",
         hostID,
@@ -96,6 +96,7 @@
     }
 
     function getHosts() {
+      console.log("CALLING HostService.getHosts()")
       var hostsURL = buildHostsURL();
       // return $http.get(URLS.FETCH).then(cacheHosts);
 
@@ -105,7 +106,8 @@
 
       function getHostsComplete(response) {
         hosts = extract(response);
-        // console.log(memstats);
+        console.log("HostService.getHosts() returns:");
+        console.log(hosts);
         return hosts;
       }
 
@@ -135,7 +137,9 @@
     }
 
     function buildHostsURL() {
-      return 'http://' + PAServer + ':' + port + '/hosts';
+      var URL = 'http://' + PAServer + ':' + port + '/hosts';
+      console.log("buildHostsURL built: " + URL);
+      return URL;
     }
 
     function buildMemstatURL() {
