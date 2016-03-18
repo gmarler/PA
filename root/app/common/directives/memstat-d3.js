@@ -206,6 +206,24 @@
 
         }
 
+        // GENERAL UPDATE PATTERN
+        // JOIN
+        // var binding = svg.selectAll('div').data(data);
+        //
+        // UPDATE
+        // binding.style('background-color', 'blue');
+        //
+        // ENTER
+        // binding.enter().append('div');
+        //
+        // UPDATE + ENTER
+        // binding.style('width', function(d) { return d * 50 + 'px'; })
+        //        .text(function(d) { return d; });
+        //
+        // EXIT
+        // binding.exit().style('background-color', 'red').remove();
+        //
+
         memtype =
           chart.selectAll(".memtype")
              .data(memtypes)
