@@ -225,14 +225,14 @@
         }
 
         // GENERAL UPDATE PATTERN
-        // JOIN
+        // JOIN - Join new/updated data
         // var binding = svg.selectAll('div').data(data);
         var memtypeSelection =
           chart.selectAll(".memtype")
                .data(memtypes);
 
         //
-        // UPDATE
+        // UPDATE - Update existing elements as needed
         // binding.style('background-color', 'blue');
         // Apply the updated xAxisScale to the xAxis
         xAxis.scale(xAxisScale);
@@ -243,7 +243,7 @@
           .call(xAxis);
 
         //
-        // ENTER
+        // ENTER - Create new elements as needed
         // binding.enter().append('div');
         memtypeSelection
           .enter()
@@ -254,7 +254,9 @@
           .style("fill", function(d) { return color(d.name); });
 
         //
-        // UPDATE + ENTER
+        // UPDATE + ENTER - Appending to the enter selection expands the update selection
+        // to include the entering elements; so operations on the update selection after
+        // enter() will apply to both entering and updating nodes
         // binding.style('width', function(d) { return d * 50 + 'px'; })
         //        .text(function(d) { return d; });
         // Update X Axis Text
@@ -273,7 +275,7 @@
           .attr("class", "memtype");
 
         //
-        // EXIT
+        // EXIT - Remove old nodes as needed
         // binding.exit().style('background-color', 'red').remove();
         //
         memtypeSelection.exit().remove();
