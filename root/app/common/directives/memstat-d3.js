@@ -253,6 +253,8 @@
           // Add the latest values to each area's path
           memtypeSelection
             .select("path")
+            .transition()
+            .duration(1000)
             .attr("d", function(d) { return area(d.values); });
 
           //
