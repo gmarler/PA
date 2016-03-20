@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>D3 Spike Page</title>
+
+  <style>
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+  </style>
+  <script src="../../bower_components/d3/d3.min.js"></script>
+</head>
+<body>
+
+<pre>
+  var newd3data = [
+    { "DATA1":1, "DATA2":1, "timestamp": 0 },
+    { "DATA1":1, "DATA2":2, "timestamp": 1 },
+    { "DATA1":1, "DATA2":1, "timestamp": 2 },
+    { "DATA1":1, "DATA2":2, "timestamp": 3 },
+    { "DATA1":1, "DATA2":1, "timestamp": 4 },
+  ];
+
+
+  var margin = {top: 20, right: 120, bottom: 120, left: 75};
+  var width  = 960;
+      width      = width - margin.left - margin.right;
+
+  var height = width;
+      height = height - margin.top - margin.bottom;
+
+  var keys_in_order = [ "DATA1", "DATA2" ];
+
+  var xAxisGroup,
+      yAxisGroup;
+
+  var xAxisScale = d3.scale.linear()
+                     .range([0, width]);
+
+  var yAxisScale = d3.scale.linear()
+                     .range([height, 0]);
+  // Set the Y Axis Scale Domain (it's static in this case)
+  yAxisScale.domain([0, 10]);
+
+  var color = d3.scale.category20();
+  // Define the color map domain in key order
+  color.domain(keys_in_order
+    .filter(function(key) {
+      return (key !== "timestamp" && key !== "total_bytes" && key !== "guest"); }));
+
+  var xAxis = d3.svg.axis()
+    .scale(xAxisScale)
+    .orient("bottom");
+
+  var yAxis = d3.svg.axis()
+    .scale(yAxisScale)
+    .orient("left");
+
+  var area = d3.svg.area()
+    .x(function(d) { return xAxisScale(d.timestamp); })
+    .y0(function(d) { return yAxisScale(d.y0); })
+    .y1(function(d) { return yAxisScale(d.y0 + d.y); });
+
+  var stack = d3.layout.stack()
+    .values(function(d) {
+      return d.values;
+    });
+
+  var svg = d3.select('body')
+    .append("svg")
+      .attr("width",  width  + margin.left + margin.right)
+      .attr("height", height + margin.top  + margin.bottom);
+
+  var chart = svg
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  // Create X Axis g Element
+  xAxisGroup =
+    chart.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  // Create Y Axis g Element
+  yAxisGroup =
+    chart.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+
+
+  function UpdatePattern(udata) {
+
+    // Recalculate the xAxisScale
+    xAxisScale
+      .domain(d3.extent(udata, function(d) { return d.timestamp; }));
+    // Recalculate the yAxisScale - UNNECESSARY, as it's static here
+
+    // Update values for each area to be stacked
+    memtypes = stack(color.domain().map(function(name) {
+      console.log("NAME: " + name);
+      return {
+        name: name,
+        values: udata.map(function(d) {
+          var obj = {timestamp: d.timestamp, y: d[name] };
+          console.log(obj);
+          return obj;
+        })
+      };
+    }));
+
+    // GENERAL UPDATE PATTERN
+    // JOIN - Join new/updated data
+    // var binding = svg.selectAll('div').data(data);
+    var memtypeSelection =
+      chart.selectAll(".memtype")
+           .data(memtypes);
+
+    //
+    // UPDATE - Update existing elements as needed
+    // binding.style('background-color', 'blue');
+    // Apply the updated xAxisScale to the xAxis
+    xAxis.scale(xAxisScale);
+    // Update the xAxis
+    chart
+      .select(".x")
+      .transition()
+      .duration(1000)
+      .call(xAxis);
+    // Add the latest values to each area's path
+    memtypeSelection
+      .select("path")
+      .attr("d", function(d) { return area(d.values); });
+
+    //
+    // ENTER - Create new elements as needed
+    // binding.enter().append('div');
+    memtypeSelection
+      .enter()
+      .append("g")
+      .append("path")
+      .attr("class", "area")
+      .attr("d", function(d) { return area(d.values); })
+      .style("fill", function(d) { return color(d.name); });
+
+    //
+    // UPDATE + ENTER - Appending to the enter selection expands the update selection
+    // to include the entering elements; so operations on the update selection after
+    // enter() will apply to both entering and updating nodes
+    // binding.style('width', function(d) { return d * 50 + 'px'; })
+    //        .text(function(d) { return d; });
+    // Update X Axis Text
+    xAxisGroup
+      .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-.8em")
+      .attr("dy", ".15em")
+      .attr("transform", function(d) {
+        return "rotate(-55)"
+      });
+
+    // Y Axis Does not require updating in this case...
+
+    memtypeSelection
+      .attr("class", "memtype");
+
+    //
+    // EXIT - Remove old nodes as needed
+    // binding.exit().style('background-color', 'red').remove();
+    //
+    memtypeSelection.exit().remove();
+  }
+
+
+
+</pre>
+
+</body>
+</html>

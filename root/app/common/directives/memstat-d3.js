@@ -167,7 +167,7 @@
           };
         }));
 
-        // Recalculate the xAxisScale
+        // Recalculate the xAxisScale Domain for each set of data
         xAxisScale
           .domain(d3.extent(newd3data, function(d) { return d.timestamp; }));
 
