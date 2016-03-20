@@ -62,6 +62,9 @@
 
     var yAxisScale = d3.scale.linear()
       .range([height, 0]);
+    // Set the Y Axis Scale Domain - it's static in this case at 0 to 100 percent,
+    // unlike the X Axis Scale, which is constantly increasing.
+    yAxisScale.domain([0, 1]);
 
     var color = d3.scale.category20();
 
@@ -83,7 +86,6 @@
 
     var stack = d3.layout.stack()
       .values(function(d) {
-        // console.log(d.values);
         return d.values;
       });
 
@@ -157,20 +159,6 @@
           // console.log(d);
         });
 
-        memtypes = stack(color.domain().map(function(name) {
-          // console.log(name);
-          return {
-            name: name,
-            values: newd3data.map(function(d) {
-              return {timestamp: d.timestamp, y: d[name] / d.total_bytes };
-            })
-          };
-        }));
-
-        // Recalculate the xAxisScale Domain for each set of data
-        xAxisScale
-          .domain(d3.extent(newd3data, function(d) { return d.timestamp; }));
-
         // Only run this the first time through - to create things like SVG groupings
         // the first time only
         if (first_run) {
@@ -224,62 +212,87 @@
           first_run = false;
         }
 
-        // GENERAL UPDATE PATTERN
-        // JOIN - Join new/updated data
-        // var binding = svg.selectAll('div').data(data);
-        var memtypeSelection =
-          chart.selectAll(".memtype")
-               .data(memtypes);
+        UpdatePattern(newd3data);
 
-        //
-        // UPDATE - Update existing elements as needed
-        // binding.style('background-color', 'blue');
-        // Apply the updated xAxisScale to the xAxis
-        xAxis.scale(xAxisScale);
-        // Update the xAxis
-        chart
-          .select(".x")
-          .transition()
-          .call(xAxis);
+        function UpdatePattern(udata) {
 
-        //
-        // ENTER - Create new elements as needed
-        // binding.enter().append('div');
-        memtypeSelection
-          .enter()
-          .append("g")
-          .append("path")
-          .attr("class", "area")
-          .attr("d", function(d) { return area(d.values); })
-          .style("fill", function(d) { return color(d.name); });
+          // Recalculate the xAxisScale
+          xAxisScale
+            .domain(d3.extent(udata, function(d) { return d.timestamp; }));
+          // Recalculate the yAxisScale - UNNECESSARY, as it's static in this directive
 
-        //
-        // UPDATE + ENTER - Appending to the enter selection expands the update selection
-        // to include the entering elements; so operations on the update selection after
-        // enter() will apply to both entering and updating nodes
-        // binding.style('width', function(d) { return d * 50 + 'px'; })
-        //        .text(function(d) { return d; });
-        // Update X Axis Text
-        xAxisGroup
-          .selectAll("text")
-          .style("text-anchor", "end")
-          .attr("dx", "-.8em")
-          .attr("dy", ".15em")
-          .attr("transform", function(d) {
-            return "rotate(-55)"
-          });
+          // Update values for each area to be stacked
+          memtypes = stack(color.domain().map(function(name) {
+            return {
+              name: name,
+              values: udata.map(function(d) {
+                var obj = {timestamp: d.timestamp, y: d[name] / d.total_bytes };
+                return obj;
+              })
+            };
+          }));
 
-        // Y Axis Does not require updating in this case...
+          // GENERAL UPDATE PATTERN
+          // JOIN - Join new/updated data
+          // var binding = svg.selectAll('div').data(data);
+          var memtypeSelection =
+            chart.selectAll(".memtype")
+              .data(memtypes);
 
-        memtypeSelection
-          .attr("class", "memtype");
+          //
+          // UPDATE - Update existing elements as needed
+          // binding.style('background-color', 'blue');
+          // Apply the updated xAxisScale to the xAxis
+          xAxis.scale(xAxisScale);
+          // Update the xAxis
+          chart
+            .select(".x")
+            .transition()
+            .duration(1000)
+            .call(xAxis);
+          // Add the latest values to each area's path
+          memtypeSelection
+            .select("path")
+            .attr("d", function(d) { return area(d.values); });
 
-        //
-        // EXIT - Remove old nodes as needed
-        // binding.exit().style('background-color', 'red').remove();
-        //
-        memtypeSelection.exit().remove();
+          //
+          // ENTER - Create new elements as needed
+          // binding.enter().append('div');
+          memtypeSelection
+            .enter()
+            .append("g")
+            .append("path")
+            .attr("class", "area")
+            .attr("d", function(d) { return area(d.values); })
+            .style("fill", function(d) { return color(d.name); });
 
+          //
+          // UPDATE + ENTER - Appending to the enter selection expands the update selection
+          // to include the entering elements; so operations on the update selection after
+          // enter() will apply to both entering and updating nodes
+          // binding.style('width', function(d) { return d * 50 + 'px'; })
+          //        .text(function(d) { return d; });
+          // Update X Axis Text
+          xAxisGroup
+            .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+              return "rotate(-55)"
+            });
+
+          // Y Axis Does not require updating in this case...
+
+          memtypeSelection
+            .attr("class", "memtype");
+
+          //
+          // EXIT - Remove old nodes as needed
+          // binding.exit().style('background-color', 'red').remove();
+          //
+          memtypeSelection.exit().remove();
+        }
 
         //memtype =
         //  chart.selectAll(".memtype")
