@@ -31,13 +31,13 @@
           .then(function (result) {
             vm.d3data = result;
           });
-      }, 30000);
+      }, 30-00);
   }
 
   function memstatD3() {
     // Define constants and helpers used for this directive
     // Bottom margin makes room for the lengthy and rotated timestamps
-    var margin = {top: 20, right: 120, bottom: 120, left: 75};
+    var margin = {top: 20, right: 155, bottom: 120, left: 75};
     var width  = 960;
     // var width  = parseInt(d3.select('body').style('width')) - 100;
         width      = width - margin.left - margin.right;
@@ -53,9 +53,11 @@
                           "free_freelist_bytes" ];
 
     var formatPercent = d3.format(".0%");
+    var formatRAM     = d3.format("s");
 
     var xAxisGroup,
-        yAxisGroup;
+        yAxisGroup,
+        yAxisGroupRAM;
 
     var xAxisScale = d3.time.scale()
       .range([0, width]);
@@ -65,6 +67,12 @@
     // Set the Y Axis Scale Domain - it's static in this case at 0 to 100 percent,
     // unlike the X Axis Scale, which is constantly increasing.
     yAxisScale.domain([0, 1]);
+
+    // We don't know the domain until we read the first data; wait till then
+    // to set it, and only set it once
+    var totalRAMinBytes;
+    var yAxisScaleRAM = d3.scale.linear()
+      .range([height, 0]);
 
     var color = d3.scale.category20();
 
@@ -78,6 +86,12 @@
       .scale(yAxisScale)
       .orient("left")
       .tickFormat(formatPercent);
+
+    // display a y axis on the right side of the chart that shows actual RAM size
+    var yAxisRAM = d3.svg.axis()
+      .scale(yAxisScaleRAM)
+      .orient("right")
+      .tickFormat(formatRAM);
 
     var area = d3.svg.area()
       .x(function(d) { return xAxisScale(d.timestamp); })
@@ -118,9 +132,10 @@
           paths,
           legend;
 
+      var legendWidth = 36;
       var svg = d3.select(element[0])
         .append("svg")
-          .attr("width",  width  + margin.left + margin.right)
+          .attr("width",  width  + margin.left + margin.right + legendWidth)
           .attr("height", height + margin.top  + margin.bottom);
 
       var chart = svg
@@ -169,7 +184,7 @@
             .enter()
             .append("g")
             .attr("class", "legend")
-            .attr("transform", function(d,i) { return "translate(0," + i * 25 + ")"; });
+            .attr("transform", function(d,i) { return "translate(35," + i * 25 + ")"; });
 
           legend.append("rect")
             .attr("x", width + margin.left + margin.right - 18)
@@ -208,6 +223,18 @@
             chart.append("g")
               .attr("class", "y axis")
               .call(yAxis);
+
+          totalRAMinBytes = newd3data[0].total_bytes;
+          console.log('TOTAL RAM IN BYTES: ' + totalRAMinBytes);
+          yAxisScaleRAM
+            .domain([0, totalRAMinBytes]);
+
+          // Create Y Axis RAM g Element
+          yAxisGroupRAM =
+            chart.append("g")
+              .attr("class", "y axis")
+              .attr("transform", "translate(" + width + ",0)")
+              .call(yAxisRAM);
 
           first_run = false;
         }
