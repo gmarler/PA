@@ -31,7 +31,7 @@
           .then(function (result) {
             vm.d3data = result;
           });
-      }, 30-00);
+      }, 30000);
   }
 
   function memstatD3() {
