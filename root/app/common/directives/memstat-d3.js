@@ -53,7 +53,7 @@
                           "free_freelist_bytes" ];
 
     var formatPercent = d3.format(".0%");
-    var formatRAM     = d3.format("s");
+    var formatRAM     = d3.format(".0f");
 
     var xAxisGroup,
         yAxisGroup,
@@ -71,7 +71,9 @@
     // We don't know the domain until we read the first data; wait till then
     // to set it, and only set it once
     var totalRAMinBytes;
-    var yAxisScaleRAM = d3.scale.linear()
+    //var yAxisScaleRAM = d3.scale.linear()
+    //  .range([height, 0]);
+    var yAxisScaleRAM = d3.byte.scale()
       .range([height, 0]);
 
     var color = d3.scale.category20();
@@ -90,9 +92,9 @@
     // display a y axis on the right side of the chart that shows actual RAM size
     var yAxisRAM = d3.svg.axis()
       .scale(yAxisScaleRAM)
-      .orient("right")
+      .orient("right");
       // .tickFormat(bytesToString);
-      .tickFormat(formatRAM);
+      //.tickFormat(formatRAM);
 
     var area = d3.svg.area()
       .x(function(d) { return xAxisScale(d.timestamp); })
@@ -249,7 +251,7 @@
           // Create Y Axis RAM g Element
           yAxisGroupRAM =
             chart.append("g")
-              .attr("class", "y axis")
+              .attr("class", "y axis RAM")
               .attr("transform", "translate(" + width + ",0)")
               .call(yAxisRAM);
 
@@ -264,6 +266,11 @@
           xAxisScale
             .domain(d3.extent(udata, function(d) { return d.timestamp; }));
           // Recalculate the yAxisScale - UNNECESSARY, as it's static in this directive
+          // Recalculate the yAxisScaleRAM, as we may change from machine to machine
+          // TODO: Change from newd3data[0] to newd3data[<last index>]
+          totalRAMinBytes = newd3data[0].total_bytes;
+          yAxisScaleRAM
+            .domain([0, totalRAMinBytes]);
 
           // Update values for each area to be stacked
           memtypes = stack(color.domain().map(function(name) {
@@ -294,6 +301,12 @@
             .transition()
             .duration(1000)
             .call(xAxis);
+          // Update the RAM Y Axis
+          chart
+            .select(".RAM")
+            .transition()
+            .duration(1000)
+            .call(yAxisRAM);
           // Add the latest values to each area's path
           memtypeSelection
             .select("path")
