@@ -43,6 +43,7 @@
       getHostID:       getHostID,
       setHostTimeZone: setHostTimeZone,
       getHostTimeZone: getHostTimeZone,
+      setDate:         setDate,
       extract:         extract,
       cacheHosts:      cacheHosts,
       getHosts:        getHosts,
@@ -84,6 +85,11 @@
 
     function getHostTimeZone() {
       return hostTimeZone;
+    }
+
+    function setDate(newdate) {
+      date = moment(newdate).format('YYYY-MM-DD');
+      return date;
     }
 
     function extract(result) {

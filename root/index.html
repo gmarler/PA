@@ -19,7 +19,7 @@
       <p class="input-group">
         <input type="text" uib-datepicker-popup ng-model="dt" class="form-control"
                is-open="popup.opened" datepicker-options="dateOptions" ng-required="true"
-               close-text="Close" />
+               close-text="Close" ng-click="dateChanged()"/>
         <span class="input-group-btn">
           <button type="button" class="btn btn-default" ng-click="open()">
             <i class="glyphicon glyphicon-calendar"></i>

@@ -43,6 +43,16 @@
   ;
 
   function DatepickerDemoController($scope, HostService) {
+
+    $scope.$watch('dt', function (newdt, olddt) {
+      // if 'dt' is undefined, do nothing
+      if (!newdt) {
+        return;
+      }
+      // console.log("DATE WAS CHANGED!");
+      HostService.setDate(newdt);
+    });
+
     $scope.today = function () {
       $scope.dt = new Date();
     };
