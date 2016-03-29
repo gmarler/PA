@@ -93,8 +93,6 @@
     var yAxisRAM = d3.svg.axis()
       .scale(yAxisScaleRAM)
       .orient("right");
-      // .tickFormat(bytesToString);
-      //.tickFormat(formatRAM);
 
     var area = d3.svg.area()
       .x(function(d) { return xAxisScale(d.timestamp); })
@@ -121,22 +119,6 @@
     };
 
     return directive;
-
-    var bytesToString = function (bytes) {
-      console.log(bytes);
-      var fmt = d3.format('.0f');
-      if (bytes == 0) {
-        return fmt(bytes);
-      } else if (bytes < 1024) {
-        return fmt(bytes) + 'B';
-      } else if (bytes < 1024 * 1024) {
-        return fmt(bytes / 1024) + 'kB';
-      } else if (bytes < 1024 * 1024 * 1024) {
-        return fmt(bytes / 1024 / 1024) + 'MB';
-      } else {
-        return fmt(bytes / 1024 / 1024 / 1024) + 'GB';
-      }
-    }
 
     function link(scope, element, attrs, vm) {
       // initialization, done once per directive tag in template. If my-directive is within an
