@@ -21,14 +21,35 @@
 
   })
 
-  .controller('DatepickerDemoController', function($scope) {
-    $scope.today = function() {
+  .controller('DatepickerDemoController',
+              DatepickerDemoController)
+
+  .directive('subsystemNavbar', function () {
+    return {
+      restrict:    'AE',
+      templateUrl: 'app/subsystems/subsystems.tmpl.html',
+      replace:     false
+    };
+  })
+
+  .directive('subsystemMetricsNavbar', function () {
+    return {
+      restrict:    'AE',
+      templateUrl: 'app/subsystems/subsystem-metrics.tmpl.html',
+      replace:     false
+    };
+  })
+
+  ;
+
+  function DatepickerDemoController($scope, HostService) {
+    $scope.today = function () {
       $scope.dt = new Date();
     };
 
     $scope.today();
 
-    $scope.clear = function() {
+    $scope.clear = function () {
       $scope.dt = null;
     };
 
@@ -55,18 +76,18 @@
       return mode === 'day' && (date.getDay() === 0 || date.getDay() === 6);
     }
 
-    $scope.toggleMin = function() {
+    $scope.toggleMin = function () {
       $scope.inlineOptions.minDate = $scope.inlineOptions.minDate ? null : new Date();
       $scope.dateOptions.minDate = $scope.inlineOptions.minDate;
     };
 
     $scope.toggleMin();
 
-    $scope.open = function() {
+    $scope.open = function () {
       $scope.popup.opened = true;
     };
 
-    $scope.setDate = function(year, month, day) {
+    $scope.setDate = function (year, month, day) {
       $scope.dt = new Date(year, month, day);
     };
 
@@ -97,10 +118,10 @@
       var date = data.date,
         mode = data.mode;
       if (mode === 'day') {
-        var dayToCheck = new Date(date).setHours(0,0,0,0);
+        var dayToCheck = new Date(date).setHours(0, 0, 0, 0);
 
         for (var i = 0; i < $scope.events.length; i++) {
-          var currentDay = new Date($scope.events[i].date).setHours(0,0,0,0);
+          var currentDay = new Date($scope.events[i].date).setHours(0, 0, 0, 0);
 
           if (dayToCheck === currentDay) {
             return $scope.events[i].status;
@@ -117,34 +138,19 @@
     }
 
     function testDisable(data) {
-      console.log("testDisable: " + data);;
+      console.log("testDisable: " + data);
+
       var date = data.date,
-          mode = data.mode;
-      var avail = [ '2016-03-01', '2016-03-09' ];
+        mode = data.mode;
+      var avail = ['2016-03-01', '2016-03-09'];
       console.log("DATE: " + moment(date).format('YYYY-MM-DD'));
       console.log("MODE: " + mode);
       var result = _.includes(avail, moment(date).format('YYYY-MM-DD'));
       console.log("Is it? " + result);
-      return ! _.includes(avail, moment(date).format('YYYY-MM-DD'));
+      return !_.includes(avail, moment(date).format('YYYY-MM-DD'));
     }
-  })
+  }
 
-  .directive('subsystemNavbar', function () {
-    return {
-      restrict:    'AE',
-      templateUrl: 'app/subsystems/subsystems.tmpl.html',
-      replace:     false
-    };
-  })
-
-  .directive('subsystemMetricsNavbar', function () {
-    return {
-      restrict:    'AE',
-      templateUrl: 'app/subsystems/subsystem-metrics.tmpl.html',
-      replace:     false
-    };
-  })
-
-  ;
+  DatepickerDemoController.$inject = [ '$scope', 'HostService' ];
 
 })();
