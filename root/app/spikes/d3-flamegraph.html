@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>D3 FlameGraph Test</title>
+</head>
+<body>
+
+<div id="chart"></div>
+
+<script type="text/javascript" src="../../bower_components/d3/d3.js"></script>
+<script type="text/javascript" src="../../bower_components/d3-tip/index.js"></script>
+<script type="text/javascript" src="../../bower_components/d3-flame-graph/src/d3.flameGraph.js"></script>
+
+
+
+<script type="text/javascript">
+  var flamegraph = d3.flameGraph()
+      .width(960)
+      .height(540);
+
+  d3.json("stacks-kernel.json", function(error, data) {
+    if (error) return console.warn(error);
+    d3.select("#chart")
+        .datum(data)
+        .call(flamegraph);
+  });
+</script>
+
+
+
+</body>
+</html>

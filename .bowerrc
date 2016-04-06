@@ -1,4 +1,7 @@
 {
-  "directory": "root/bower_components/",
-  "analytics": false
+  "directory":   "root/bower_components/",
+  "analytics":   false,
+  "strict-ssl":  false,
+  "proxy":       "http://proxy.bloomberg.com:80/",
+  "https-proxy": "http://proxy.bloomberg.com:80/"
 }
