@@ -133,6 +133,12 @@ sub host_memstat_GET {
   $self->status_ok( $c, entity => \@memstat_rows );
 }
 
+=method host
+
+Get the host portion of the /host/<host>/... URL
+
+=cut
+
 
 # This is the beginning of our chain
 sub host : PathPart('host') Chained('/') CaptureArgs(1) {
@@ -152,6 +158,12 @@ sub host : PathPart('host') Chained('/') CaptureArgs(1) {
   $c->stash->{ time_zone } = $host->time_zone;
 }
 
+=method subsystem
+
+Get the subsystem portion of the /host/<host>/subsystem/<subsystem>/... URL
+
+=cut
+
 sub subsystem : PathPart('subsystem') Chained('host') CaptureArgs(1) {
   my ( $self, $c, $subsystem ) = @_;
 
@@ -165,6 +177,12 @@ sub subsystem : PathPart('subsystem') Chained('host') CaptureArgs(1) {
   $c->stash->{ resultset } = $subsystems->{$subsystem};
   say "RESULTSET NAME: " . $c->stash->{ resultset };
 }
+
+=method date
+
+Get the date portion of the /host/<host>/subsystem/<subsystem>/date/<date>/... URL
+
+=cut
 
 sub date : PathPart('date') Chained('subsystem') Args(1) {
   my ( $self, $c, $date ) = @_;
