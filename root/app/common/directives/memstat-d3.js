@@ -12,6 +12,12 @@
   function memstatD3Controller($scope, $element, $attrs, HostService, $interval, $window) {
     var vm = this;
 
+    //$scope.PAServer  = HostService.PAServer;
+    //$scope.port      = HostService.port;
+    //$scope.hostname  = HostService.hostname;
+    //$scope.subsystem = HostService.subsystem ;
+    //$scope.date      = HostService.date;
+
     // Allow window resizing
     $window.addEventListener('resize', function() {
       $scope.$broadcast('vm.windowResize');
@@ -32,6 +38,20 @@
             vm.d3data = result;
           });
       }, 30000);
+
+    //var varwatch =
+    //  $scope.watchGroup(['PAServer', 'port', 'hostname', 'subsystem', 'date'],
+    //    function(newVals, oldVals) {
+    //      console.log("Got into watchGroup");
+    //    }
+    //  );
+
+    // Clean up the interval timer before we kill this
+    // controller
+    $scope.$on('$destroy', function() {
+      console.log("CLEANING UP");
+      if (intervalID) { $interval.cancel(intervalID); }
+    });
   }
 
   function memstatD3() {

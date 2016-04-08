@@ -55,7 +55,7 @@
     // FUNCTION DEFINITIONS
 
     function setPAServer(server) {
-      console.log("Updating PA Server to: " + server)
+      console.log("Updating PA Server to: " + server);
       PAServer = server;
     }
 
@@ -102,7 +102,7 @@
     }
 
     function getHosts() {
-      console.log("CALLING HostService.getHosts()")
+      console.log("CALLING HostService.getHosts()");
       var hostsURL = buildHostsURL();
       // return $http.get(URLS.FETCH).then(cacheHosts);
 
