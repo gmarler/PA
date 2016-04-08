@@ -55,8 +55,7 @@ has [ 'mdb' ] => (
   isa      => 'Solaris::mdb',
   lazy     => 1,
   default  => sub {
-                # ::memstat can take a while on the largest machines, so give a nice timeout
-                my $mdb = Solaris::mdb->new( timeout => 300 );
+                my $mdb = Solaris::mdb->new( timeout => 30 );
                 return $mdb;
               },
 );
@@ -108,17 +107,21 @@ sub _build_timer {
     on_tick    => sub {
       my $out = $mdb->capture_dcmd("time::print -d ! sed -e 's/^0t//' ; ::memstat");
 
-      my $dhref = $self->extract($out);
+      if (defined($out)) {
+        my $dhref = $self->extract($out);
 
-      my @publish_futures;
-      my ($routing_key) = $client->client_hostname . "." . $self->stat_name;
-      push @publish_futures, $client->send($routing_key, $dhref);
+        my @publish_futures;
+        my ($routing_key) = $client->client_hostname . "." . $self->stat_name;
+        push @publish_futures, $client->send($routing_key, $dhref);
 
-      # Wait for all of the publishing futures to complete
-      my $publishing_future = Future->wait_all( @publish_futures );
-      $publishing_future->get;
-      my $logging_output = $self->_format_for_logging($dhref);
-      $logger->info( $logging_output );
+        # Wait for all of the publishing futures to complete
+        my $publishing_future = Future->wait_all( @publish_futures );
+        $publishing_future->get;
+        my $logging_output = $self->_format_for_logging($dhref);
+        $logger->info( $logging_output );
+      } else {
+        $logger->debug( 'NO OUTPUT FOR THIS INTERVAL FROM ::memstat' );
+      }
     },
   );
 
