@@ -25,6 +25,7 @@
         };
 
     var service = {
+      data_pullable:   false,
       hosts:           hosts,
       URLS:            URLS,
       PAServer:        PAServer,
@@ -151,6 +152,26 @@
     function buildMemstatURL() {
       return 'http://' + PAServer + ':' + port + '/host/' + hostname + '/subsystem/' +
              subsystem + '/date/' + date;
+    }
+
+    function getHostSubsystemDateMetric() {
+      var myURL = buildMemstatURL();
+      console.log("URL: " + myURL);
+
+      // return $http.get(URLS.MEMSTAT)
+      return $http.get(myURL)
+        .then(getMemstatComplete)
+        .catch(getMemstatFailed);
+
+      function getMemstatComplete(response) {
+        memstats = extract(response);
+        // console.log(memstats);
+        return memstats;
+      }
+
+      function getMemstatFailed(error) {
+        console.log("ERROR: XHR Failed for getMemstat." + error.data);
+      }
     }
 
   }

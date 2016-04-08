@@ -12,12 +12,6 @@
   function memstatD3Controller($scope, $element, $attrs, HostService, $interval, $window) {
     var vm = this;
 
-    //$scope.PAServer  = HostService.PAServer;
-    //$scope.port      = HostService.port;
-    //$scope.hostname  = HostService.hostname;
-    //$scope.subsystem = HostService.subsystem ;
-    //$scope.date      = HostService.date;
-
     // Allow window resizing
     $window.addEventListener('resize', function() {
       $scope.$broadcast('vm.windowResize');
@@ -38,13 +32,6 @@
             vm.d3data = result;
           });
       }, 30000);
-
-    //var varwatch =
-    //  $scope.watchGroup(['PAServer', 'port', 'hostname', 'subsystem', 'date'],
-    //    function(newVals, oldVals) {
-    //      console.log("Got into watchGroup");
-    //    }
-    //  );
 
     // Clean up the interval timer before we kill this
     // controller
@@ -168,6 +155,22 @@
         .filter(function(key) {
           return (key !== "timestamp" && key !== "total_bytes" && key !== "guest"); }));
 
+      // Whenever things in the view change such that a 'pull' of the D3 data by
+      // the HostService can be attempted, go ahead and initiate that action.
+      scope.$watch(
+        function() {
+          return HostService.data_pullable;
+        },
+        function(newVal, oldVal) {
+          if (newVal)
+            HostService.fetch_data(
+              function(response) {
+                scope.d3data = response;
+                HostService.data_pullable = false;
+              }
+            );
+        }
+      );
 
       // whenever the bound 'd3data' expression changes, execute this
       scope.$watch('vm.d3data', function (newd3data, oldd3data) {
