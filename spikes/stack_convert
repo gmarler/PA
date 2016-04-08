@@ -1,0 +1,275 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+
+use Data::Dumper;
+use Moose;
+use namespace::autoclean;
+
+package Node;
+
+use Moose;
+use namespace::autoclean;
+
+has name => (
+  is       => 'rw',
+  isa      => 'Str',
+  required => 1,
+);
+
+has value => (
+  is       => 'rw',
+  isa      => 'Int',
+  default  => 0,
+);
+
+has children => (
+  is       => 'rw',
+  isa      => 'HashRef',
+  default  => sub { return {}; },
+);
+
+sub add {
+  my ($self, $frames, $value) = @_;
+
+  $self->value($self->value + $value);
+
+  if ($frames and (scalar(@$frames) > 0)) {
+    my $head  = $frames->[0];
+    my $child = exists($self->children->{$head}) ?
+                  $self->children->{$head} : undef;
+    if (not $child) {
+      $child = Node->new(name => $head);
+      $self->children->{$head} = $child;
+    }
+    splice(@{$frames}, 0, 1);
+    $child->add($frames, $value);
+  }
+}
+
+sub serialize {
+  my ($self) = @_;
+
+  my $res = {
+    name  => $self->name,
+    value => $self->value,
+  };
+
+  my $children = [];
+
+  foreach my $key (keys %{$self->children}) {
+    push @$children, $self->children->{$key}->serialize();
+  }
+
+  if (scalar(@{$children}) > 0) {
+    $res->{children} = $children;
+  }
+
+  return $res;
+}
+
+package Profile;
+
+use Moose;
+use namespace::autoclean;
+use Node;
+
+has samples => (
+  is       => 'rw',
+  isa      => 'Node',
+  default  => sub {
+                return Node->new(name => 'root');
+              },
+);
+
+has stack => (
+  is       => 'rw',
+  isa      => 'ArrayRef',
+  default  => sub { return []; },
+);
+
+has stack_is_open => (
+  is       => 'rw',
+  isa      => 'Bool',
+  default  => 0,
+);
+
+
+has name => (
+  is       => 'rw',
+  isa      => 'Maybe[Str]',
+  default  => undef,
+);
+
+
+sub openStack {
+  my ($self, $name) = @_;
+
+  $self->stack_is_open(1);
+  $self->name($name);
+}
+
+sub addFrame {
+  my ($self, $func, $mod) = @_;
+
+  # TODO: Skip process names and some punctuation
+
+  unshift(@{$self->stack}, $func);
+}
+
+sub closeStack {
+  my ($self,$value) = @_;
+
+  unshift(@{$self->stack}, $self->name);
+  $self->samples->add($self->stack, $value);
+  $self->stack([]);
+  $self->name(undef);
+  $self->stack_is_open(0);
+}
+
+package Recording;
+
+use Moose;
+use namespace::autoclean;
+use Profile;
+
+has profiles => (
+  is       => 'rw',
+  isa      => 'HashRef',
+  default  => sub { return {}; },
+);
+
+sub getProfile {
+  my ($self, $timestamp) = @_;
+
+  my $profile = $self->profiles->{$timestamp};
+  if (not $profile) {
+    $profile = Profile->new();
+    $self->profiles->{$timestamp} = $profile;
+  }
+  return $profile;
+}
+
+sub serialize {
+  my ($self) = @_;
+
+  my $res = {};
+
+  foreach my $key (keys %{$self->profiles}) {
+    $res->{$key} = $self->profiles->{$key}->samples->serialize();
+  }
+
+  return $res;
+}
+
+package main;
+
+use Node;
+use Profile;
+use IO::File;
+use Data::Dumper;
+use JSON::MaybeXS              qw(decode_json encode_json);
+
+sub raw {
+  my ($filename, $live) = @_;
+
+  my $recording = Recording->new();
+  my ($lines, $profile, $res);
+
+  my $fh = IO::File->new($filename, "<") or
+    die "Unable to open $filename: $!";
+
+  if (not $live) {
+    $profile = Profile->new();
+  }
+
+  foreach my $line (<$fh>) {
+    chomp($line);
+
+    next if ($line =~ m/^\s*$/);
+
+    if ($line =~ m/^$/) {
+      next;
+    }
+
+    if ($line =~ m/^\s*(\d+)$/) {
+      my $count = $1;
+      if ($profile->stack_is_open()) {
+        $profile->closeStack($count);
+      } else {
+        # There is no open profile stack to close
+        say "ERROR: $line";
+      }
+      next;
+    }
+
+    my $frame = $line;
+
+    $frame =~ s/^\s*//;
+    $frame =~ s/\+[^+]*$//;  # Strip offset into function
+    # Remove args from C++ function names
+    $frame =~ s/(::.*)[(<].*/$1/;
+    $frame = "-" if $frame eq "";
+
+    if ($frame !~ m/^(\S+)`(\S+)$/) {
+      say "UNKNOWN LINE: $frame";
+      next;
+    }
+
+    if ($profile->stack_is_open()) {
+        say "Sending to profile addFrame with: ($frame, undef)";
+        $profile->addFrame($frame, undef);
+    } else {
+      $profile->openStack('kernel');
+      say "Sending to profile addFrame with: ($frame, undef)";
+      $profile->addFrame($frame, undef);
+    }
+
+#    if ($line =~ m/$re/g) {
+#      if ($live) {
+#        $profile = $recording->getProfile($5);
+#      }
+#      $profile->openStack('kernel');
+#    } else {
+#      my $re2 = qr/^\s*(\w+)\s*(.+) \((\s*)\)/x;
+#
+#      if ($line =~ m/$re2/g) {
+#        say "Sending to profile addFrame with: ($2, $3)";
+#        $profile->addFrame($2, $3);
+#      } else {
+#        my $re3 = qr/^$/;
+#
+#        if ($line =~ m/$re3/g) {
+#          if ($profile->stack_is_open()) {
+#            $profile->closeStack();
+#          } else {
+#            # There is no open profile stack to close - just a random blank line
+#          }
+#        } else {
+#          my $re4 = qr/^#/;
+#
+#          if ($line =~ m/$re4/g) {
+#            say "Hit a comment line";
+#          } else {
+#            say "Unknown line type: $line";
+#          }
+#        }
+#      }
+#    }
+  }
+
+  if ($live) {
+    $res = $recording->serialize();
+  } else {
+    $res = $profile->samples->serialize();
+  }
+
+  #my $encoder = JSON::MaybeXS->new->ascii->pretty;
+  my $encoder = JSON::MaybeXS->new->ascii;
+  say $encoder->encode( $res );
+}
+
+raw("/tmp/stacks", undef);
+
