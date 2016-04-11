@@ -76,7 +76,7 @@
       // formatYear: 'yy',
       // maxDate: new Date(2020, 5, 22),
       minDate: new Date(),
-      startingDay: 0,
+      startingDay: 0
       // dateDisabled: testDisable
       // customClass: testCustomClass
     };
