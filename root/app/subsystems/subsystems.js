@@ -51,6 +51,8 @@
       }
       // console.log("DATE WAS CHANGED!");
       HostService.setDate(newdt);
+      // Alert watchers that something has changed
+      HostService.data_pullable = true;
     });
 
     $scope.today = function () {

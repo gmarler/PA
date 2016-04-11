@@ -8,7 +8,8 @@
   HostService.$inject = [ '$http' ];
 
   function HostService($http) {
-    var hosts,
+    var data_pullable,
+        hosts,
         memstats,
         PAServer,
         port      = "5000",
@@ -52,7 +53,6 @@
     function setPAServer(server) {
       console.log("Updating PA Server to: " + server);
       PAServer = server;
-      // data_pullable = true;
     }
 
     function getPAServer() {
@@ -61,7 +61,6 @@
 
     function setHostname(newHostname) {
       hostname = newHostname;
-      // data_pullable = true;
     }
 
     function getHostname() {
@@ -86,7 +85,7 @@
 
     function setDate(newdate) {
       date = moment(newdate).format('YYYY-MM-DD');
-      // data_pullable = true;
+      data_pullable = true;
       return date;
     }
 
@@ -155,16 +154,18 @@
       //       'http://' + PAServer + ':' + port + '/host/' + hostname +
       //       '/subsystem/' + subsystem + '/metric/' + metric +
       //       '/date/' + date;
-      var myURL = 'http://' + PAServer + ':' + port + '/host/' + hostname + '/subsystem/' +
-                  metric + '/date/' + date;
-      console.log("getHostSubsystemDateMetric URL: " + myURL);
 
       // If any of the items are undefined, then don't perform the request, just return an empty
       // array
       if ((PAServer === undefined) || (port === undefined) || (hostname === undefined) ||
           (metric === undefined) || (date === undefined)) {
+        console.log("NOT PULLING ANY DATA");
         return [];
       }
+
+      var myURL = 'http://' + PAServer + ':' + port + '/host/' + hostname + '/subsystem/' +
+        metric + '/date/' + date;
+      console.log("getHostSubsystemDateMetric URL: " + myURL);
 
       // Perform request
       return $http.get(myURL)

@@ -55,6 +55,8 @@
         HostService.setHostTimeZone(hostobj.time_zone);
         scope.selectedHostId       = hostobj.id;
         HostService.setHostID(hostobj.id);
+        // Alert those watching that something has changed
+        HostService.data_pullable = true;
       };
 
       scope.availSubsystemsForHost = function(hostobj) {
