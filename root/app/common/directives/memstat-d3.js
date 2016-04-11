@@ -26,10 +26,6 @@
       },
       "memory", "memstat"
     );
-    //HostService.getMemstat()
-    //  .then(function (result) {
-    //    vm.d3data = result;
-    //  });
 
     // ... update every 30 seconds thereafter
     // Grab the intervalID so we can eliminate it if we so choose later
@@ -43,10 +39,6 @@
           },
           "memory", "memstat"
         );
-        //HostService.getMemstat()
-        //  .then(function (result) {
-        //    vm.d3data = result;
-        //  });
       }, 30000);
 
     // Clean up the interval timer before we kill this
