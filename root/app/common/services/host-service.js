@@ -12,22 +12,15 @@
         memstats,
         PAServer,
         port      = "5000",
-        hostname  = "nysbldo8",
+        hostname,
         hostID,
         hostTimeZone,
-        subsystem = "memstat",
-        date      = moment().format('YYYY-MM-DD'),
-        URLS = {
-          FETCH:   'data/hosts.json',
-          // MEMSTAT: 'data/memstat.json'
-          MEMSTAT: 'http://' + PAServer + ':' + port + '/host/' + hostname + '/subsystem/' +
-                    subsystem + '/date/' + date
-        };
+        subsystem,
+        date      = moment().format('YYYY-MM-DD');
 
     var service = {
       data_pullable:   false,
       hosts:           hosts,
-      URLS:            URLS,
       PAServer:        PAServer,
       port:            port,
       hostname:        hostname,
@@ -36,19 +29,20 @@
       subsystem:       subsystem,
       date:            date,
 
-      setPAServer:     setPAServer,
-      getPAServer:     getPAServer,
-      setHostname:     setHostname,
-      getHostname:     getHostname,
-      setHostID:       setHostID,
-      getHostID:       getHostID,
-      setHostTimeZone: setHostTimeZone,
-      getHostTimeZone: getHostTimeZone,
-      setDate:         setDate,
-      extract:         extract,
-      cacheHosts:      cacheHosts,
-      getHosts:        getHosts,
-      getMemstat:      getMemstat
+      setPAServer:                  setPAServer,
+      getPAServer:                  getPAServer,
+      setHostname:                  setHostname,
+      getHostname:                  getHostname,
+      setHostID:                    setHostID,
+      getHostID:                    getHostID,
+      setHostTimeZone:              setHostTimeZone,
+      getHostTimeZone:              getHostTimeZone,
+      setDate:                      setDate,
+      extract:                      extract,
+      cacheHosts:                   cacheHosts,
+      getHosts:                     getHosts,
+      getMemstat:                   getMemstat,
+      getHostSubsystemDateMetric:   getHostSubsystemDateMetric
     };
 
     return service;
@@ -58,6 +52,7 @@
     function setPAServer(server) {
       console.log("Updating PA Server to: " + server);
       PAServer = server;
+      // data_pullable = true;
     }
 
     function getPAServer() {
@@ -66,6 +61,7 @@
 
     function setHostname(newHostname) {
       hostname = newHostname;
+      // data_pullable = true;
     }
 
     function getHostname() {
@@ -90,6 +86,7 @@
 
     function setDate(newdate) {
       date = moment(newdate).format('YYYY-MM-DD');
+      // data_pullable = true;
       return date;
     }
 
@@ -105,7 +102,6 @@
     function getHosts() {
       console.log("CALLING HostService.getHosts()");
       var hostsURL = buildHostsURL();
-      // return $http.get(URLS.FETCH).then(cacheHosts);
 
       return $http.get(hostsURL)
         .then(getHostsComplete)
@@ -127,7 +123,6 @@
       var myURL = buildMemstatURL();
       console.log("URL: " + myURL);
 
-      // return $http.get(URLS.MEMSTAT)
       return $http.get(myURL)
                   .then(getMemstatComplete)
                   .catch(getMemstatFailed);
@@ -154,19 +149,32 @@
              subsystem + '/date/' + date;
     }
 
-    function getHostSubsystemDateMetric() {
-      var myURL = buildMemstatURL();
-      console.log("URL: " + myURL);
+    function getHostSubsystemDateMetric(callback, subsystem, metric) {
+      // Build REST request to fetch data for this particular subsystem and metric
+      // TODO: Will need to change this to:
+      //       'http://' + PAServer + ':' + port + '/host/' + hostname +
+      //       '/subsystem/' + subsystem + '/metric/' + metric +
+      //       '/date/' + date;
+      var myURL = 'http://' + PAServer + ':' + port + '/host/' + hostname + '/subsystem/' +
+                  metric + '/date/' + date;
+      console.log("getHostSubsystemDateMetric URL: " + myURL);
 
-      // return $http.get(URLS.MEMSTAT)
+      // If any of the items are undefined, then don't perform the request, just return an empty
+      // array
+      if ((PAServer === undefined) || (port === undefined) || (hostname === undefined) ||
+          (metric === undefined) || (date === undefined)) {
+        return [];
+      }
+
+      // Perform request
       return $http.get(myURL)
         .then(getMemstatComplete)
         .catch(getMemstatFailed);
 
       function getMemstatComplete(response) {
         memstats = extract(response);
-        // console.log(memstats);
-        return memstats;
+        callback(memstats);
+        // return memstats;
       }
 
       function getMemstatFailed(error) {

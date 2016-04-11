@@ -12,6 +12,7 @@
       // $scope.PAServer = "localhost";
 
       $scope.$watch('PAServer', function() {
+        console.log("PAServer changed to: " + $scope.PAServer);
         HostService.setPAServer($scope.PAServer);
 
         HostService.getHosts()

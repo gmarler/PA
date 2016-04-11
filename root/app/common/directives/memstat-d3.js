@@ -13,24 +13,40 @@
     var vm = this;
 
     // Allow window resizing
-    $window.addEventListener('resize', function() {
-      $scope.$broadcast('vm.windowResize');
-    });
+    //$window.addEventListener('resize', function() {
+    //  $scope.$broadcast('vm.windowResize');
+    //});
 
     // Grab the data when we start ...
-    HostService.getMemstat()
-      .then(function (result) {
+    console.log("DATA PULL UPON START");
+    HostService.getHostSubsystemDateMetric(
+      function (result) {
         vm.d3data = result;
-      });
+        HostService.data_pullable = false;
+      },
+      "memory", "memstat"
+    );
+    //HostService.getMemstat()
+    //  .then(function (result) {
+    //    vm.d3data = result;
+    //  });
 
     // ... update every 30 seconds thereafter
     // Grab the intervalID so we can eliminate it if we so choose later
     var intervalID =
       $interval(function() {
-        HostService.getMemstat()
-          .then(function (result) {
+        console.log("PERIODIC DATA PULL");
+        HostService.getHostSubsystemDateMetric(
+          function (result) {
             vm.d3data = result;
-          });
+            HostService.data_pullable = false;
+          },
+          "memory", "memstat"
+        );
+        //HostService.getMemstat()
+        //  .then(function (result) {
+        //    vm.d3data = result;
+        //  });
       }, 30000);
 
     // Clean up the interval timer before we kill this
@@ -41,7 +57,7 @@
     });
   }
 
-  function memstatD3() {
+  function memstatD3(HostService) {
     // Define constants and helpers used for this directive
     // Bottom margin makes room for the lengthy and rotated timestamps
     var margin = {top: 20, right: 155, bottom: 120, left: 75};
@@ -162,13 +178,16 @@
           return HostService.data_pullable;
         },
         function(newVal, oldVal) {
-          if (newVal)
-            HostService.fetch_data(
-              function(response) {
-                scope.d3data = response;
+          if (newVal) {
+            console.log("data_pullable has been flipped!");
+            HostService.getHostSubsystemDateMetric(
+              function (response) {
+                vm.d3data = response;
                 HostService.data_pullable = false;
-              }
+              },
+              "memory", "memstat"
             );
+          }
         }
       );
 
