@@ -23,6 +23,18 @@
       </li>
       <li class="navbar-text">TimeZone</li>
       <li id="host_time_zone" class="navbar-text">{{ selectedHostTimeZone }}</li>
+      <li id="host_date" class="navbar-form" style="display:inline-block" ng-controller="DatepickerDemoController">
+        <p class="input-group">
+          <input type="text" uib-datepicker-popup ng-model="dt" class="form-control"
+                 is-open="popup.opened" datepicker-options="dateOptions" ng-required="true"
+                 close-text="Close" ng-click="dateChanged()"/>
+        <span class="input-group-btn">
+          <button type="button" class="btn btn-default" ng-click="open()">
+            <i class="glyphicon glyphicon-calendar"></i>
+          </button>
+        </span>
+        </p>
+      </li>
       <li class="navbar-text">PA Server</li>
       <li class="navbar-form navbar-text navbar-right">
         <input id="pa-server"
