@@ -169,16 +169,16 @@
 
       // Perform request
       return $http.get(myURL)
-        .then(getMemstatComplete)
-        .catch(getMemstatFailed);
+        .then(getHostSubsystemDateMetricComplete)
+        .catch(getHostSubsystemDateMetricFailed);
 
-      function getMemstatComplete(response) {
+      function getHostSubsystemDateMetricComplete(response) {
         memstats = extract(response);
         callback(memstats);
         // return memstats;
       }
 
-      function getMemstatFailed(error) {
+      function getHostSubsystemDateMetricFailed(error) {
         console.log("ERROR: XHR Failed for getMemstat." + error.data);
       }
     }
