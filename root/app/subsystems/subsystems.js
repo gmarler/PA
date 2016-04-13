@@ -1,28 +1,15 @@
 (function() {
   'use strict';
 
+  SubsystemsController.inject = [ 'SubsystemsModel', '$scope', 'HostService' ];
+
   angular.module('pa.subsystems', [
     'pa.models.subsystems'
   ])
-    
-  .controller('SubsystemsController', function (SubsystemsModel) {
-    var vm = this;
 
-    SubsystemsModel.getSubsystems()
-      .then(function(result) {
-        vm.subsystems = result;
-        vm.subsystem_metrics = [
-          { name: "memstat" },
-          { name: "VM scan rate" },
-          { name: "freemem" }
-        ];
-        console.log(vm.subsystems);
-      });
+  .controller('SubsystemsController', SubsystemsController)
 
-  })
-
-  .controller('DatepickerDemoController',
-              DatepickerDemoController)
+  .controller('DatepickerDemoController', DatepickerDemoController)
 
   .directive('subsystemNavbar', function () {
     return {
@@ -41,6 +28,32 @@
   })
 
   ;
+
+
+  function SubsystemsController (SubsystemsModel, $scope, HostService) {
+    var vm = this;
+
+    SubsystemsModel.getSubsystems()
+      .then(function(result) {
+        vm.subsystems = result;
+        vm.subsystem_metrics = [
+          { name: "memstat" },
+          { name: "VM scan rate" },
+          { name: "freemem" }
+        ];
+        console.log(vm.subsystems);
+      });
+
+    $scope.isCurrentSubsystem = function (subsystem) {
+      // console.log("Current Subsystem: " + subsystem.name);
+      return subsystem.name === $scope.getCurrentSubsystemName();
+    };
+
+    $scope.getCurrentSubsystemName = function () {
+      return "MEMORY";
+    }
+
+  }
 
   function DatepickerDemoController($scope, HostService) {
 

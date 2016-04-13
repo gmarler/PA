@@ -10,7 +10,7 @@
 
   <div class="collapse navbar-collapse" id="nav-subsystems">
     <ul class="nav navbar-nav">
-      <li class="disabled" ng-repeat="subsystem in vm.subsystems">
+      <li ng-repeat="subsystem in vm.subsystems" ng-class="{'active':isCurrentSubsystem(subsystem)}">
         <a href="#">{{subsystem.name}}</a>
       </li>
     </ul>
