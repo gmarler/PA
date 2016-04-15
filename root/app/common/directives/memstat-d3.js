@@ -52,13 +52,13 @@
   function memstatD3(HostService) {
     // Define constants and helpers used for this directive
     // Bottom margin makes room for the lengthy and rotated timestamps
-    var margin = {top: 20, right: 155, bottom: 120, left: 75};
-    var width  = 960;
+    var margin = {top: 20, right: 155, bottom: 140, left: 75};
+    var width  = 1600;
     // var width  = parseInt(d3.select('body').style('width')) - 100;
         width      = width - margin.left - margin.right;
     // var height = parseInt(d3.select('body').style('height'));
     // var height = 1000;
-    var height = width;
+    var height = 1024;
         height = height - margin.top - margin.bottom;
 
     // Specify the order in which we stack the data in the graph, from the Y axis up
