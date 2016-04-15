@@ -9,7 +9,7 @@
     "bootstrap": "3.3.6",
     "bootstrap-ui-datetime-picker": "2.0.5",
     "d3": "3.5.12",
-    "d3-flame-graph": "~0.4.2",
+    "d3-flame-graph": "^0.4.2",
     "d3-tip": "~0.6.7",
     "lodash": "3.10.1",
     "moment": "^2.12.0"
