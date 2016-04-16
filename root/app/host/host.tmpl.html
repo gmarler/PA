@@ -49,6 +49,13 @@
                ng-model-options="{ updateOn: 'blur' }"
                type="text" placeholder="Enter PA Server" size="32"/>
       </li>
+      <!--
+      <li class="navbar-form">
+        <input id="pa-server" type="text" ng-model="PAServer" placeholder="Enter PA Server"
+               uib-typeahead="host as host.name for host in vm.hosts | filter:{name:$viewValue} | limitTo:8"
+               class="form-control">
+      </li>
+      -->
     </ul>
   </div>
 
