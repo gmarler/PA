@@ -190,6 +190,13 @@ while (my $dhref = $mq->recv(0)) {
                             free_freelist total );
     foreach my $memstat_type (@memstat_types) {
       foreach my $submeta (keys %{$stat_ref->{$memstat_type}}) {
+        # Handle the case where the pattern didn't match, due to a bug in
+        # ::memstat
+        if (not defined($stat_ref->{$memstat_type}->{$submeta})) {
+          say "WARNING: $hostname memstat $memstat_type UNDEFINED - FAKING IT";
+          # Make it 0 rather than undef
+          $stat_ref->{$memstat_type}->{$submeta} = 0;
+        }
         $memstat_data{"${memstat_type}_${submeta}"} =
           $stat_ref->{$memstat_type}->{$submeta};
       }
