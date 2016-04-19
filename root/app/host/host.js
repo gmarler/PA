@@ -9,7 +9,11 @@
     .controller('HostController', function ($scope, HostService) {
       var vm = this;
 
-      // $scope.PAServer = "localhost";
+      // Temporary list of initial PA Servers for dev / testing
+      vm.pa_servers = [
+        '192.168.55.101',
+        'nydevsol10.dev.bloomberg.com'
+      ];
 
       $scope.$watch('PAServer', function() {
         console.log("PAServer changed to: " + $scope.PAServer);
