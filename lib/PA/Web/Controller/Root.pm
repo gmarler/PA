@@ -1,4 +1,5 @@
 package PA::Web::Controller::Root;
+use v5.20;
 use Moose;
 use namespace::autoclean;
 
@@ -35,10 +36,8 @@ sub index :Path :Args(0) {
 
     # Hello World
     #$c->response->body( $c->welcome_message );
-    if ($c->req->path =~ m/\.html$/) {
-      $c->stash->{template} = $c->req->path;
-      $c->detach;
-    }
+    $c->stash->{template} = $c->req->path . "index.html";
+    $c->detach;
 }
 
 =head2 default
