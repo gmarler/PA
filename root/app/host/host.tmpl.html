@@ -11,18 +11,7 @@
 
   <div class="collapse navbar-collapse" id="nav-toggle">
     <ul class="nav navbar-nav">
-      <!--<li class="dropdown">
-        <a id="host-selected"
-           href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
-           aria-expanded="false">{{ selectedHostName }} <span class="caret"></span></a>
-        <ul class="dropdown-menu">
-          <li ng-repeat="host in vm.hosts | orderBy: 'name' " ng-click="hostSelected(host)">
-            <a href="#">{{host.name}}</a>
-          </li>
-        </ul>
-      </li>-->
       <li class="navbar-form">
-        <!-- ng-model-options="{ getterSetter: true }" -->
         <input id="host-selected" type="text" ng-model="Host" placeholder="Select Hostname"
                typeahead-on-select="hostSelected($item)"
                uib-typeahead="host as host.name for host in vm.hosts | filter:{name:$viewValue} | limitTo:8"
