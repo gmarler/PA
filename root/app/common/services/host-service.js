@@ -152,8 +152,9 @@
       // Build REST request to fetch data for this particular subsystem and metric
       // TODO: Will need to change this to:
       //       'http://' + PAServer + ':' + port + '/host/' + hostname +
-      //       '/subsystem/' + subsystem + '/metric/' + metric +
-      //       '/date/' + date;
+      //       '/date/' + date +
+      //       '/subsystem/' + subsystem + '/metric/' + metric;
+      //
 
       // If any of the items are undefined, then don't perform the request, just return an empty
       // array
