@@ -144,6 +144,7 @@ Get the host portion of the /host/<host>/... URL
 sub host : PathPart('host') Chained('/') CaptureArgs(1) {
   my ( $self, $c, $hostname ) = @_;
 
+  # Allow CORS (Cross-Origin Resource Sharing)
   $c->response->headers->header(
     'Access-Control-Allow-Origin' => '*',
   );
