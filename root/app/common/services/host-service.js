@@ -43,7 +43,6 @@
       cacheHosts:                   cacheHosts,
       getHosts:                     getHosts,
       getMemstat:                   getMemstat,
-      getHostSubsystemDateMetric:   getHostSubsystemDateMetric,
       getHostDateSubsystemMetric:   getHostDateSubsystemMetric
     };
 
@@ -147,42 +146,6 @@
     function buildMemstatURL() {
       return 'http://' + PAServer + ':' + port + '/host/' + hostname + '/subsystem/' +
              subsystem + '/date/' + date;
-    }
-
-    function getHostSubsystemDateMetric(callback, subsystem, metric) {
-      // Build REST request to fetch data for this particular subsystem and metric
-      // TODO: Will need to change this to:
-      //       'http://' + PAServer + ':' + port + '/host/' + hostname +
-      //       '/date/' + date +
-      //       '/subsystem/' + subsystem + '/metric/' + metric;
-      //
-
-      // If any of the items are undefined, then don't perform the request, just return an empty
-      // array
-      if ((PAServer === undefined) || (port === undefined) || (hostname === undefined) ||
-          (metric === undefined) || (date === undefined)) {
-        console.log("NOT PULLING ANY DATA");
-        return [];
-      }
-
-      var myURL = 'http://' + PAServer + ':' + port + '/host/' + hostname + '/subsystem/' +
-        metric + '/date/' + date;
-      console.log("getHostSubsystemDateMetric URL: " + myURL);
-
-      // Perform request
-      return $http.get(myURL)
-        .then(getHostSubsystemDateMetricComplete)
-        .catch(getHostSubsystemDateMetricFailed);
-
-      function getHostSubsystemDateMetricComplete(response) {
-        memstats = extract(response);
-        callback(memstats);
-        // return memstats;
-      }
-
-      function getHostSubsystemDateMetricFailed(error) {
-        console.log("ERROR: XHR Failed for getMemstat." + error.data);
-      }
     }
 
     function getHostDateSubsystemMetric(callback, subsystem, metric) {
