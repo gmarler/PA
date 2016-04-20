@@ -152,6 +152,7 @@ sub host : PathPart('host') Chained('/') CaptureArgs(1) {
   my $host = $c->model('DB::Host')->find_by_name($hostname);
 
   say "HOSTNAME:  " . $host->name;
+  say "HOSTID:    " . $host->host_id;
   say "TIME_ZONE: " . $host->time_zone;
 
   $c->stash->{ hostname }  = $host->name;
@@ -159,48 +160,66 @@ sub host : PathPart('host') Chained('/') CaptureArgs(1) {
   $c->stash->{ time_zone } = $host->time_zone;
 }
 
-=method subsystem
+=method date
 
-Get the subsystem portion of the /host/<host>/subsystem/<subsystem>/... URL
+Get the date portion of the /host/<host>/date/<date>/... URL
 
 =cut
 
-sub subsystem : PathPart('subsystem') Chained('host') CaptureArgs(1) {
+sub date : PathPart('date') Chained('host') CaptureArgs(1) {
+  my ( $self, $c, $date ) = @_;
+
+  $c->stash->{ date } = $date;
+
+  say "DATE:      $date";
+}
+
+
+=method subsystem
+
+Get the subsystem portion of the /host/<host>/date/<date>/subsystem/<subsystem>/... URL
+
+=cut
+
+sub subsystem : PathPart('subsystem') Chained('date') CaptureArgs(1) {
   my ( $self, $c, $subsystem ) = @_;
 
-  my ($subsystems) = {
+  $c->stash->{ subsystem } = $subsystem;
+
+  say "SUBSYSTEM: $subsystem";
+}
+
+=method metric
+
+Get the metric portion of the
+/host/<host>/date/<date>/subsystem/<subsystem>/metric/<metric> URL
+
+=cut
+
+sub metric : PathPart('metric') Chained('subsystem') Args(1) {
+  my ( $self, $c, $metric ) = @_;
+
+  my @rows;
+  my ($metrics) = {
     memstat => 'Memstat',
   };
 
-  say "SUBSYSTEM: $subsystem";
+  say "METRIC:    $metric";
 
-  $c->stash->{ subsystem } = $subsystem;
-  $c->stash->{ resultset } = $subsystems->{$subsystem};
-  say "RESULTSET NAME: " . $c->stash->{ resultset };
-}
+  $c->stash->{ resultset } = $metrics->{$metric};
 
-=method date
-
-Get the date portion of the /host/<host>/subsystem/<subsystem>/date/<date>/... URL
-
-=cut
-
-sub date : PathPart('date') Chained('subsystem') Args(1) {
-  my ( $self, $c, $date ) = @_;
-
-  my @rows;
   my $resultset = $c->stash->{ resultset };
   my $hostid    = $c->stash->{ hostid };
+  my $date      = $c->stash->{ date };
   my $time_zone = $c->stash->{ time_zone };
+  my $subsystem = $c->stash->{ subsystem };
 
-  say "RESULTSET: $resultset";
-  say "HOSTID:    $hostid";
-  say "TIME_ZONE: $time_zone";
+  say "RESULTSET: DB::$resultset";
 
-  my $subsystem_rs = $c->model('DB::' . $resultset)
-                       ->search_by_host_on_date($hostid, $date, $time_zone);
+  my $metric_rs = $c->model('DB::' . $resultset)
+                    ->search_by_host_on_date($hostid, $date, $time_zone);
 
-  while (my $row = $subsystem_rs->next) {
+  while (my $row = $metric_rs->next) {
     my %cols = $row->get_columns;
     push @rows, \%cols;
   }
