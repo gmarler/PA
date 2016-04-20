@@ -184,6 +184,39 @@
       }
     }
 
+    function getHostDateSubsystemMetric(callback, subsystem, metric) {
+      // Build REST request to fetch data for this particular subsystem and metric
+
+      // If any of the items are undefined, then don't perform the request, just return an empty
+      // array
+      if ((PAServer === undefined) || (port === undefined) || (hostname === undefined) ||
+          (date === undefined) || (subsystem === undefined) ||
+          (metric === undefined) || ) {
+        console.log("NOT PULLING ANY DATA");
+        return [];
+      }
+
+      var myURL = 'http://' + PAServer + ':' + port + '/host/' + hostname +
+                  '/date/' + date + '/subsystem/' + subsystem +
+                  '/metric/' + metric;
+      console.log("getHostDateSubsystemMetric URL: " + myURL);
+
+      // Perform request
+      return $http.get(myURL)
+        .then(getHostDateSubsystemMetricComplete)
+        .catch(getHostDateSubsystemMetricFailed);
+
+      function getHostDateSubsystemMetricComplete(response) {
+        memstats = extract(response);
+        callback(memstats);
+        // return memstats;
+      }
+
+      function getHostDateSubsystemMetricFailed(error) {
+        console.log("ERROR: XHR Failed for getHostDateSubsystemMetricFailed." + error.data);
+      }
+    }
+
   }
 
 })();
