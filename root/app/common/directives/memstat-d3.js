@@ -19,7 +19,7 @@
 
     // Grab the data when we start ...
     console.log("DATA PULL UPON START");
-    HostService.getHostSubsystemDateMetric(
+    HostService.getHostDateSubsystemMetric(
       function (result) {
         vm.d3data = result;
         HostService.data_pullable = false;
@@ -32,7 +32,7 @@
     var intervalID =
       $interval(function() {
         console.log("PERIODIC DATA PULL");
-        HostService.getHostSubsystemDateMetric(
+        HostService.getHostDateSubsystemMetric(
           function (result) {
             vm.d3data = result;
             HostService.data_pullable = false;
@@ -172,7 +172,7 @@
         function(newVal, oldVal) {
           if (newVal) {
             console.log("data_pullable has been flipped!");
-            HostService.getHostSubsystemDateMetric(
+            HostService.getHostDateSubsystemMetric(
               function (response) {
                 vm.d3data = response;
                 HostService.data_pullable = false;

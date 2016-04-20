@@ -43,7 +43,8 @@
       cacheHosts:                   cacheHosts,
       getHosts:                     getHosts,
       getMemstat:                   getMemstat,
-      getHostSubsystemDateMetric:   getHostSubsystemDateMetric
+      getHostSubsystemDateMetric:   getHostSubsystemDateMetric,
+      getHostDateSubsystemMetric:   getHostDateSubsystemMetric
     };
 
     return service;
@@ -191,7 +192,7 @@
       // array
       if ((PAServer === undefined) || (port === undefined) || (hostname === undefined) ||
           (date === undefined) || (subsystem === undefined) ||
-          (metric === undefined) || ) {
+          (metric === undefined)) {
         console.log("NOT PULLING ANY DATA");
         return [];
       }
