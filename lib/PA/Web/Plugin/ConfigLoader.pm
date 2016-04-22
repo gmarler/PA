@@ -2,12 +2,13 @@ package PA::Web::Plugin::ConfigLoader;
 
 use strict;
 use warnings;
+use v5.20;
 
 # VERSION
 
 use parent 'Catalyst::Plugin::ConfigLoader';
 
-use Catalyst:Utils      qw();
+use Catalyst::Utils      qw();
 use Sys::Hostname       qw();
 
 =method get_config_local_suffix
@@ -32,6 +33,7 @@ sub get_config_local_suffix {
     Catalyst::Utils::env_value($c, 'CONFIG_LOCAL_SUFFIX')
     || join('_', grep { $_ } ($username, $hostname, $env_suffix));
 
+  say __PACKAGE__ . " will look for config here: " . $config_local_suffix;
   return $config_local_suffix;
 }
 

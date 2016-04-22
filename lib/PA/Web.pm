@@ -17,7 +17,7 @@ use Catalyst::Runtime 5.80;
 #                 directory
 
 use Catalyst qw/
-    ConfigLoader
+    +PA::Web::Plugin::ConfigLoader
     Static::Simple
 /;
 #   -Debug
@@ -34,6 +34,13 @@ extends 'Catalyst';
 # details given here can function as a default configuration,
 # with an external configuration file acting as an override for
 # local deployment.
+
+###__PACKAGE__->config(
+###  'Plugin::ConfigLoader' => {
+###    file => __PACKAGE__->path_to('conf'),
+###  },
+###);
+
 
 __PACKAGE__->config(
     name => 'PA::Web',
