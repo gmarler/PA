@@ -1,4 +1,5 @@
 ## Start like so:
+## CATALYST_CONFIG_ENV_SUFFIX=[dev|prod] \
 ## CATALYST_DEBUG=1 \
 ##   plackup -Ilib \
 ##           -s Net::Async::HTTP::Server pa_web.psgi
