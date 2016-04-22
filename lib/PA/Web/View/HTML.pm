@@ -1,11 +1,11 @@
 package PA::Web::View::HTML;
 
-# VERSION
-
 use Moose;
 use namespace::autoclean;
 
 extends 'Catalyst::View::TT';
+
+# VERSION
 
 __PACKAGE__->config(
   # Commented out to allow our index.html to be served statically, rather than
