@@ -22,7 +22,7 @@ Set the schema to use to be from Catalyst's idea of the Schema
 =cut
 
 sub defaults {
-  schema => PA::Web->model('Schema')->schema,
+  schema => PA::Web->model('DB')->schema,
 }
 
 
