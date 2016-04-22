@@ -67,6 +67,9 @@ __PACKAGE__->config(
     #        __PACKAGE__->path_to( 'root', 'src' ),
     #    ],
     #},
+    'Plugin::ConfigLoader' => {
+      file => __PACKAGE__->path_to('conf'),
+    },
 );
 
 

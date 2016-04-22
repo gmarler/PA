@@ -9,7 +9,7 @@ use v5.20;
 use parent 'Catalyst::Plugin::ConfigLoader';
 
 use Catalyst::Utils      qw();
-use Sys::Hostname       qw();
+use Sys::Hostname        qw();
 
 =method get_config_local_suffix
 
