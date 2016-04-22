@@ -1,10 +1,15 @@
 package PA::Web::View::HTML;
+
+# VERSION
+
 use Moose;
 use namespace::autoclean;
 
 extends 'Catalyst::View::TT';
 
 __PACKAGE__->config(
+  # Commented out to allow our index.html to be served statically, rather than
+  # via TT
   #TEMPLATE_EXTENSION => '.tt',
     render_die => 1,
 );
