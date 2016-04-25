@@ -35,13 +35,6 @@ extends 'Catalyst';
 # with an external configuration file acting as an override for
 # local deployment.
 
-###__PACKAGE__->config(
-###  'Plugin::ConfigLoader' => {
-###    file => __PACKAGE__->path_to('conf'),
-###  },
-###);
-
-
 __PACKAGE__->config(
     name => 'PA::Web',
     # Disable deprecated behavior needed by old applications
