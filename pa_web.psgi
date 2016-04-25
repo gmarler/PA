@@ -1,15 +1,15 @@
 ## Start like so:
 ## DEV  Environment:
 ## CATALYST_CONFIG_ENV_SUFFIX=dev \
-## CATALYST_DEBUG=1 \
+## CATALYST_DEBUG=1 DBIC_TRACE=1 \
 ##   plackup -Ilib --port 5000 \
 ##           -s Net::Async::HTTP::Server pa_web.psgi
 
 ##
 ## PROD Environment:
 ## CATALYST_CONFIG_ENV_SUFFIX=prod \
-## CATALYST_DEBUG=1 --port 80 \
-##   plackup -Ilib \
+## CATALYST_DEBUG=1 DBIC_TRACE=1 \
+##   plackup -Ilib --port 80 \
 ##           -s Net::Async::HTTP::Server pa_web.psgi
 ##
 use strict;
