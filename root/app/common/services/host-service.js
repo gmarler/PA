@@ -5,14 +5,14 @@
     .module('pa.services.host', [])
     .factory('HostService', HostService);
 
-  HostService.$inject = [ '$http' ];
+  HostService.$inject = [ '$http', '$location' ];
 
-  function HostService($http) {
+  function HostService($http, $location) {
     var data_pullable,
         hosts,
         memstats,
         PAServer,
-        port      = "80",
+        port      = $location.port(),
         hostname,
         hostID,
         hostTimeZone,
