@@ -33,7 +33,7 @@ sub get_config_local_suffix {
     Catalyst::Utils::env_value($c, 'CONFIG_LOCAL_SUFFIX')
     || join('_', grep { $_ } ($username, $hostname, $env_suffix));
 
-  say __PACKAGE__ . " will look for config here: " . $config_local_suffix;
+  #say __PACKAGE__ . " will look for config here: " . $config_local_suffix;
   return $config_local_suffix;
 }
 

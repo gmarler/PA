@@ -21,8 +21,9 @@ use Getopt::Long;
 
 my %recvd_seq;
 
+# TODO: Add ability to insert into either of dev or prod
 my $connect_info = {
-  dsn => 'DBI:Pg:dbname=template1;host=localhost;port=15432',
+  dsn => 'DBI:Pg:dbname=template1;host=localhost;port=5432',
   user => 'postgres',
   password => '',
 };
