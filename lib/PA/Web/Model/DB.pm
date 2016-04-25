@@ -10,6 +10,7 @@ use base 'Catalyst::Model::DBIC::Schema';
 
 __PACKAGE__->config(
     schema_class => 'PA::Schema',
+    # This will be overridden by the custom config for prod or dev
     connect_info =>
       ['DBI:Pg:dbname=template1;host=localhost;port=0','postgres',''],
 );
