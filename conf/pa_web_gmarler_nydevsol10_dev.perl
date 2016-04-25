@@ -7,7 +7,7 @@
   name => 'PA::Web',
   # NOTE: We have to strip PA::Web off the beginning of each module we're
   # configuring, if it is present
-  'PA::Web::Model::DB' => {
+  'Model::DB' => {
     connect_info =>
       ['DBI:Pg:dbname=template1;host=localhost;port=15432','postgres',''],
   },
