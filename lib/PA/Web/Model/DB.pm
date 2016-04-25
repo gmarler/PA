@@ -11,7 +11,7 @@ use base 'Catalyst::Model::DBIC::Schema';
 __PACKAGE__->config(
     schema_class => 'PA::Schema',
     connect_info =>
-      ['DBI:Pg:dbname=template1;host=localhost;port=15432','postgres',''],
+      ['DBI:Pg:dbname=template1;host=localhost;port=0','postgres',''],
 );
 
 =head1 NAME
