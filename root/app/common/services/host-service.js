@@ -12,7 +12,7 @@
         hosts,
         memstats,
         PAServer,
-        port      = "5000",
+        port      = "80",
         hostname,
         hostID,
         hostTimeZone,
