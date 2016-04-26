@@ -19,11 +19,34 @@ use IO::Async::Loop      qw();
 use IO::Async::Function  qw();
 use Getopt::Long;
 
+my $pgdb   = "template1";
+my $pghost = "localhost";
+my $pgport = "0";   # Bogus, so we'll have to pick dev or prod
+my $mode   = undef;
+
+my $getopt_result =
+  GetOptions("mode=s"   => \$mode,
+            );
+
+if (not defined($mode)) {
+  say "--mode=[dev|prod] not specified - defaulting to dev mode";
+  $mode = "dev";
+}
+
+if ($mode eq "dev") {
+  say "DEVELOPMENT MODE specified";
+  $pgport = 15432;
+} elsif ($mode eq "prod") {
+  say "PRODUCTION MODE specified";
+  $pgport = 5432;
+} else {
+  die "Invalid mode specified - specify --mode=[dev|prod]";
+}
+
 my %recvd_seq;
 
-# TODO: Add ability to insert into either of dev or prod
 my $connect_info = {
-  dsn => 'DBI:Pg:dbname=template1;host=localhost;port=5432',
+  dsn => 'DBI:Pg:dbname=${pgdb};host=${pghost};port=${pgport}',
   user => 'postgres',
   password => '',
 };
