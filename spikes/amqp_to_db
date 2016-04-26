@@ -224,9 +224,9 @@ while (my $dhref = $mq->recv(0)) {
             say "Faking memstat $memstat_type subtype $subtype";
             $stat_ref->{$memstat_type}->{$subtype} = 0;
           }
+          $memstat_data{"${memstat_type}_${subtype}"} =
+            $stat_ref->{$memstat_type}->{$subtype};
         }
-        $memstat_data{"${memstat_type}_${subtype}"} =
-          $stat_ref->{$memstat_type}->{$subtype};
       } else {
         foreach my $subtype (keys %{$stat_ref->{$memstat_type}}) {
           if (not defined($stat_ref->{$memstat_type}->{$subtype})) {
@@ -234,9 +234,9 @@ while (my $dhref = $mq->recv(0)) {
             # Make it 0 rather than undef
             $stat_ref->{$memstat_type}->{$subtype} = 0;
           }
+          $memstat_data{"${memstat_type}_${subtype}"} =
+            $stat_ref->{$memstat_type}->{$subtype};
         }
-        $memstat_data{"${memstat_type}_${subtype}"} =
-          $stat_ref->{$memstat_type}->{$subtype};
       }
     }
     # say Dumper( \%memstat_data );
