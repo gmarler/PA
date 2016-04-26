@@ -12,7 +12,12 @@
         hosts,
         memstats,
         PAServer,
-        port      = $location.port(),
+    // If the web server port is 80, then it's likely PROD, and thus the
+    // PA Server port should also be PROD.
+    // Otherwise, we're either pointed at the WebStorm DEV web server,
+    // or the Catalyst DEV web server, both of which will need the DEV
+    // PA Server that resides on port 5000.
+        port      = $location.port() == 80 ? 80 : 5000,
         hostname,
         hostID,
         hostTimeZone,
