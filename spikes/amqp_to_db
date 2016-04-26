@@ -46,9 +46,9 @@ if ($mode eq "dev") {
 my %recvd_seq;
 
 my $connect_info = {
-  dsn => 'DBI:Pg:dbname=${pgdb};host=${pghost};port=${pgport}',
-  user => 'postgres',
-  password => '',
+  dsn => "DBI:Pg:dbname=${pgdb};host=${pghost};port=${pgport}",
+  user => "postgres",
+  password => "",
 };
 
 my $schema = PA::Schema->connect(
@@ -212,17 +212,31 @@ while (my $dhref = $mq->recv(0)) {
     my @memstat_types = qw( defdump_prealloc zfs_file_data free_cachelist kernel
                             anon exec_and_libs page_cache zfs_metadata
                             free_freelist total );
+    my @memstat_subtypes = qw( page_count bytes pct_of_total );
+    # Handle the case where the pattern didn't match, due to a bug in
+    # ::memstat - don't forget subtypes in addition to top level stat types
     foreach my $memstat_type (@memstat_types) {
-      foreach my $submeta (keys %{$stat_ref->{$memstat_type}}) {
-        # Handle the case where the pattern didn't match, due to a bug in
-        # ::memstat
-        if (not defined($stat_ref->{$memstat_type}->{$submeta})) {
-          say "WARNING: $hostname memstat $memstat_type UNDEFINED - FAKING IT";
-          # Make it 0 rather than undef
-          $stat_ref->{$memstat_type}->{$submeta} = 0;
+      if (not exists($stat_ref->{$memstat_type})) {
+        say "WARNING: $hostname memstat $memstat_type UNDEFINED - FAKING IT";
+        $stat_ref->{$memstat_type} = {};
+        foreach my $subtype (@memstat_subtypes) {
+          unless (exists($stat_ref->{$memstat_type}->{$subtype})) {
+            say "Faking memstat $memstat_type subtype $subtype";
+            $stat_ref->{$memstat_type}->{$subtype} = 0;
+          }
         }
-        $memstat_data{"${memstat_type}_${submeta}"} =
-          $stat_ref->{$memstat_type}->{$submeta};
+        $memstat_data{"${memstat_type}_${subtype}"} =
+          $stat_ref->{$memstat_type}->{$subtype};
+      } else {
+        foreach my $subtype (keys %{$stat_ref->{$memstat_type}}) {
+          if (not defined($stat_ref->{$memstat_type}->{$subtype})) {
+            say "WARNING: $hostname memstat $memstat_type subtype $subtype UNDEFINED - FAKING IT";
+            # Make it 0 rather than undef
+            $stat_ref->{$memstat_type}->{$subtype} = 0;
+          }
+        }
+        $memstat_data{"${memstat_type}_${subtype}"} =
+          $stat_ref->{$memstat_type}->{$subtype};
       }
     }
     # say Dumper( \%memstat_data );
