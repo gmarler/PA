@@ -1,21 +1,17 @@
 * PA Web Server
-  * Create Dev/Prod Deployment configs
-  * Chained dispatch for host/:hostid/:subsystem/:metric/:date
+  *
 
 * PA DBIx::Class DB
-  * Update Test::PostgreSQL, DBIx::class::Fixtures, DBIx::Class::Migration
-  * Create dev/production database setup
+  *
   * Test ResultSets for Memstat
     * TimeZone (dates just before/after midnight in UTC and local Time Zone)
 
 * PA Client
   * Test Net::Async::AMQP connect/disconnect handling
-  * If Solaris::mdb fails or times out, restart it/continue, don't just die
 
 * AngularJS Client
-  * Allow Specifying Web/DB server IP/hostname to interact with, for WebStorm dev purposes
-  * Dropdown datepicker for host/subsystem/metric/date selection
+  * Use ngMessages to denote current state of interaction with REST service(s)
 
   * d3-memstat Directive
-    * Create a legend for the stacked graph colors, rather than laying the labels on shifting stacks
-    * Fix up HostService to get the right data off the scope to make calls into the REST API
+    * Fill in gaps in incoming data
+    * Use a brush to allow zooming in on data of interest
