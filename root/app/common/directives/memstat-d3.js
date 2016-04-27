@@ -5,11 +5,11 @@
     .module('pa')
     .directive('memstatD3', memstatD3);
 
-  memstatD3.$inject = [ 'HostService' ];
+  memstatD3.$inject = [ 'HostService', '$log' ];
 
-  memstatD3Controller.inject = [ '$scope', '$interval', '$window' ];
+  memstatD3Controller.inject = [ '$scope', '$interval', '$window', '$log' ];
 
-  function memstatD3Controller($scope, $element, $attrs, HostService, $interval, $window) {
+  function memstatD3Controller($scope, $element, $attrs, HostService, $interval, $window, $log) {
     var vm = this;
 
     // Allow window resizing
@@ -18,7 +18,7 @@
     //});
 
     // Grab the data when we start ...
-    console.log("DATA PULL UPON START");
+    $log.debug("INITIAL DATA PULL...");
     HostService.getHostDateSubsystemMetric(
       function (result) {
         vm.d3data = result;
@@ -31,7 +31,7 @@
     // Grab the intervalID so we can eliminate it if we so choose later
     var intervalID =
       $interval(function() {
-        console.log("PERIODIC DATA PULL");
+        $log.debug("PERIODIC DATA PULL");
         HostService.getHostDateSubsystemMetric(
           function (result) {
             vm.d3data = result;
@@ -44,12 +44,12 @@
     // Clean up the interval timer before we kill this
     // controller
     $scope.$on('$destroy', function() {
-      console.log("CLEANING UP");
+      $log.debug("CLEANING UP");
       if (intervalID) { $interval.cancel(intervalID); }
     });
   }
 
-  function memstatD3(HostService) {
+  function memstatD3(HostService, $log) {
     // Define constants and helpers used for this directive
     // Bottom margin makes room for the lengthy and rotated timestamps
     var margin = {top: 20, right: 155, bottom: 140, left: 75};
@@ -164,14 +164,16 @@
           return (key !== "timestamp" && key !== "total_bytes" && key !== "guest"); }));
 
       // Whenever things in the view change such that a 'pull' of the D3 data by
-      // the HostService can be attempted, go ahead and initiate that action.
+      // the HostService can be attempted, go ahead and initiate that action immediately,
+      // instead of waiting for the recurring update to come along and do the update
+      // later.
       scope.$watch(
         function() {
           return HostService.data_pullable;
         },
         function(newVal, oldVal) {
           if (newVal) {
-            console.log("data_pullable has been flipped!");
+            $log.debug("data_pullable has been flipped!");
             HostService.getHostDateSubsystemMetric(
               function (response) {
                 vm.d3data = response;
@@ -186,7 +188,7 @@
       // whenever the bound 'd3data' expression changes, execute this
       scope.$watch('vm.d3data', function (newd3data, oldd3data) {
         // console.log("GOT NEW DATA!");
-        console.log(vm);
+        $log.debug(vm);
         // Don't graph:
         // - The Epoch timestamp
         // - The Guest data (since it's currently always 0)
@@ -212,7 +214,7 @@
         // Only run this the first time through - to create things like SVG groupings
         // the first time only
         if (first_run) {
-          console.log("First Time Through memstat-d3 directive!");
+          $log.debug("First Time Through memstat-d3 directive!");
           // ...
           legend = d3.select('svg').selectAll(".legend")
             .data(color.domain().slice().reverse())

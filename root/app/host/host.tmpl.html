@@ -33,12 +33,19 @@
         </p>
       </li>
       <li class="navbar-text">PA Server</li>
-      <li class="navbar-form navbar-right">
+      <li class="navbar-form">
         <input id="pa-server" type="text" ng-model="PAServer" placeholder="Enter PA Server"
                size=32
                uib-typeahead="pa_server for pa_server in vm.pa_servers | filter:$viewValue"
                class="form-control">
       </li>
+      <!--TODO: Extract into CSS-->
+      <div class="navbar-text" ng-if="vm.getHostError" style="color: red">
+        <b>FAIL:</b> {{ vm.getHostError }}
+      </div>
+      <div class="navbar-text" ng-if="vm.getHostSuccess" style="color: green">
+        <b>SUCCESS:</b> {{ vm.getHostSuccess }}
+      </div>
     </ul>
   </div>
 

@@ -37,7 +37,6 @@
     "commit": "e68e21689b6981dc93131ae1640519f9ff48cf36"
   },
   "_source": "https://github.com/spiermar/d3-flame-graph.git",
-  "_target": "~0.4.2",
-  "_originalSource": "d3-flame-graph",
-  "_direct": true
+  "_target": "^0.4.2",
+  "_originalSource": "d3-flame-graph"
 }

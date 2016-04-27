@@ -23,6 +23,15 @@
           .then(function(result) {
             vm.hosts = result;
             console.log(vm.hosts)
+            // Register this status message: Pulled list of hosts from PA Server
+            vm.getHostError   = undefined;
+            vm.getHostSuccess = "Pulled list of hosts from PA Server";
+          })
+          .catch(function(error) {
+            // Register this message: Unable to pull list of hosts from PA Server
+            console.log("host.js call to getHosts() failed");
+            vm.getHostError   = "Unable to pull list of hosts from PA Server";
+            vm.getHostSuccess = undefined;
           });
       });
 
@@ -41,6 +50,10 @@
     return directive;
 
     function link(scope, element, attrs) {
+
+      scope.getHostError         = undefined;
+      scope.getHostSuccess       = undefined;
+
       scope.selectedHostName     = "Select Hostname";
       scope.selectedHostTimeZone = "N / A";
       scope.selectedHostId       = undefined;

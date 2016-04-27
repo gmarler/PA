@@ -2,7 +2,7 @@
   'use strict';
 
   angular
-    .module('pa.services.host', [])
+    .module('pa.services.host', ['ngMessages'])
     .factory('HostService', HostService);
 
   HostService.$inject = [ '$http', '$location', '$log', '$q' ];
@@ -56,7 +56,7 @@
     // FUNCTION DEFINITIONS
 
     function setPAServer(server) {
-      console.log("Updating PA Server to: " + server);
+      $log.debug("Updating PA Server to: " + server);
       PAServer = server;
     }
 
@@ -139,13 +139,13 @@
       }
 
       function getMemstatFailed(error) {
-        console.log("ERROR: XHR Failed for getMemstat." + error.data);
+        $log.debug("ERROR: XHR Failed for getMemstat." + error.data);
       }
     }
 
     function buildHostsURL() {
       var URL = 'http://' + PAServer + ':' + port + '/hosts';
-      console.log("buildHostsURL built: " + URL);
+      $log.debug("buildHostsURL built: " + URL);
       return URL;
     }
 
@@ -162,14 +162,14 @@
       if ((PAServer === undefined) || (port === undefined) || (hostname === undefined) ||
           (date === undefined) || (subsystem === undefined) ||
           (metric === undefined)) {
-        console.log("NOT PULLING ANY DATA");
+        $log.debug("NOT PULLING ANY DATA");
         return [];
       }
 
       var myURL = 'http://' + PAServer + ':' + port + '/host/' + hostname +
                   '/date/' + date + '/subsystem/' + subsystem +
                   '/metric/' + metric;
-      console.log("getHostDateSubsystemMetric URL: " + myURL);
+      $log.debug("getHostDateSubsystemMetric URL: " + myURL);
 
       // Perform request
       return $http.get(myURL)
@@ -183,7 +183,8 @@
       }
 
       function getHostDateSubsystemMetricFailed(error) {
-        console.log("ERROR: XHR Failed for getHostDateSubsystemMetricFailed." + error.data);
+        $log.error("ERROR: XHR Failed for getHostDateSubsystemMetricFailed." + error.data);
+        return $q.reject(error);
       }
     }
 
