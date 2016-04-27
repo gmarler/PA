@@ -5,9 +5,9 @@
     .module('pa.services.host', [])
     .factory('HostService', HostService);
 
-  HostService.$inject = [ '$http', '$location' ];
+  HostService.$inject = [ '$http', '$location', '$log' ];
 
-  function HostService($http, $location) {
+  function HostService($http, $location, $log) {
     var data_pullable,
         hosts,
         memstats,
@@ -104,7 +104,7 @@
     }
 
     function getHosts() {
-      console.log("CALLING HostService.getHosts()");
+      $log.debug("CALLING HostService.getHosts()");
       var hostsURL = buildHostsURL();
 
       return $http.get(hostsURL)
@@ -113,13 +113,13 @@
 
       function getHostsComplete(response) {
         hosts = extract(response);
-        console.log("HostService.getHosts() returns:");
-        console.log(hosts);
+        $log.info("HostService.getHosts() returns:");
+        $log.info($log.infohosts);
         return hosts;
       }
 
       function getHostsFailed(error) {
-        console.log("ERROR: XHR Failed for getHosts." + error.data);
+        $log.error("ERROR: XHR Failed for getHosts." + error.statusText);
       }
     }
 
