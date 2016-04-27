@@ -5,9 +5,9 @@
     .module('pa.services.host', [])
     .factory('HostService', HostService);
 
-  HostService.$inject = [ '$http', '$location', '$log' ];
+  HostService.$inject = [ '$http', '$location', '$log', '$q' ];
 
-  function HostService($http, $location, $log) {
+  function HostService($http, $location, $log, $q) {
     var data_pullable,
         hosts,
         memstats,
@@ -120,6 +120,7 @@
 
       function getHostsFailed(error) {
         $log.error("ERROR: XHR Failed for getHosts." + error.statusText);
+        return $q.reject(error);
       }
     }
 
