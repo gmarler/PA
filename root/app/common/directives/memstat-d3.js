@@ -60,6 +60,9 @@
     // var height = 1000;
     var height = 1024;
         height = height - margin.top - margin.bottom;
+    // Navigation/Brushing Chart below the main chart
+    var navWidth = width,
+        navHeight = 100 - margin.top - margin.bottom;
 
     // Specify the order in which we stack the data in the graph, from the Y axis up
     // NOTE: We're currently excluding: Guest and defump_prealloc
@@ -157,6 +160,14 @@
       var chart = svg
           .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      // Create the Navigation/Brushing chart after the regular chart
+      var navChart = svg.append('svg')
+        .classed('navigator', true)
+        .attr('width', navWidth + margin.left + margin.right)
+        .attr('height', navHeight + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
       // Define the color map domain in key order
       color.domain(keys_in_order
