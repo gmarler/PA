@@ -162,7 +162,8 @@
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // Create the Navigation/Brushing chart after the regular chart
-      var navChart = svg.append('svg')
+      var navChart = d3.select(element[0])
+        .append('svg')
         .classed('navigator', true)
         .attr('width', navWidth + margin.left + margin.right)
         .attr('height', navHeight + margin.top + margin.bottom)
