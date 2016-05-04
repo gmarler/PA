@@ -67,7 +67,7 @@ sub _parse_interval {
                           Free\s\(cachelist\)|Free\s\(freelist\)|
                           In\stemporary\suse))          \s+
              (?<pgcount>\d+)               \s+
-             (?<bytes>\d+(?:\.\d+)?(?:[kMG])?)  \s+
+             (?<bytes>\d+(?:\.\d+)?(?:[kMGT])?)  \s+
              (?<pct_of_total>\d+)\%
              \n
          ) |
@@ -90,7 +90,7 @@ sub _parse_interval {
 
     $memstat_data{$page_type} = { };
 
-    if ($bytes =~ m/(?<size>\d+(?:\.\d+)?)(?<unit>k|M|G|)$/) {
+    if ($bytes =~ m/(?<size>\d+(?:\.\d+)?)(?<unit>k|M|G|T|)$/) {
       $bytes = $+{size};
       if ($+{unit} eq '') { # must be in bytes, nothing to do
       } elsif ($+{unit} eq 'k') {
@@ -99,6 +99,8 @@ sub _parse_interval {
         $bytes *= 1024 * 1024;
       } elsif ($+{unit} eq 'G') {
         $bytes *= 1024 * 1024 * 1024;
+      } elsif ($+{unit} eq 'T') {
+        $bytes *= 1024 * 1024 * 1024 * 1024;
       }
       $bytes = int($bytes);  # Eliminate possible "fractional" bytes
     }
