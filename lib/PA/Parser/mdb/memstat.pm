@@ -73,7 +73,7 @@ sub _parse_interval {
          ) |
          (?: (?<pgtype>Total) \s+
              (?<pgcount>\d+)  \s+
-             (?<bytes>\d+(?:\.\d+)?(?:k|M|G|)?) \n )
+             (?<bytes>\d+(?:\.\d+)?(?:k|M|G|T|)?) \n )
       }smx;
 
   while ($data =~ m{ $memstat_regex }gsmx ) {
