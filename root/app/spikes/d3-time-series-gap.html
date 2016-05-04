@@ -49,6 +49,12 @@
     stroke: darkgrey;
     stroke-width: 1px;
   }
+
+  .navigator .viewport {
+    stroke: grey;
+    fill: black;
+    fill-opacity: 0.2;
+  }
 </style>
 <body>
 
@@ -68,7 +74,7 @@ var margin = {
 };
 
 var navWidth  = width,
-    navHeight = 100 - margin.top - margin.bottom,
+    navHeight = 100, // - margin.top - margin.bottom,
     navChart;
 
 var findCriticalPairs = function(data) {
@@ -121,7 +127,10 @@ var chart = svg.append("g")
 
 var data = generateData();
 
-console.log(data);
+function redrawChart() {
+//  timeSeries.call(series);
+//  chart.select('.x.axis').call(xAxis);
+}
 
   function generateData() {
     var data = [];
@@ -215,6 +224,12 @@ var viewport = d3.svg.brush()
       xAxisScale.domain(viewport.empty() ? navXScale.domain() : viewport.extent());
       redrawChart();
     });
+
+navChart.append("g")
+    .attr("class", "viewport")
+    .call(viewport)
+    .selectAll("rect")
+    .attr("height", navHeight);
 
 
 var line = d3.svg.line()
