@@ -47,7 +47,7 @@
 
 <script>
 var width = 1200;
-var height = 600;
+var height = 700;
 
 var margin = {
 top: 10,
@@ -114,7 +114,7 @@ console.log(data);
     var timestamp = start;
     var value = 0;
 
-    for (i = 0; i < 2880; i++) {
+    for (i = 0; i <= 2880; i++) {
       if (timestamp.isBetween("2016-04-20 01:00:00", "2016-04-20 02:00:00", "second")) {
         data.push({ timestamp: timestamp.toDate(), value: NaN });
       } else {
@@ -142,7 +142,7 @@ var yAxisScale = d3.scale.linear()
 var xAxis = d3.svg.axis()
     .scale(xAxisScale)
     .orient("bottom")
-    .ticks(24)
+    .ticks(25)
     .tickFormat(d3.time.format("%Y-%m-%d %X"));
 
 var yAxis = d3.svg.axis()
