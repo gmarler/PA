@@ -38,6 +38,17 @@
   .line-undefined {
     stroke-dasharray: 3px 3px;
   }
+
+  .navigator .data {
+    fill: lightgrey;
+    stroke-width: 0px;
+  }
+
+  .navigator .line {
+    fill: none;
+    stroke: darkgrey;
+    stroke-width: 1px;
+  }
 </style>
 <body>
 
@@ -50,11 +61,15 @@ var width = 1200;
 var height = 700;
 
 var margin = {
-top: 10,
-right: 10,
-bottom: 100,
-left: 90
+  top: 10,
+  right: 10,
+  bottom: 100,
+  left: 90
 };
+
+var navWidth  = width,
+    navHeight = 100 - margin.top - margin.bottom,
+    navChart;
 
 var findCriticalPairs = function(data) {
   // Store property `critical` on points before and after a series of points.
@@ -103,6 +118,7 @@ var chart = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
+
 var data = generateData();
 
 console.log(data);
@@ -148,6 +164,57 @@ var xAxis = d3.svg.axis()
 var yAxis = d3.svg.axis()
     .scale(yAxisScale)
     .orient("left");
+
+
+navChart = d3.select("body").append('svg')
+    .classed('navigator', true)
+    .attr('width', navWidth + margin.left + margin.right)
+    .attr('height', navHeight + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+var navXScale = d3.time.scale()
+    .domain(d3.extent(data, function(d) { return +d.timestamp; }))
+    .range([0, navWidth]),
+
+    navYScale = d3.scale.linear()
+        .domain(d3.extent(data, function(d) { return +d.value; }))
+        .range([navHeight, 0]);
+
+var navXAxis = d3.svg.axis()
+    .scale(navXScale)
+    .orient('bottom');
+
+navChart.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', 'translate(0,' + navHeight + ')')
+    .call(navXAxis);
+
+var navData = d3.svg.area()
+    .defined(function(d) { return d.value; })
+    .x(function (d) { return navXScale(+d.timestamp); })
+    .y0(navHeight)
+    .y1(function (d) { return navYScale(+d.value); });
+
+var navLine = d3.svg.line()
+    .defined(function(d) { return d.value; })
+    .x(function (d) { return navXScale(+d.timestamp); })
+    .y(function (d) { return navYScale(+d.value); });
+
+navChart.append('path')
+    .attr('class', 'data')
+    .attr('d', navData(data));
+
+navChart.append('path')
+    .attr('class', 'line')
+    .attr('d', navLine(data));
+
+var viewport = d3.svg.brush()
+    .x(navXScale)
+    .on("brush", function() {
+      xAxisScale.domain(viewport.empty() ? navXScale.domain() : viewport.extent());
+      redrawChart();
+    });
 
 
 var line = d3.svg.line()
