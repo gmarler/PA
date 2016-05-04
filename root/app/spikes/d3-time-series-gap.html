@@ -56,6 +56,45 @@ bottom: 100,
 left: 90
 };
 
+var findCriticalPairs = function(data) {
+  // Store property `critical` on points before and after a series of points.
+  var inUndefinedSeries = false;
+  var criticalValues = [];
+  var criticalPairs = [];
+
+  _.each(data, function(e, i) {
+    // WARNING: careful here - 0 could be true.  Testing for is NaN or defined-ness is
+    // probably more useful here.
+    if (isNaN(e.value)) {
+      // If this is the first item in an undefined series, add the previous
+      // item to the critical values array.
+      if (!inUndefinedSeries) {
+        inUndefinedSeries = true;
+        data[i - 1].critical = true;
+        criticalValues.push(data[i - 1]);
+      }
+    } else if (inUndefinedSeries) {
+      // When we reach the end of an undefined series, add the current item
+      // to the critical values array.
+      inUndefinedSeries = false;
+      data[i].critical = true;
+      criticalValues.push(data[i]);
+    }
+
+    // Coerce numbers
+    e.timestamp = +e.timestamp;
+    e.value     = +e.value;
+  });
+
+  // These pairs will be used to generate sections of undefined values
+  for (var i = 0; i < criticalValues.length; i++) {
+    if (criticalValues[i].critical && i % 2 === 0) {
+      criticalPairs.push([criticalValues[i], criticalValues[i + 1]]);
+    }
+  }
+  return criticalPairs;
+};
+
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom);
@@ -118,6 +157,17 @@ var area = d3.svg.area()
     .y0(function(d) { return yAxisScale(+d.value); })
     .y1(height);
 
+var lineUndefined = d3.svg.line()
+    .defined(function(d) { return d.critical; })
+    .x(function(d) { return xAxisScale(+d.timestamp); })
+    .y(function(d) { return yAxisScale(+d.value); });
+
+var areaUndefined = d3.svg.area()
+    .defined(function(d) { return d.critical; })
+    .x(function(d) { return xAxisScale(+d.timestamp); })
+    .y0(function(d) { return yAxisScale(+d.value); })
+    .y1(height);
+
 
 var xAxisGroup =
 chart.append("g")
@@ -146,6 +196,30 @@ chart.append("path")
 chart.append("path")
     .attr("class", "line")
     .attr("d", line(data));
+
+
+var criticalPairs = findCriticalPairs(data);
+
+console.log("Critical Pairs");
+
+console.log(criticalPairs);
+
+_.each(criticalPairs, function(e) {
+
+  chart.append("circle")
+      .attr("class", "critical-point")
+      .attr("r", 5)
+      .attr("cx", function() { return xAxisScale(e[0].timestamp); })
+      .attr("cy", function() { return yAxisScale(e[0].value); });
+
+  chart.append("circle")
+      .attr("class", "critical-point")
+      .attr("r", 5)
+      .attr("cx", function() { return xAxisScale(e[1].timestamp); })
+      .attr("cy", function() { return yAxisScale(e[1].value); });
+
+});
+
 
 </script>
 
