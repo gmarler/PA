@@ -1,0 +1,5 @@
+$HASH1 = {
+           host_id   => 1,
+           name      => 'control',
+           time_zone => 'America/New_York'
+         };
