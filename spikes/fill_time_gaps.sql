@@ -59,6 +59,11 @@ INSERT INTO data_table(entity_fk, timestamp, value) VALUES
 
 SELECT * FROM data_table;
 
+SELECT timestamp,
+       lag(timestamp)  OVER (ORDER BY timestamp ASC) AS prev_timestamp,
+       lead(timestamp) OVER (ORDER BY timestamp ASC) AS next_timestamp
+FROM data_table;
+
 WITH filled_timestamps AS (
   SELECT timestamp FROM
     generate_series('2016-04-05 13:00:00'::timestamptz,
