@@ -4,33 +4,26 @@ use warnings;
 use Test::More;
 use Future::Utils;
 use IO::Async::Loop;
+use IO::Async::Timer::Countdown;
 use Net::Async::AMQP;
 use Net::Async::AMQP::Server;
+use Data::Dumper;
 
 #plan skip_all => 'unfinished implementation';
 
 my $loop = IO::Async::Loop->new;
-my $srv = Net::Async::AMQP::Server->new;
-$loop->add($srv);
-
-my ($host, $port) = $srv->listening->get;
-
-is($host, '0.0.0.0', 'host is 0.0.0.0');
-$host = 'localhost';
-ok($port, 'non-zero port');
 
 $loop->add(my $cli = Net::Async::AMQP->new);
 # $cli->bus->subscribe_to_event(
 # 	close => sub { fail("close - @_") },
 # 	unexpected_frame => sub { fail("unexpected - @_") },
 # );
+$cli->bus->subscribe_to_event(close => sub { diag "closed by remote"; });
 
 my $true = Net::AMQP::Value->true;
 my $f;
 ok($f = $cli->connect(
 	host  => 'localhost',
-  #host  => $host,
-  #port  => $port,
 	user  => 'guest',
 	pass  => 'guest',
 	vhost => '/',
@@ -45,15 +38,30 @@ ok($f = $cli->connect(
   sub { diag "Failure during connect: @_"; Future->done; }
 )->get, 'connect to server');
 
-$cli->bus->subscribe_to_event(close => sub { diag "closed by remote"; });
+my $timer = IO::Async::Timer::Countdown->new(
+  delay      => 3,
+  on_expire  => sub {
+    diag "FIRING TIMER TO CLOSE CONNECTION";
+    #my $svr_stream = $cli->stream;
+    #$svr_stream->close;
+    $cli->close->get;
 
-# $loop->run;
+    diag "Closure completed";
+    #$loop->stop;
+  },
+);
+
+$timer->start;
+$loop->add($timer);
+
 
 my $ch;
 #ok($ch = $cli->open_channel->get, 'open channel');
 #$ch->on_close( sub { diag "CHANNEL CLOSED"; } );
 #$srv->close;
-undef($srv);
+
+$loop->run;
+
 #diag "Channel closed: " . $ch->closed;
 #ok($cli->close->get, 'close connection again');
 done_testing;
