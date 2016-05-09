@@ -137,7 +137,7 @@ sub _build_mq {
   my $loop = $self->loop;
   $loop->add(
     my $mq = Net::Async::AMQP->new(
-      heartbeat_interval => 5,
+      #heartbeat_interval => 5,
     )
   );
 
