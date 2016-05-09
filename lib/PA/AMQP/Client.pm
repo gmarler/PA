@@ -139,6 +139,8 @@ sub _build_mq {
     my $mq = Net::Async::AMQP->new()
   );
 
+  $mq->configure( heartbeat_interval => 5 );
+
   # Event bus method of registering for closure of connection to AMQP Server
   $mq->bus->subscribe_to_event(
     # If we get to a close event, we will have already initialized a
