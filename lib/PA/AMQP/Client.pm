@@ -136,7 +136,9 @@ sub _build_mq {
 
   my $loop = $self->loop;
   $loop->add(
-    my $mq = Net::Async::AMQP->new()
+    my $mq = Net::Async::AMQP->new(
+      heartbeat_interval => 5,
+    )
   );
 
   # need to work on how to configure this
@@ -285,6 +287,10 @@ sub _try_connect {
         user      => $self->mq_user,
         pass      => $self->mq_password,
         vhost     => '/',
+        client_properties => {
+          'consumer_cancel_notify' => 1,
+          'connection.blocked'     => 1,
+        },
       )->then(
         sub {
           say "CONNECT SUCCEEDED";
