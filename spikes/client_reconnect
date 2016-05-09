@@ -1,0 +1,139 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+
+# VERSION
+# PODNAME: client_reconnect - the Performance Analytics Client reconnect test
+
+use FindBin qw($Bin);
+
+# This would normally be .../../lib, but we install modules in a slightly
+# different place in /bb/pm/...
+use lib "$Bin/../lib/perl5";
+
+use Moose;
+use Getopt::Long;
+use JSON::MaybeXS;
+use DateTime::TimeZone   qw();
+use Net::Async::AMQP;
+use IO::Async::Loop;
+use Data::Dumper;
+use PA::AMQP::Client;
+use PA::Capture::mdb::memstat;
+use PA::Capture::kstat;
+
+with 'MooseX::Log::Log4perl';
+
+my $log_conf = q{
+log4perl.category.PA            = INFO, Screen
+
+log4perl.appender.Screen        = \
+     Log::Log4perl::Appender::ScreenColoredLevels
+log4perl.appender.Screen.layout = \
+     Log::Log4perl::Layout::PatternLayout
+log4perl.appender.Screen.layout.ConversionPattern = \
+     %m%n
+};
+
+Log::Log4perl::init(\$log_conf);
+
+my $logger = Log::Log4perl::get_logger();
+
+# This spike shows how PA clients starting up will initially post host specific
+# information, so that it can be received and pre-inserted into the back end
+# database before the host begins to send information.
+
+my %client_ctor_args;
+my $amqp_server;
+my $logdir;
+
+GetOptions(
+            "amqp=s"   => \$amqp_server,
+            "logdir=s" => \$logdir,
+          )
+  or $logger->logdie("ERROR in command line args");
+
+if ($amqp_server) {
+  $client_ctor_args{amqp_server} = $amqp_server;
+}
+
+if (not defined($logdir)) {
+  $logger->warn("Logging to $logdir");
+  $logdir = "/tmp";  # Default to /tmp
+}
+
+#
+# Set up the logger specifically for PA::Capture::mdb::memstat, so it goes
+# to a file, with no other cruft.  The output still goes to the Screen, so
+# that's good - for the moment
+#
+my $logfile_logger = Log::Log4perl::get_logger('PA::Capture::mdb::memstat');
+my $log_layout = Log::Log4perl::Layout::PatternLayout->new("%m%n");
+
+my $log_appender = Log::Log4perl::Appender->new(
+                        "Log::Dispatch::FileWriteRotate",
+                        dir          => $logdir,
+                        histories    => 7,
+                        prefix       => "memstat",
+                        period       => "daily",
+                      );
+
+$log_appender->layout($log_layout);
+$logfile_logger->add_appender($log_appender);
+$logfile_logger->level('INFO');
+
+#
+# Set up the logger specifically for Solaris::mdb, so it goes
+# to a file, with debug level data.
+#
+my $mdb_logfile_logger = Log::Log4perl::get_logger('Solaris::mdb');
+my $mdb_log_layout = Log::Log4perl::Layout::PatternLayout->new("%m%n");
+
+my $mdb_log_appender = Log::Log4perl::Appender->new(
+                        "Log::Dispatch::FileWriteRotate",
+                        dir          => $logdir,
+                        histories    => 7,
+                        prefix       => "Solaris::mdb",
+                        period       => "daily",
+                      );
+
+$mdb_log_appender->layout($mdb_log_layout);
+$mdb_logfile_logger->add_appender($mdb_log_appender);
+$mdb_logfile_logger->level('DEBUG');
+
+
+#
+# Now we're back to setting up this client
+#
+my $loop = IO::Async::Loop->new();
+
+$client_ctor_args{loop}           = $loop;
+$client_ctor_args{retry_interval} = 5;
+
+my $client = PA::AMQP::Client->new( %client_ctor_args );
+
+#my $memstat_capture =
+#  PA::Capture::mdb::memstat->new( client         => $client,
+#                                  stat_name      => 'memstat',
+#                               );
+my $kstats_to_collect =
+  [
+    [ qw( unix    0      system_pages) ],
+    [ qw( unix    0      dnlcstats) ],
+    [ qw( zfs     0      arcstats) ],
+  ];
+
+
+
+my $kstats = PA::Capture::kstat->new(
+  # TODO: Don't need loop if we've got client with loop within it
+  loop              => $loop,
+  client            => $client,
+  kstats_to_collect => $kstats_to_collect,
+);
+
+$logger->info( "AMQP SERVER: " . $client->amqp_server );
+$loop->run();
+
