@@ -21,7 +21,7 @@ use Net::Async::AMQP;
 use IO::Async::Loop;
 use Data::Dumper;
 use PA::AMQP::Client;
-use PA::Capture::mdb::memstat;
+#use PA::Capture::mdb::memstat;
 use PA::Capture::kstat;
 
 with 'MooseX::Log::Log4perl';
