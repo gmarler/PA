@@ -147,7 +147,19 @@ sub _build_mq {
       say "closed by remote";
       $self->is_connected(0);
       my $reconnected_f = $self->_try_connect()->get;
-    }
+    },
+    heartbeat_failure => sub {
+      my ($ev, $last) = @_;
+      say "Heartbeat failure detected";
+      #$self->is_connected(0);
+      #my $reconnected_f = $self->_try_connect()->get;
+    },
+    unexpected_frame => sub {
+      my ($ev, $type, $frame) = @_;
+      say "Unexpected frame type $type received: $frame";
+      #$self->is_connected(0);
+      #my $reconnected_f = $self->_try_connect()->get;
+    },
   );
 
   # IO::Async-ish method of registering for closure of connection to AMQP
