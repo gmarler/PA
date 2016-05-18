@@ -57,17 +57,56 @@ INSERT INTO data_table(entity_fk, timestamp, value) VALUES
 ,( 7,  '2016-04-05 13:25:04',           9)
              ;
 
-SELECT * FROM data_table;
+SELECT entity_fk, timestamp AT TIME ZONE 'America/New_York', value FROM data_table;
 
-WITH filled_timestamps AS (
-  SELECT timestamp FROM
-    generate_series('2016-04-05 13:00:00'::timestamptz,
-                    '2016-04-05 13:25:30'::timestamptz, '30 seconds')
-                  AS timestamp
+WITH
+ts_after_midnight AS (
+  SELECT timestamp FROM data_table
+  WHERE data_table.entity_fk = 7 AND
+        timestamp >= '2016-04-05 00:00:00'::timestamptz AT TIME ZONE 'America/New_York'
+  ORDER BY data_table.timestamp ASC
+  LIMIT 1
+),
+-- null_ts_after midnight
+null_ts_after_midnight AS (
+  SELECT entity_fk,
+         (ts_after_midnight.timestamp - interval '1 second') AS timestamp,
+         'NaN' AS value
+  FROM ts_after_midnight
+  LEFT JOIN data_table
+  ON entity_fk = 7
+  LIMIT 1
+),
+ts_before_midnight AS (
+  SELECT timestamp FROM data_table
+  WHERE data_table.entity_fk = 7 AND
+        timestamp <= '2016-04-05 23:59:59'::timestamptz AT TIME ZONE 'America/New_York'
+  ORDER BY data_table.timestamp DESC
+  LIMIT 1
+),
+-- null_ts_before midnight
+null_ts_before_midnight AS (
+  SELECT entity_fk,
+         (ts_before_midnight.timestamp + interval '1 second') AS timestamp,
+         'NaN' AS value
+  FROM ts_before_midnight
+  LEFT JOIN data_table
+  ON entity_fk = 7
+  LIMIT 1
+),
+real_ts AS (
+  SELECT entity_fk, timestamp, value
+  FROM data_table
+  WHERE data_table.entity_fk = 7
 )
-SELECT filled_timestamps.timestamp, 'NaN' AS non_value
-  FROM filled_timestamps
-  ORDER BY filled_timestamps.timestamp;
+SELECT entity_fk, timestamp AT TIME ZONE 'America/New_York', value
+  FROM null_ts_after_midnight
+  JOIN real_ts
+  ON null_ts_after_midnight.entity_fk = real_ts.entity_fk
+  ;
 
-SELECT entity_fk, timestamp, value, ntile(5) OVER (ORDER BY timestamp ASC)
-FROM data_table;
+-- SELECT entity_fk, timestamp, value, ntile(5) OVER (ORDER BY timestamp ASC)
+-- FROM data_table;
+SELECT entity_fk, timestamp AT TIME ZONE 'America/New_York', value FROM data_table
+  ORDER BY timestamp ASC
+  LIMIT 1;
