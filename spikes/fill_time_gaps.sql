@@ -101,9 +101,13 @@ real_ts AS (
 )
 SELECT entity_fk, timestamp, value::numeric
   FROM null_ts_after_midnight
-  UNION ALL
+  UNION
 SELECT entity_fk, timestamp, value::numeric
   FROM real_ts
+  UNION
+SELECT entity_fk, timestamp, value::numeric
+  FROM null_ts_before_midnight
+  ORDER BY timestamp ASC
   ;
 
 -- SELECT entity_fk, timestamp, value, ntile(5) OVER (ORDER BY timestamp ASC)
