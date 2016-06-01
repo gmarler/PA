@@ -71,7 +71,7 @@ ts_after_midnight AS (
 null_ts_after_midnight AS (
   SELECT entity_fk,
          (ts_after_midnight.timestamp - interval '1 second') AS timestamp,
-         'NaN' AS value
+         'NaN'::numeric AS value
   FROM ts_after_midnight
   LEFT JOIN data_table
   ON entity_fk = 7
@@ -88,7 +88,7 @@ ts_before_midnight AS (
 null_ts_before_midnight AS (
   SELECT entity_fk,
          (ts_before_midnight.timestamp + interval '1 second') AS timestamp,
-         'NaN' AS value
+         'NaN'::numeric AS value
   FROM ts_before_midnight
   LEFT JOIN data_table
   ON entity_fk = 7
@@ -99,10 +99,11 @@ real_ts AS (
   FROM data_table
   WHERE data_table.entity_fk = 7
 )
-SELECT entity_fk, timestamp AT TIME ZONE 'America/New_York', value
+SELECT entity_fk, timestamp, value::numeric
   FROM null_ts_after_midnight
-  JOIN real_ts
-  ON null_ts_after_midnight.entity_fk = real_ts.entity_fk
+  UNION ALL
+SELECT entity_fk, timestamp, value::numeric
+  FROM real_ts
   ;
 
 -- SELECT entity_fk, timestamp, value, ntile(5) OVER (ORDER BY timestamp ASC)
