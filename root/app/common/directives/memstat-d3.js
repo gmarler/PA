@@ -198,6 +198,7 @@
             HostService.getHostDateSubsystemMetric(
               function (response) {
                 vm.d3data = response;
+                vm.TZ     = HostService.getHostTimeZone();
                 HostService.data_pullable = false;
               },
               "memory", "memstat"
@@ -206,10 +207,9 @@
         }
       );
 
-      // whenever the bound 'd3data' expression changes, execute this
-      scope.$watch('vm.d3data', function (newd3data, oldd3data) {
-        // console.log("GOT NEW DATA!");
-
+      // whenever the bound 'TZ' timezone changes, execute this
+      scope.$watch('vm.TZ', function(newTZ, oldTZ) {
+        console.log('TIMEZONE UPDATED!');
         // This is the point at which we reformat the x-axis timestamp to display in the time
         // zone of the host where the data was collected.  This tickFormat() replaces that which
         // was set above where xAxis was defined.
@@ -218,6 +218,11 @@
           .tickFormat(function(d) {
             return moment(d).tz(hostTZ).format("MM-DD-YYYY HH:mm:ss");
           });
+      });
+
+      // whenever the bound 'd3data' expression changes, execute this
+      scope.$watch('vm.d3data', function (newd3data, oldd3data) {
+        // console.log("GOT NEW DATA!");
 
         $log.debug(vm);
         // Don't graph:
@@ -236,11 +241,10 @@
 
         newd3data.forEach(function(d) {
           // convert Epoch seconds timestamp into Epoch millisec timestamp so it can be converted
-          // into a Javascript Date object.
+          // into a Javascript Date object later.
           // WARNING: This will be in the local timezone of the browser you load this into!
+          // TODO: Now that we've moved to moment for this, do we really need to do this step anymore?
           d.timestamp = new Date((d.timestamp * 1000));
-
-          // console.log(d);
         });
 
         // Only run this the first time through - to create things like SVG groupings

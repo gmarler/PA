@@ -81,6 +81,7 @@
     }
 
     function setHostTimeZone(timezone) {
+      data_pullable = true;
       hostTimeZone = timezone;
     }
 
@@ -178,16 +179,7 @@
 
       function getHostDateSubsystemMetricComplete(response) {
         memstats = extract(response);
-        // Now we set the timestamps, which are in UTC, to the time zone the host resides in for
-        // display in D3
-        // var hostTZ = getHostTimeZone();
 
-        //_.each(memstats,function(element) {
-        //  console.log(element.timestamp);
-        //  // console.log(moment(element.timestamp).tz(hostTZ));
-        //  // Multiply by 1000 to convert from epoch seconds (in UTC) to epoch millisecs
-        //  // element.timestamp = moment(element.timestamp * 1000).tz(hostTZ);
-        //});
         // Now we pass the results into the callback
         callback(memstats);
         // return memstats;
