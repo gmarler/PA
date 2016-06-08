@@ -22,6 +22,7 @@
     HostService.getHostDateSubsystemMetric(
       function (result) {
         vm.d3data = result;
+        vm.TZ     = HostService.getHostTimeZone();
         HostService.data_pullable = false;
       },
       "memory", "memstat"
@@ -35,6 +36,7 @@
         HostService.getHostDateSubsystemMetric(
           function (result) {
             vm.d3data = result;
+            vm.TZ     = HostService.getHostTimeZone();
             HostService.data_pullable = false;
           },
           "memory", "memstat"
@@ -96,11 +98,17 @@
 
     var color = d3.scale.category20();
 
+    // NOTE: The tickFormat() is replaced in the code that watches for updates in d3data.
+    // TODO: find all the places where the tickFormat() needs to be adjusted, as there is
+    //       more than one.  The issue we see is that the timestamps are initially in the
+    //       TZ local to the browser where this is viewed, then later is updated to be
+    //       the TZ of the host where the data was originally collected.
     var xAxis = d3.svg.axis()
       .scale(xAxisScale)
       .orient("bottom")
       .ticks(20)
       .tickFormat(d3.time.format("%Y-%m-%d %X"));
+
 
     var yAxis = d3.svg.axis()
       .scale(yAxisScale)
@@ -129,7 +137,8 @@
       replace:          true,
       link:             link,
       scope:     {
-        d3data:     '='
+        d3data:     '=',
+        TZ:         '='
       },
       controller:        memstatD3Controller,
       controllerAs:     'vm',
@@ -200,6 +209,16 @@
       // whenever the bound 'd3data' expression changes, execute this
       scope.$watch('vm.d3data', function (newd3data, oldd3data) {
         // console.log("GOT NEW DATA!");
+
+        // This is the point at which we reformat the x-axis timestamp to display in the time
+        // zone of the host where the data was collected.  This tickFormat() replaces that which
+        // was set above where xAxis was defined.
+        var hostTZ = vm.TZ;
+        xAxis
+          .tickFormat(function(d) {
+            return moment(d).tz(hostTZ).format("MM-DD-YYYY HH:mm:ss");
+          });
+
         $log.debug(vm);
         // Don't graph:
         // - The Epoch timestamp
@@ -220,6 +239,7 @@
           // into a Javascript Date object.
           // WARNING: This will be in the local timezone of the browser you load this into!
           d.timestamp = new Date((d.timestamp * 1000));
+
           // console.log(d);
         });
 
