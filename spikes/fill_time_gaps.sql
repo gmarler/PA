@@ -40,6 +40,13 @@ SELECT timestamp, anon_pct_of_total FROM memstat
   LIMIT 10;
 
 WITH
+real_ts AS (
+  SELECT host_fk, timestamp, anon_pct_of_total
+  FROM memstat
+  WHERE (memstat.host_fk = 5) AND
+        (timestamp BETWEEN ('2016-06-07 00:00:00'::timestamptz AT TIME ZONE 'Europe/London')
+                       AND ('2016-06-07 23:59:59'::timestamptz AT TIME ZONE 'Europe/London'))
+),
 ts_after_midnight AS (
   SELECT timestamp FROM memstat
   WHERE memstat.host_fk = 5 AND
@@ -73,11 +80,6 @@ null_ts_before_midnight AS (
   LEFT JOIN memstat
   ON host_fk = 5
   LIMIT 1
-),
-real_ts AS (
-  SELECT host_fk, timestamp, anon_pct_of_total
-  FROM memstat
-  WHERE memstat.host_fk = 7
 )
 SELECT host_fk, timestamp, anon_pct_of_total::numeric
   FROM null_ts_after_midnight
