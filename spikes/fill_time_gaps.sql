@@ -33,6 +33,67 @@
 --     LEFT OUTER JOIN kbytes ON kbytes.timestamp = filled_timestamps.time
 --   ORDER BY filled_timestamps.time;
 
+-- Test for host P315 in UK
+SELECT timestamp, anon_pct_of_total FROM memstat
+  WHERE (host_fk = 5) AND (DATE(timestamp AT TIME ZONE 'Europe/London') = '2016-06-07')
+  ORDER BY timestamp ASC
+  LIMIT 10;
+
+WITH
+real_ts AS (
+  SELECT host_fk, timestamp, anon_pct_of_total
+  FROM memstat
+  WHERE (memstat.host_fk = 5) AND
+        (timestamp BETWEEN ('2016-06-07 00:00:00'::timestamptz AT TIME ZONE 'Europe/London')
+                       AND ('2016-06-07 23:59:59'::timestamptz AT TIME ZONE 'Europe/London'))
+),
+ts_after_midnight AS (
+  SELECT timestamp FROM memstat
+  WHERE memstat.host_fk = 5 AND
+        timestamp >= '2016-06-07 00:00:00'::timestamptz AT TIME ZONE 'Europe/London'
+  ORDER BY memstat.timestamp ASC
+  LIMIT 1
+),
+-- null_ts_after midnight
+null_ts_after_midnight AS (
+  SELECT host_fk,
+         (ts_after_midnight.timestamp - interval '1 second') AS timestamp,
+         'NaN'::numeric AS anon_pct_of_total
+  FROM ts_after_midnight
+  LEFT JOIN memstat
+  ON host_fk = 5
+  LIMIT 1
+),
+ts_before_midnight AS (
+  SELECT timestamp FROM memstat
+  WHERE memstat.host_fk = 5 AND
+        timestamp <= '2016-06-07 23:59:59'::timestamptz AT TIME ZONE 'Europe/London'
+  ORDER BY memstat.timestamp DESC
+  LIMIT 1
+),
+-- null_ts_before midnight
+null_ts_before_midnight AS (
+  SELECT host_fk,
+         (ts_before_midnight.timestamp + interval '1 second') AS timestamp,
+         'NaN'::numeric AS anon_pct_of_total
+  FROM ts_before_midnight
+  LEFT JOIN memstat
+  ON host_fk = 5
+  LIMIT 1
+)
+SELECT host_fk, timestamp, anon_pct_of_total::numeric
+  FROM null_ts_after_midnight
+  UNION
+SELECT host_fk, timestamp, anon_pct_of_total::numeric
+  FROM real_ts
+  UNION
+SELECT host_fk, timestamp, anon_pct_of_total::numeric
+  FROM null_ts_before_midnight
+  ORDER BY timestamp ASC
+  ;
+
+
+
 DROP SCHEMA tmp CASCADE;
 CREATE SCHEMA tmp ;
 SET search_path = tmp;
@@ -115,3 +176,6 @@ SELECT entity_fk, timestamp, value::numeric
 SELECT entity_fk, timestamp AT TIME ZONE 'America/New_York', value FROM data_table
   ORDER BY timestamp ASC
   LIMIT 1;
+
+
+
