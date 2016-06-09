@@ -102,3 +102,8 @@
   stroke:       darkgrey;
   stroke-width: 1px;
 }
+
+/* Specific to rendering data gaps (or do we use this anyway?) */
+.line-undefined {
+  stroke-dasharray: 3px 3px;
+}

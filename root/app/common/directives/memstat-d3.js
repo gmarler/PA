@@ -457,6 +457,46 @@
       }
 
       scope.$on('vm.windowResize',resize);
+
+
+      var findCriticalPairs = function(data) {
+        // Store property `critical` on points before and after a series of points.
+        var inUndefinedSeries = false;
+        var criticalValues = [];
+        var criticalPairs = [];
+
+        _.each(data, function(e, i) {
+          // WARNING: careful here - 0 could be true.  Testing for is NaN or defined-ness is
+          // probably more useful here.
+          if (isNaN(e.value)) {
+            // If this is the first item in an undefined series, add the previous
+            // item to the critical values array.
+            if (!inUndefinedSeries) {
+              inUndefinedSeries = true;
+              data[i - 1].critical = true;
+              criticalValues.push(data[i - 1]);
+            }
+          } else if (inUndefinedSeries) {
+            // When we reach the end of an undefined series, add the current item
+            // to the critical values array.
+            inUndefinedSeries = false;
+            data[i].critical = true;
+            criticalValues.push(data[i]);
+          }
+
+          // Coerce numbers
+          e.timestamp = +e.timestamp;
+          e.value     = +e.value;
+        });
+
+        // These pairs will be used to generate sections of undefined values
+        for (var i = 0; i < criticalValues.length; i++) {
+          if (criticalValues[i].critical && i % 2 === 0) {
+            criticalPairs.push([criticalValues[i], criticalValues[i + 1]]);
+          }
+        }
+        return criticalPairs;
+      };
     }
   }
 
