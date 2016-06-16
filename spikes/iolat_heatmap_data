@@ -119,7 +119,7 @@ $timer = IO::Async::Timer::Periodic->new(
    on_tick => sub {
      $iterations++;
      say "on_tick ITERATION: $iterations";
-     my $data_aref = [];
+     my $data_href = {};
      $dtc->aggwalk(
        sub {
          #say "agg_walk CALLBACK ITERATION: $iterations";
@@ -128,7 +128,9 @@ $timer = IO::Async::Timer::Periodic->new(
 
          #say "VARID: $varid";
          #say "KEY:   " . Data::Dumper::Dumper( $key );
-         push @$data_aref, { $key => $val };
+         my $fstype = $key->[1];
+         my $fsop   = $key->[0];
+         $data_href->{$fstype}->{$fsop} = $val;
          if ($iterations > 30) {
            # Stop the timer
            #$loop->remove( $timer );
@@ -138,7 +140,7 @@ $timer = IO::Async::Timer::Periodic->new(
          # diag Dumper( $rec );
        }
      );
-     say $encoder->encode( $data_aref );
+     say $encoder->encode( $data_href );
    },
 );
 
