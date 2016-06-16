@@ -1,0 +1,149 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.22;
+
+use Data::Dumper;
+use IO::Async::Timer::Periodic;
+use IO::Async::Loop;
+use DTrace::Consumer;
+use JSON::MaybeXS              qw(decode_json encode_json);
+
+my $dtc = DTrace::Consumer->new();
+
+$dtc->setopt("aggsize","2m");
+$dtc->setopt("aggrate","189Hz");
+$dtc->setopt("cleanrate","181Hz");
+
+my $prog = q\
+this string fstype;
+
+fbt::fop_read:entry,
+fbt::fop_write:entry,
+fbt::fop_ioctl:entry,
+fbt::fop_access:entry,
+fbt::fop_getattr:entry,
+fbt::fop_setattr:entry,
+fbt::fop_lookup:entry,
+fbt::fop_create:entry,
+fbt::fop_remove:entry,
+fbt::fop_link:entry,
+fbt::fop_rename:entry,
+fbt::fop_mkdir:entry,
+fbt::fop_rmdir:entry,
+fbt::fop_readdir:entry,
+fbt::fop_symlink:entry,
+fbt::fop_readlink:entry,
+fbt::fop_fsync:entry,
+fbt::fop_getpage:entry,
+fbt::fop_putpage:entry,
+fbt::fop_map:entry,
+fbt::fop_open:entry
+/((self->vnode0 == NULL))/{
+	self->vnode0 = arg0;
+	self->depth0 = stackdepth;
+	self->latency0 = timestamp;
+}
+
+fbt::fop_open:return
+/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof((*((vnode_t**)self->vnode0))->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "dev" || this->fstype == "dev fs" || this->fstype == "proc" || this->fstype == "lofs" || this->fstype == "tmpfs" || this->fstype == "nfs")))/{
+	@[((probefunc + 4)),this->fstype] = llquantize((timestamp - self->latency0), 10, 3, 11, 100);
+}
+
+fbt::fop_read:return,
+fbt::fop_write:return,
+fbt::fop_ioctl:return,
+fbt::fop_access:return,
+fbt::fop_getattr:return,
+fbt::fop_setattr:return,
+fbt::fop_lookup:return,
+fbt::fop_create:return,
+fbt::fop_remove:return,
+fbt::fop_link:return,
+fbt::fop_rename:return,
+fbt::fop_mkdir:return,
+fbt::fop_rmdir:return,
+fbt::fop_readdir:return,
+fbt::fop_symlink:return,
+fbt::fop_readlink:return,
+fbt::fop_fsync:return,
+fbt::fop_getpage:return,
+fbt::fop_putpage:return,
+fbt::fop_map:return
+/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof(((vnode_t*)self->vnode0)->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "dev" || this->fstype == "dev fs" || this->fstype == "proc" || this->fstype == "lofs" || this->fstype == "tmpfs" || this->fstype == "nfs")))/{
+	@[((probefunc + 4)),this->fstype] = llquantize((timestamp - self->latency0), 10, 3, 11, 100);
+}
+
+fbt::fop_read:return,
+fbt::fop_write:return,
+fbt::fop_ioctl:return,
+fbt::fop_access:return,
+fbt::fop_getattr:return,
+fbt::fop_setattr:return,
+fbt::fop_lookup:return,
+fbt::fop_create:return,
+fbt::fop_remove:return,
+fbt::fop_link:return,
+fbt::fop_rename:return,
+fbt::fop_mkdir:return,
+fbt::fop_rmdir:return,
+fbt::fop_readdir:return,
+fbt::fop_symlink:return,
+fbt::fop_readlink:return,
+fbt::fop_fsync:return,
+fbt::fop_getpage:return,
+fbt::fop_putpage:return,
+fbt::fop_map:return,
+fbt::fop_open:entry
+/((self->depth0 == stackdepth))/{
+	(self->vnode0) = 0;
+	(self->depth0) = 0;
+	(self->latency0) = 0;
+}
+
+\;
+
+$dtc->strcompile($prog);
+
+$dtc->go();
+
+my $encoder = JSON::MaybeXS->new->ascii;
+my $loop = IO::Async::Loop->new;
+
+my $iterations;
+my $timer;
+$timer = IO::Async::Timer::Periodic->new(
+   interval => 1,
+
+   on_tick => sub {
+     $iterations++;
+     say "on_tick ITERATION: $iterations";
+     my $data_aref = [];
+     $dtc->aggwalk(
+       sub {
+         #say "agg_walk CALLBACK ITERATION: $iterations";
+         #say Data::Dumper::Dumper( \@_ );
+         my ($varid, $key, $val) = @_;
+
+         #say "VARID: $varid";
+         #say "KEY:   " . Data::Dumper::Dumper( $key );
+         push @$data_aref, { $key => $val };
+         if ($iterations > 30) {
+           # Stop the timer
+           #$loop->remove( $timer );
+           $dtc->stop();
+           $loop->loop_stop();
+         }
+         # diag Dumper( $rec );
+       }
+     );
+     say $encoder->encode( $data_aref );
+   },
+);
+
+$timer->start;
+
+$loop->add( $timer );
+
+$loop->run;
