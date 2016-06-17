@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>D3 FS Operations Heatmap Spike</title>
+</head>
+
+<style>
+  body {
+    font:    10px sans-serif;
+  }
+
+  .label {
+    font-weight: bold;
+  }
+
+  .tile {
+    shape-rendering: crispEdges;
+  }
+
+  .axis path,
+  .axis line {
+    fill:            none;
+    stroke:          #000;
+    shape-rendering: crispEdges;
+  }
+</style>
+<body>
+
+<script src="../../bower_components/d3/d3.min.js"></script>
+<script src="../../bower_components/lodash/lodash.min.js"></script>
+<script src="../../bower_components/moment/moment.js"></script>
+
+<script>
+
+var margin = {
+  top:    20,
+  right:  90,
+  bottom: 30,
+  left:   50
+};
+
+var width  = 960 - margin.left - margin.right;
+var height = 700 - margin.top  - margin.bottom;
+
+d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
+  if (error) return console.warn(error);
+//  d3.select("#chart")
+//      .datum(data)
+//      .call(flamegraph);
+});
+
+</script>
+
+</body>
+</html>
