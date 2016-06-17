@@ -8,6 +8,7 @@ use Data::Dumper;
 use IO::Async::Timer::Periodic;
 use IO::Async::Loop;
 use DTrace::Consumer;
+use DateTime;
 use JSON::MaybeXS              qw(decode_json encode_json);
 
 my $dtc = DTrace::Consumer->new();
@@ -118,29 +119,37 @@ $timer = IO::Async::Timer::Periodic->new(
 
    on_tick => sub {
      $iterations++;
-     say "on_tick ITERATION: $iterations";
-     my $data_href = {};
+     # say "on_tick ITERATION: $iterations";
+     my $agg = {};
+
      $dtc->aggwalk(
        sub {
-         #say "agg_walk CALLBACK ITERATION: $iterations";
-         #say Data::Dumper::Dumper( \@_ );
-         my ($varid, $key, $val) = @_;
+         my ($id, $key, $val) = @_;
 
-         #say "VARID: $varid";
-         #say "KEY:   " . Data::Dumper::Dumper( $key );
-         my $fstype = $key->[1];
-         my $fsop   = $key->[0];
-         $data_href->{$fstype}->{$fsop} = $val;
+         if (not exists( $agg->{$id} ) ) {
+           $agg->{$id} = {};
+         }
+
+         my $merged_key = join ':', @$key;
+         $agg->{$id}->{$merged_key} = $val;
+
          if ($iterations > 30) {
            # Stop the timer
            #$loop->remove( $timer );
            $dtc->stop();
            $loop->loop_stop();
          }
-         # diag Dumper( $rec );
        }
      );
-     say $encoder->encode( $data_href );
+
+     my %reduced_agg;
+     $reduced_agg{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+     $reduced_agg{interval_data}  = [ ];
+     foreach my $aggid (keys %$agg) {
+       push @{$reduced_agg{interval_data}}, $agg->{$aggid};
+     }
+
+     say $encoder->encode( \%reduced_agg );
    },
 );
 
