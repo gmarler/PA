@@ -43,6 +43,28 @@ var margin = {
 var width  = 960 - margin.left - margin.right;
 var height = 700 - margin.top  - margin.bottom;
 
+var xAxisScale = d3.time.scale().range([0, width]);
+var yAxisScale = d3.scale.linear().range([height,0]);
+var colorScale = d3.scale.linear().range(["white", "steelblue"]);
+
+// Size of the buckets (constant for now, with test data)
+var xStep = 31;
+var yStep = 900;
+
+
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var xAxis = d3.svg.axis()
+    .scale(xAxisScale)
+    .orient("bottom")
+    .ticks(20)
+    .tickFormat(d3.time.format("%Y-%m-%d %X"));
+
 d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   if (error) return console.warn(error);
   // Data is in form:
@@ -67,14 +89,40 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   // So that's a possible range of 9 orders of magnitude, with 100 steps each, so our heatmap
   // could be, at most, 900 rectangles tall per time interval.
   //
-  var ts = data.forEach(function(interval) {
-    console.log(interval.timestamp);
+  var intervals = [];
+  data.forEach(function(interval) {
+    var itimestamp = interval.timestamp;
     var interval_data = interval.interval_data;
-    interval_data.forEach(function(hash) {
-      // How to get key for each element?
-      console.log(fsop_fstype);
+    var current_interval = {};
+    interval_data.forEach(function(fsop_fstype_data) {
+      Object.keys(fsop_fstype_data).forEach(function(key) {
+        // key is the fsop:fstype
+        // console.log(key);
+        // The value is an array of latency ranges, each composed of a start/end range, and a count
+        // We will eventually determine which fsop/fstype we care about, and only aggregate those
+        // Data Extent:
+        // minimum latency among all timestamps being considered
+        // maximum latency among all timestamps being considered
+        // Based on the llquantize() parameters above, this will give us an extent of (even if the
+        // data is sparse, which it always should be) max exponent - min exponent * 100
+        // To begin, we'll just use 9 * 100 as a constant
+        fsop_fstype_data[key].forEach(function(lat_array) {
+          // new_key: [ low bound, upper bound ]
+          // WARNING: This converts into a string "lower,upper", so we may have to deal with this
+          var new_key = lat_array[0];
+          // new_val: count
+          var new_val = lat_array[1];
+          if (new_key in current_interval) {
+            current_interval[new_key] += new_val;
+          } else {
+            current_interval[new_key] = new_val;
+          }
+        });
+      });
     });
+    intervals.push({ timestamp: new Date(itimestamp * 1000), data: current_interval });
   });
+  console.log(intervals);
 //  d3.select("#chart")
 //      .datum(data)
 //      .call(flamegraph);
