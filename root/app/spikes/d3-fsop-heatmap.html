@@ -107,15 +107,15 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
         // data is sparse, which it always should be) max exponent - min exponent * 100
         // To begin, we'll just use 9 * 100 as a constant
         fsop_fstype_data[key].forEach(function(lat_array) {
-          // new_key: [ low bound, upper bound ]
-          // WARNING: This converts into a string "lower,upper", so we may have to deal with this
-          var new_key = lat_array[0];
+          // new_key: low_bound part of [ low_bound, upper_bound ]
+          //
+          var new_key = lat_array[0][0];
           // new_val: count
           var new_val = lat_array[1];
           if (new_key in current_interval) {
-            current_interval[new_key] += new_val;
+            current_interval[new_key][1] += new_val;
           } else {
-            current_interval[new_key] = new_val;
+            current_interval[new_key] = [ lat_array[0], new_val ];
           }
         });
       });
