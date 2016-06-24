@@ -213,17 +213,17 @@ sub raw {
     $frame =~ s/(::.*)[(<].*/$1/;
     $frame = "-" if $frame eq "";
 
-    if ($frame !~ m/^(\S+)`(\S+)$/) {
+    if ($frame !~ m/^((\S+)`(\S+)|0x[0-9a-f]+)$/) {
       say "UNKNOWN LINE: $frame";
       next;
     }
 
     if ($profile->stack_is_open()) {
-        say "Sending to profile addFrame with: ($frame, undef)";
-        $profile->addFrame($frame, undef);
+      #say "Sending to profile addFrame with: ($frame, undef)";
+      $profile->addFrame($frame, undef);
     } else {
       $profile->openStack('kernel');
-      say "Sending to profile addFrame with: ($frame, undef)";
+      #say "Sending to profile addFrame with: ($frame, undef)";
       $profile->addFrame($frame, undef);
     }
 
