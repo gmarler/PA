@@ -16,22 +16,27 @@
 
 
 <script type="text/javascript">
-  var flamegraph = d3.flameGraph()
+  var flamegraph1 = d3.flameGraph()
       .width(1900)
-      .height(512);
+      .height(512)
+      .title("Perl Stack Collapse");
+  var flamegraph2 = d3.flameGraph()
+      .width(1900)
+      .height(512)
+      .title("Node.JS Stack Collapse");
 
   //d3.json("stacks-kernel.json", function(error, data) {
   d3.json("stacks-x86.json", function(error, data) {
     if (error) return console.warn(error);
     d3.select("#chart_perl")
         .datum(data)
-        .call(flamegraph);
+        .call(flamegraph1);
   });
-  d3.json("stacks-x86.json", function(error, data) {
+  d3.json("stacks-x86-node.json", function(error, data) {
     if (error) return console.warn(error);
     d3.select("#chart_node")
         .datum(data)
-        .call(flamegraph);
+        .call(flamegraph2);
   });
 
 </script>
