@@ -6,7 +6,8 @@
 </head>
 <body>
 
-<div id="chart"></div>
+<div id="chart_perl"></div>
+<div id="chart_node"></div>
 
 <script type="text/javascript" src="../../bower_components/d3/d3.js"></script>
 <script type="text/javascript" src="../../bower_components/d3-tip/index.js"></script>
@@ -16,15 +17,23 @@
 
 <script type="text/javascript">
   var flamegraph = d3.flameGraph()
-      .width(960)
-      .height(540);
+      .width(1900)
+      .height(512);
 
-  d3.json("stacks-kernel.json", function(error, data) {
+  //d3.json("stacks-kernel.json", function(error, data) {
+  d3.json("stacks-x86.json", function(error, data) {
     if (error) return console.warn(error);
-    d3.select("#chart")
+    d3.select("#chart_perl")
         .datum(data)
         .call(flamegraph);
   });
+  d3.json("stacks-x86.json", function(error, data) {
+    if (error) return console.warn(error);
+    d3.select("#chart_node")
+        .datum(data)
+        .call(flamegraph);
+  });
+
 </script>
 
 
