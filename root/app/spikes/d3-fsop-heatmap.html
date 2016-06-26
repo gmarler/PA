@@ -123,11 +123,146 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
     intervals.push({ timestamp: new Date(itimestamp * 1000), data: current_interval });
   });
   console.log(intervals);
+
+  var bucketized = bucketize(intervals[0].data, {nbuckets: 90});
+
+  console.log(bucketized);
 //  d3.select("#chart")
 //      .datum(data)
 //      .call(flamegraph);
 });
 
+
+
+  function bucketize(dataIntervals, conf) {
+    // REQUIRED
+    var nbuckets = conf.nbuckets;
+
+    // OPTIONAL
+    var min = conf.hasOwnProperty('min') ? conf.min : 0;
+    var max = conf.hasOwnProperty('mzx') ? conf.max : 0;
+
+    var i, j, k;
+
+    var low, high;
+    var lowfilled, highfilled;
+
+    // Assume data passed in for interval is an Array, rather than an Object
+    if (max === 0 ) {
+      //
+      // If the max has not been specified, iterate over the data to determine the maximum value, then use
+      // that to determined the preferred maximum for bucketization.
+
+      for (i = 0; i < dataIntervals.length; i++) {
+        for (j = 0; j < dataIntervals[i].length; j++) {
+          if (dataIntervals[i][j][0][1] > max) {
+            max = dataIntervals[i][j][0][1] + 1;  // One greater than
+          }
+        }
+      }
+
+      // At this point, the max of all data has been determined.
+      // To prevent small changes in the data from causing large swings
+      // in the maximum, we compute an autoscale for the max, rather than
+      // just using the max as the max bucket.
+      // We then reflect this in the conf Object.
+      conf.max = max = autoscale(max);
+    }
+
+
+    var size = (max - min) / nbuckets;
+    var rval = [];
+
+    for (i = 0; i < dataIntervals.length; i++) {
+      var buckets = new Array(nbuckets);
+      var datum = dataIntervals[i];
+
+      for (j = 0; j < buckets.length; j++)
+        buckets[j] = 0;
+
+      for (j = 0; j < datum.length; j++) {
+        var range = datum[j][0];
+        var val   = datum[j][1];
+        var u;
+
+        if (range[0] >= max || range[1] < min)
+            continue;
+
+        if (conf.weighbyrange)
+            val *= range[0] + ((range[1] - range[0]) / 2);
+
+        // Begin by normalizing our range to our buckets, expressing this in
+        // terms of multiple of buckets.
+        low   = (range[0] - min) / size;
+        high  = ((range[1] + 1) - min) / size;
+
+        lowfilled  = Math.floor(low) + 1;
+        highfilled = Math.floor(high);
+
+        if (highfilled < lowfilled) {
+          // We can't even fill a single bucket.  The entire value assignment
+          // goes to a single bucket - the one corresponding to both the high
+          // and low bucket.
+          buckets[highfilled] += val;
+          continue;
+        }
+
+        // Determine the amount of value that corresponds to one filled bucket
+        // If we do not fill an entire bucket, this may actually exceed our value
+        u = (1 / (high - low)) * val;
+
+        // Clamp the low and high to the bucket range
+        if (low < 0)
+            low = 0;
+
+        if (high >= nbuckets)
+            high = nbuckets - 1;
+
+        if (highfilled > nbuckets)
+            highfilled = nbuckets;
+
+        // If low is lower than our lowest filled bucket, add in the proper
+        // portion of our value to the partially filled bucket.
+        if (low < lowfilled && lowfilled > 0)
+            buckets[lowfilled - 1] += (lowfilled - low) * u;
+      }
+    }
+  }
+
+  function autoscale(max) {
+    // Start with the power of 10 that is greater than the given maximum.
+    //
+    // Then divide down (alterately by 5 and 2) until a value is reached such
+    // that the lowest multiple of that value greater than the max is no more
+    // than 25% greater.
+
+    // This assures that even if the max fluctuates the autoscaling remains
+    // stable; but it remains close enough to the original max that not many
+    // buckets will be empty at the top of the range.
+    //
+    var pow = Math.floor(Math.log(max) / Math.log(10)) + 1,
+        i;
+    var round = 1;
+    var ceiling = 1.25 * max;
+    var divisors = [ ];
+
+    for (i = 0; i < pow; i++) {
+      divisors.push(5);
+      divisors.push(2);
+      round *= 10;
+    }
+
+    for (i = 0; i < divisors.length; i++) {
+      var scaled = (Math.floor(max / round) + 1) * round;
+
+      if (scaled < ceiling)
+          return(scaled);
+
+      round /= divisors[i];
+    }
+
+    return(max);
+  }
 </script>
 
 </body>
