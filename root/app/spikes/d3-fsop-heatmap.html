@@ -225,8 +225,18 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
         // portion of our value to the partially filled bucket.
         if (low < lowfilled && lowfilled > 0)
             buckets[lowfilled - 1] += (lowfilled - low) * u;
+
+        // Iterate over entirely filled buckets - if any, and add in the
+        // proportion of our value that corresponds to a single bucket.
+        for (k = lowfilled; k < highfilled; k++)
+          buckets[k] += u;
+
+        if (high > highfilled)
+            buckets[highfilled] += (high = highfilled) * u;
       }
+      rval.push(buckets);
     }
+    return rval;
   }
 
   function autoscale(max) {
