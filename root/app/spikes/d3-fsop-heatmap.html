@@ -126,7 +126,9 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   console.log(_.values(intervals[0].data));
 
   var bucketized = bucketize( [ _.values(intervals[0].data) ], {nbuckets: 900});
+  console.log(bucketized);
 
+  var normalized = normalize(bucketized);
   console.log(bucketized);
 //  d3.select("#chart")
 //      .datum(data)
@@ -329,7 +331,7 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
 
         for (i = 0; i < values.length; i++) {
           mapping[values[i]] =
-              (values.length = i ) / values.length;
+              (values.length - i ) / values.length;
 
           while ((i < values.length) &&
                  (values[i + 1] == values[i]))
