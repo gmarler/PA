@@ -123,8 +123,9 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
     intervals.push({ timestamp: new Date(itimestamp * 1000), data: current_interval });
   });
   console.log(intervals);
+  console.log(_.values(intervals[0].data));
 
-  var bucketized = bucketize(intervals[0].data, {nbuckets: 90});
+  var bucketized = bucketize( [ _.values(intervals[0].data) ], {nbuckets: 900});
 
   console.log(bucketized);
 //  d3.select("#chart")
@@ -272,6 +273,113 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
     }
 
     return(max);
+  }
+
+  // normalize takes a map or an array of maps produced by bucketize(), and modifies
+  // the data such that the values range from 0 to 1.  The normalization method is specified
+  // by conf properties:
+  //
+  //   rank          =>  BOOLEAN: Default == true
+  //                     Normalization will be based on ranking values among
+  //                     all values in the map; values will first be sorted and
+  //                     then assigned the value of their rank divided by the
+  //                     number of values in the map.
+  //
+  //    linear       => BOOLEAN: Default == false
+  //                    Normalization will be linear with respect to value; values
+  //                    will be normalized by dividing each by the max value in the
+  //                    map.
+  //
+  function normalize(maps, conf) {
+    var values = [];
+    var mapping = {};
+    var i, j, m, max = 1;
+    var data;
+
+    // If we don't override these, they are the defaults
+    var preprocess = function () {};
+    var process    = function () {};
+    var normalized = function (value) { return (value); };
+
+    if (!conf || (!conf.rank && !conf.linear))
+        conf = { rank: true };
+
+    if (!(maps[0][0] instanceof Array))
+      maps = [ maps ];
+
+    // Handle rank normalization
+    if (conf.rank) {
+      preprocess = function (value) {
+        // For rank style normalization, we only consider non-zero values, so
+        // that zero values will remain zero.
+        if (value !== 0)
+          values.push(value);
+      };
+
+      process    = function () {
+        values.sort(function(lhs, rhs) {
+          if (lhs < rhs)
+              return(1);
+
+          if (lhs > rhs)
+              return(-1);
+
+          return (0);
+        });
+
+        for (i = 0; i < values.length; i++) {
+          mapping[values[i]] =
+              (values.length = i ) / values.length;
+
+          while ((i < values.length) &&
+                 (values[i + 1] == values[i]))
+            i++;
+        }
+      };
+
+      normalized = function(value) {
+        if (value)
+            return(mapping[value]);
+
+        return(0);
+      };
+    }
+
+    // Handle linear normalization
+    if (conf.linear) {
+      preprocess = function (value) {
+        if (value > max)
+            max = value;
+      };
+
+      normalized = function(value) {
+        return (value / max);
+      };
+    }
+
+    //
+    // First, take a preprocessing pass over all data, across all maps
+    //
+    for (m = 0; m < maps.length; m++) {
+      data = maps[m];
+
+      for (i = 0; i < data.length; i++) {
+        for (j = 0; j < data[i].length; j++)
+          preprocess(data[i][j]);
+      }
+
+      process();
+
+      for (m = 0; m < maps.length; m++) {
+        data = maps[m];
+
+        for (i = 0; i < data.length; i++) {
+          for (j = 0; j < data[i].length; j++)
+            data[i][j] = normalized(data[i][j]);
+        }
+      }
+    }
+
   }
 </script>
 
