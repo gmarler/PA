@@ -125,11 +125,19 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   console.log(intervals);
   console.log(_.values(intervals[0].data));
 
-  var bucketized = bucketize( [ _.values(intervals[0].data) ], {nbuckets: 900});
+  var samples = [];
+  intervals.forEach(function(item) {
+    samples.push(_.values(item.data));
+  });
+  console.log("SAMPLES:", samples);
+
+  var bucketized = bucketize( samples, {nbuckets: 100});
   console.log(bucketized);
 
   var normalized = normalize(bucketized);
   console.log(bucketized);
+
+
 //  d3.select("#chart")
 //      .datum(data)
 //      .call(flamegraph);
