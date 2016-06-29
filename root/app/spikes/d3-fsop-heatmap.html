@@ -44,13 +44,15 @@ var width  = 960 - margin.left - margin.right;
 var height = 700 - margin.top  - margin.bottom;
 
 var xAxisScale = d3.time.scale().range([0, width]);
+
 var yAxisScale = d3.scale.linear().range([height,0]);
+
 var colorScale = d3.scale.linear().range(["white", "steelblue"]);
 
 
 // Size of the buckets (constant for now, with test data)
 var xStep = 31;
-var yStep = 900;
+var yStep = 100;
 
 
 
@@ -153,9 +155,25 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
 
   console.log(normalized_samples);
 
-  xAxisScale.domain([normalized_samples[0].timestamp,normalized_samples[normalized_samples.length - 1].timestamp]);
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  // xAxisScale.domain([normalized_samples[0].timestamp,normalized_samples[normalized_samples.length - 1].timestamp]);
+  xAxisScale.domain(data.map(function(d) { // console.log("TIMESTAMP:", d.timestamp);
+                                           return Date(d.timestamp * 1000); }));
+  console.log("xAxisScale DOMAIN",data.map(function(d) {
+    return Date(d.timestamp * 1000); }));
   yAxisScale.domain([0,normalized_samples[0].sample.length]);
   colorScale.domain([0,1]);
+
+  var timestamps = svg.selectAll(".timestamp")
+      .data(data)
+      .enter().append("g")
+      .attr("class","g")
+      .attr("transform", function(d) { console.log("TRANSFORM: ", Date(d.timestamp * 1000));
+                                       return "translate(" + xAxisScale(Date(d.timestamp * 1000)) + ",0)"});
 
   svg.selectAll(".tile")
       .data(normalized_samples)
