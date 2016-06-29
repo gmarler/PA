@@ -47,6 +47,7 @@ var xAxisScale = d3.time.scale().range([0, width]);
 var yAxisScale = d3.scale.linear().range([height,0]);
 var colorScale = d3.scale.linear().range(["white", "steelblue"]);
 
+
 // Size of the buckets (constant for now, with test data)
 var xStep = 31;
 var yStep = 900;
@@ -152,7 +153,17 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
 
   console.log(normalized_samples);
 
+  xAxisScale.domain([normalized_samples[0].timestamp,normalized_samples[normalized_samples.length - 1].timestamp]);
+  yAxisScale.domain([0,normalized_samples[0].sample.length]);
+  colorScale.domain([0,1]);
 
+  svg.selectAll(".tile")
+      .data(normalized_samples)
+      .enter()
+      .append("rect")
+      .attr("class", "tile")
+      .attr("x", function(d) { return xAxisScale(d.timestamp); })
+      .attr("y", function(d) { return yAxisScale()})
 
 //  d3.select("#chart")
 //      .datum(data)
