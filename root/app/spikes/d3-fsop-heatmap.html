@@ -134,8 +134,24 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   var bucketized = bucketize( samples, {nbuckets: 100});
   console.log(bucketized);
 
-  var normalized = normalize(bucketized);
+  normalize(bucketized);
   console.log(bucketized);
+
+  var normalized_samples = [ ];
+
+  intervals.forEach(
+      function(object,index) {
+        var tmp_object = {
+          timestamp: object.timestamp,
+          sample:    bucketized[index]
+        };
+        // console.log(tmp_object);
+        normalized_samples.push(tmp_object);
+      }
+  );
+
+  console.log(normalized_samples);
+
 
 
 //  d3.select("#chart")
