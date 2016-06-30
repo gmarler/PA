@@ -161,10 +161,9 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
       .call(xAxis);
 
   // xAxisScale.domain([normalized_samples[0].timestamp,normalized_samples[normalized_samples.length - 1].timestamp]);
-  xAxisScale.domain(data.map(function(d) { // console.log("TIMESTAMP:", d.timestamp);
-                                           return Date(d.timestamp * 1000); }));
+  xAxisScale.domain(d3.extent(data.map(function(d) {return new Date(d.timestamp * 1000); })));
   console.log("xAxisScale DOMAIN",data.map(function(d) {
-    return Date(d.timestamp * 1000); }));
+    return new Date(d.timestamp * 1000); }));
   yAxisScale.domain([0,normalized_samples[0].sample.length]);
   colorScale.domain([0,1]);
 
@@ -172,8 +171,8 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
       .data(data)
       .enter().append("g")
       .attr("class","g")
-      .attr("transform", function(d) { console.log("TRANSFORM: ", Date(d.timestamp * 1000));
-                                       return "translate(" + xAxisScale(Date(d.timestamp * 1000)) + ",0)"});
+      .attr("transform", function(d) { console.log("TRANSFORM: ", new Date(d.timestamp * 1000));
+                                       return "translate(" + xAxisScale(new Date(d.timestamp * 1000)) + ",0)"});
 
   svg.selectAll(".tile")
       .data(normalized_samples)
