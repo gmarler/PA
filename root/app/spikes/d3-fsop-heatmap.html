@@ -30,31 +30,27 @@
 <script src="../../bower_components/d3/d3.min.js"></script>
 <script src="../../bower_components/lodash/lodash.min.js"></script>
 <script src="../../bower_components/moment/moment.js"></script>
+<script src="../../bower_components/moment-timezone/builds/moment-timezone-with-data.min.js"></script>
+
 
 <script>
 
 var margin = {
   top:    20,
   right:  90,
-  bottom: 30,
-  left:   50
+  bottom: 90,
+  left:   70
 };
 
-var width  = 960 - margin.left - margin.right;
-var height = 700 - margin.top  - margin.bottom;
+var hostTZ = "US/Eastern";
+var width  = 1024 - margin.left - margin.right;
+var height = 900  - margin.top  - margin.bottom;
 
 var xScale = d3.time.scale().range([0, width]);
 
 var yScale = d3.scale.linear().range([height,0]);
 
 var colorScale = d3.scale.linear().range(["white", "steelblue"]);
-
-
-// Size of the buckets (constant for now, with test data)
-var xStep = 31;
-var yStep = 100;
-
-
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -66,7 +62,9 @@ var xAxis = d3.svg.axis()
     .scale(xScale)
     .orient("bottom")
     .ticks(20)
-    .tickFormat(d3.time.format("%Y-%m-%d %X"));
+    .tickFormat(function(d) {
+      return moment(d).tz(hostTZ).format("MM-DD-YYYY HH:mm:ss");
+    });
 
 d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   if (error) return console.warn(error);
@@ -158,11 +156,6 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
 
   console.log(normalized_samples);
 
-//  svg.append("g")
-//      .attr("class", "x axis")
-//      .attr("transform", "translate(0," + height + ")")
-//      .call(xAxis);
-
   xScale.domain(d3.extent(data.map(function(d) {return new Date(d.timestamp * 1000); })));
   yScale.domain([0,normalized_samples[0].sample.length]);
   colorScale.domain([0,1]);
@@ -185,6 +178,31 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
       .attr("height", function() { return tileHeight; })
       .attr("width",  function() { return tileWidth; })
       .attr("fill", function(d) { return colorScale(d); });
+
+  // Add an x-axis with labels created by xScale.domain() above...
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+      .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-.8em")
+      .attr("dy", ".15em")
+      .attr("transform", function(d) {
+        return "rotate(-55)"
+      });
+
+  // Add a y-axis with labels
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(d3.svg.axis().scale(yScale).orient("left"))
+      .append("text")
+      .attr("class", "label")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .attr("text-anchor", "end")
+      .attr("transform", "rotate(-90)")
+      .text("Value");
 
 });
 
