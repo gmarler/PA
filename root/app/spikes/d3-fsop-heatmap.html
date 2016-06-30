@@ -163,19 +163,12 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
 //      .attr("transform", "translate(0," + height + ")")
 //      .call(xAxis);
 
-  var minDate = new Date(normalized_samples[0].timestamp * 1000);
-  var maxDate = new Date(normalized_samples[normalized_samples.length - 1].timestamp * 1000);
-  console.log("MIN DATE: ", minDate, " MAX DATE: ", maxDate);
-  xScale.domain([minDate,maxDate]);
-  // xScale.domain(d3.extent(data.map(function(d) {return new Date(d.timestamp * 1000); })));
+  xScale.domain(d3.extent(data.map(function(d) {return new Date(d.timestamp * 1000); })));
   yScale.domain([0,normalized_samples[0].sample.length]);
   colorScale.domain([0,1]);
 
   var tileHeight = height / tilesPerSample;
   var tileWidth  = width  / 31;
-
-  console.log("TILE HEIGHT: ", tileHeight);
-  console.log("TILE WIDTH:  ", tileWidth);
 
   var timestamps = svg.selectAll(".timestamp")
       .data(normalized_samples)
@@ -195,9 +188,6 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
       .attr("width",  function() { return tileWidth; })
       .attr("fill", function(d) { return colorScale(d); });
 
-//  d3.select("#chart")
-//      .datum(data)
-//      .call(flamegraph);
 });
 
 
