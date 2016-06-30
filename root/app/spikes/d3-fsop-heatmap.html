@@ -180,9 +180,9 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   var timestamps = svg.selectAll(".timestamp")
       .data(normalized_samples)
       .enter().append("g")
-      .attr("class","g")
-      //.attr("transform", function(d,i) { return "translate(" + i * tileWidth + ",0)"});
-      .attr("transform", function(d,i) { return "translate(" + xScale(new Date(d.timestamp * 1000)) + ",0)"});
+      .attr("class","timestamp")
+      // WHY THE HECK DO i HAVE TO SUBTRACT tileWidth TO MAKE THIS WORK?!?!?
+      .attr("transform", function(d,i) { return "translate(" + xScale(new Date(d.timestamp * 1000)) - tileWidth + ",0)"});
 
   timestamps.selectAll(".tile")
       .data(function(d,i) { return normalized_samples[i].sample; })
