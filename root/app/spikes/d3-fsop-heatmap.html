@@ -66,6 +66,23 @@ var xAxis = d3.svg.axis()
       return moment(d).tz(hostTZ).format("MM-DD-YYYY HH:mm:ss");
     });
 
+var yAxis = d3.svg.axis().
+    scale(yScale)
+    .orient("left")
+    .ticks(40)
+    .tickFormat(function(d) {
+      console.log("Y AXIS: ", d);
+      if ((d/1000) < 1) {
+        return d + " ns";
+      } else if ((d/1000000) < 1) {
+        return d/1000 + " us";
+      } else if ((d/1000000000) < 1) {
+        return d/1000000 + " ms";
+      } else {
+        return d/1000000000 + " sec";
+      }
+    });
+
 d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   if (error) return console.warn(error);
 
@@ -136,10 +153,10 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   var tilesPerSample = 200
 
   var bucketized = bucketize( samples, {nbuckets: tilesPerSample});
-  console.log(bucketized);
+  console.log("BUCKETIZED: ", bucketized);
 
   normalize(bucketized, {rank: true});
-  console.log(bucketized);
+  console.log("NORMALIZED: ", bucketized);
 
   var normalized_samples = [ ];
 
@@ -157,7 +174,8 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   console.log(normalized_samples);
 
   xScale.domain(d3.extent(data.map(function(d) {return new Date(d.timestamp * 1000); })));
-  yScale.domain([0,normalized_samples[0].sample.length]);
+  // yScale.domain([0,normalized_samples[0].sample.length]);
+  yScale.domain([0,100000000]);
   colorScale.domain([0,1]);
 
   var tileHeight = height / tilesPerSample;
@@ -195,7 +213,7 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   // Add a y-axis with labels
   svg.append("g")
       .attr("class", "y axis")
-      .call(d3.svg.axis().scale(yScale).orient("left"))
+      .call(yAxis)
       .append("text")
       .attr("class", "label")
       .attr("y", 6)
@@ -241,6 +259,7 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
       // just using the max as the max bucket.
       // We then reflect this in the conf Object.
       conf.max = max = autoscale(max);
+      console.log("BUCKETIZED MAX: ", max);
     }
 
 
