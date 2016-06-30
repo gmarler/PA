@@ -71,7 +71,7 @@ var yAxis = d3.svg.axis().
     .orient("left")
     .ticks(40)
     .tickFormat(function(d) {
-      console.log("Y AXIS: ", d);
+      // console.log("Y AXIS: ", d);
       if ((d/1000) < 1) {
         return d + " ns";
       } else if ((d/1000000) < 1) {
