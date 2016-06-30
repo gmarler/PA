@@ -174,7 +174,7 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
       .append("rect")
       .attr("class", "tile")
       .attr("x", function(d,i,j) { return (j * tileWidth); })
-      .attr("y", function(d,i) { return height - (i * tileHeight); })
+      .attr("y", function(d,i) { return height - (i * tileHeight) - tileHeight; })
       .attr("height", function() { return tileHeight; })
       .attr("width",  function() { return tileWidth; })
       .attr("fill", function(d) { return colorScale(d); });
