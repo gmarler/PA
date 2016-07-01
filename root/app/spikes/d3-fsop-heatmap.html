@@ -174,7 +174,8 @@ d3.json("../../data/N121-iolat_heatmap_data.json", function(error, data) {
   console.log(normalized_samples);
 
   xScale.domain(d3.extent(data.map(function(d) {return new Date(d.timestamp * 1000); })));
-  // NOTE: Get the top of the yScale domain AUTOMATICALLY
+  // TODO: Get the top of the yScale domain AUTOMATICALLY, by returning an object with the
+  //       autoscaled max generated from bucketize.
   yScale.domain([0,200000000]);
   colorScale.domain([0,1]);
 
