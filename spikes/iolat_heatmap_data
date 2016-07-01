@@ -13,10 +13,11 @@ use JSON::MaybeXS              qw(decode_json encode_json);
 
 my $dtc = DTrace::Consumer->new();
 
-# $dtc->setopt("aggsize","2m");
+$dtc->setopt("aggsize","4m");
 $dtc->setopt("aggrate","181Hz");
 $dtc->setopt("cleanrate","439Hz");
-$dtc->setopt("dynvarsize","5m");
+$dtc->setopt("switchrate","239Hz");
+$dtc->setopt("dynvarsize","8m");
 
 my $prog = q\
 this string fstype;
