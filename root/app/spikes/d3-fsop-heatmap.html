@@ -174,8 +174,8 @@ d3.json("../../data/N121-iolat_heatmap_data.json", function(error, data) {
   console.log(normalized_samples);
 
   xScale.domain(d3.extent(data.map(function(d) {return new Date(d.timestamp * 1000); })));
-  // yScale.domain([0,normalized_samples[0].sample.length]);
-  yScale.domain([0,100000000]);
+  // NOTE: Get the top of the yScale domain AUTOMATICALLY
+  yScale.domain([0,200000000]);
   colorScale.domain([0,1]);
 
   var tileHeight = height / tilesPerSample;
