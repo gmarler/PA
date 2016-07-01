@@ -50,7 +50,7 @@ var xScale = d3.time.scale().range([0, width]);
 
 var yScale = d3.scale.linear().range([height,0]);
 
-var colorScale = d3.scale.linear().range(["white", "steelblue"]);
+var colorScale = d3.scale.linear().range(["white", "green"]);
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -83,7 +83,7 @@ var yAxis = d3.svg.axis().
       }
     });
 
-d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
+d3.json("../../data/N121-iolat_heatmap_data.json", function(error, data) {
   if (error) return console.warn(error);
 
   // Data is in form:
@@ -179,7 +179,7 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   colorScale.domain([0,1]);
 
   var tileHeight = height / tilesPerSample;
-  var tileWidth  = width  / 31;
+  var tileWidth  = width  / 61;
 
   var timestamps = svg.selectAll(".timestamp")
       .data(normalized_samples)
