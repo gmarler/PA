@@ -176,6 +176,12 @@ d3.json("../../data/N121-iolat_heatmap_data.json", function(error, data) {
   xScale.domain(d3.extent(data.map(function(d) {return new Date(d.timestamp * 1000); })));
   // TODO: Get the top of the yScale domain AUTOMATICALLY, by returning an object with the
   //       autoscaled max generated from bucketize.
+  // TODO: Probably need to have 2 Y scales.
+  //       1) For the Y axis, which represents the min/max
+  //          of the log-linear latency ranges before bucketization/normalization.
+  //       2) For the bucketized/normalized tiles, which ends up being the
+  //          bucket count.
+  //
   yScale.domain([0,200000000]);
   colorScale.domain([0,1]);
 
