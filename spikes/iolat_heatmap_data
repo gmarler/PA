@@ -50,7 +50,7 @@ fbt::fop_open:entry
 }
 
 fbt::fop_open:return
-/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof((*((vnode_t**)self->vnode0))->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "dev" || this->fstype == "dev fs" || this->fstype == "proc" || this->fstype == "lofs" || this->fstype == "tmpfs" || this->fstype == "nfs")))/{
+/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof((*((vnode_t**)self->vnode0))->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "nfs")))/{
 	@[((probefunc + 4)),this->fstype] = llquantize((timestamp - self->latency0), 10, 3, 11, 100);
 }
 
@@ -74,7 +74,7 @@ fbt::fop_fsync:return,
 fbt::fop_getpage:return,
 fbt::fop_putpage:return,
 fbt::fop_map:return
-/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof(((vnode_t*)self->vnode0)->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "dev" || this->fstype == "dev fs" || this->fstype == "proc" || this->fstype == "lofs" || this->fstype == "tmpfs" || this->fstype == "nfs")))/{
+/((((((self->vnode0) != NULL)))) && (((((self->depth0) != NULL)))) && (((((self->latency0) != NULL)))) && (((((this->fstype = stringof(((vnode_t*)self->vnode0)->v_op->vnop_name)) != NULL || 1)))) && (self->depth0 == stackdepth && self->vnode0 != NULL && (this->fstype == "ufs" || this->fstype == "zfs" || this->fstype == "nfs")))/{
 	@[((probefunc + 4)),this->fstype] = llquantize((timestamp - self->latency0), 10, 3, 11, 100);
 }
 
