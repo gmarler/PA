@@ -50,7 +50,7 @@ var xScale = d3.time.scale().range([0, width]);
 
 var yScale = d3.scale.linear().range([height,0]);
 
-var colorScale = d3.scale.linear().range(["white", "steelblue"]);
+var colorScale = d3.scale.linear().range(["white", "green"]);
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -83,7 +83,7 @@ var yAxis = d3.svg.axis().
       }
     });
 
-d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
+d3.json("../../data/N121-iolat_heatmap_data.json", function(error, data) {
   if (error) return console.warn(error);
 
   // Data is in form:
@@ -174,12 +174,19 @@ d3.json("../../data/iolat_heatmap_data.json", function(error, data) {
   console.log(normalized_samples);
 
   xScale.domain(d3.extent(data.map(function(d) {return new Date(d.timestamp * 1000); })));
-  // yScale.domain([0,normalized_samples[0].sample.length]);
-  yScale.domain([0,100000000]);
+  // TODO: Get the top of the yScale domain AUTOMATICALLY, by returning an object with the
+  //       autoscaled max generated from bucketize.
+  // TODO: Probably need to have 2 Y scales.
+  //       1) For the Y axis, which represents the min/max
+  //          of the log-linear latency ranges before bucketization/normalization.
+  //       2) For the bucketized/normalized tiles, which ends up being the
+  //          bucket count.
+  //
+  yScale.domain([0,200000000]);
   colorScale.domain([0,1]);
 
   var tileHeight = height / tilesPerSample;
-  var tileWidth  = width  / 31;
+  var tileWidth  = width  / 61;
 
   var timestamps = svg.selectAll(".timestamp")
       .data(normalized_samples)
