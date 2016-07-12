@@ -202,6 +202,7 @@ sub metric : PathPart('metric') Chained('subsystem') Args(1) {
   my @rows;
   my ($metrics) = {
     memstat => 'Memstat',
+    iolat   => 'Fsoplatjson',
   };
 
   say "METRIC:    $metric";
