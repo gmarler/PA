@@ -1,0 +1,1262 @@
+---
+schema:
+  procedures: {}
+  tables:
+    arcstat:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - arcstat_id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - host_fk
+          match_type: ''
+          name: arcstat_fk_host_fk
+          on_delete: CASCADE
+          on_update: CASCADE
+          options: []
+          reference_fields:
+            - host_id
+          reference_table: host
+          type: FOREIGN KEY
+      fields:
+        arcstat_id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: arcstat_id
+          order: 1
+          size:
+            - 0
+        buf_size:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: buf_size
+          order: 5
+          size:
+            - 0
+        c:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: c
+          order: 6
+          size:
+            - 0
+        c_max:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: c_max
+          order: 7
+          size:
+            - 0
+        c_min:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: c_min
+          order: 8
+          size:
+            - 0
+        data_size:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: data_size
+          order: 9
+          size:
+            - 0
+        deleted:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: deleted
+          order: 10
+          size:
+            - 0
+        demand_data_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: demand_data_hits
+          order: 11
+          size:
+            - 0
+        demand_data_misses:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: demand_data_misses
+          order: 12
+          size:
+            - 0
+        demand_metadata_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: demand_metadata_hits
+          order: 13
+          size:
+            - 0
+        demand_metadata_misses:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: demand_metadata_misses
+          order: 14
+          size:
+            - 0
+        evict_mfu:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: evict_mfu
+          order: 15
+          size:
+            - 0
+        evict_mru:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: evict_mru
+          order: 16
+          size:
+            - 0
+        hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: hits
+          order: 17
+          size:
+            - 0
+        host_fk:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: host_fk
+          order: 2
+          size:
+            - 0
+        l2_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: l2_hits
+          order: 18
+          size:
+            - 0
+        l2_misses:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: l2_misses
+          order: 19
+          size:
+            - 0
+        l2_persistence_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: l2_persistence_hits
+          order: 20
+          size:
+            - 0
+        l2_read_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: l2_read_bytes
+          order: 21
+          size:
+            - 0
+        l2_rw_clash:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: l2_rw_clash
+          order: 22
+          size:
+            - 0
+        l2_size:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: l2_size
+          order: 23
+          size:
+            - 0
+        memory_throttle_count:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: memory_throttle_count
+          order: 24
+          size:
+            - 0
+        meta_limit:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: meta_limit
+          order: 25
+          size:
+            - 0
+        meta_max:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: meta_max
+          order: 26
+          size:
+            - 0
+        meta_used:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: meta_used
+          order: 27
+          size:
+            - 0
+        mfu_ghost_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: mfu_ghost_hits
+          order: 28
+          size:
+            - 0
+        mfu_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: mfu_hits
+          order: 29
+          size:
+            - 0
+        misses:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: misses
+          order: 30
+          size:
+            - 0
+        mru_ghost_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: mru_ghost_hits
+          order: 31
+          size:
+            - 0
+        mru_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: mru_hits
+          order: 32
+          size:
+            - 0
+        mutex_miss:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: mutex_miss
+          order: 33
+          size:
+            - 0
+        other_size:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: other_size
+          order: 34
+          size:
+            - 0
+        p:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: p
+          order: 35
+          size:
+            - 0
+        prefetch_behind_prefetch:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: prefetch_behind_prefetch
+          order: 36
+          size:
+            - 0
+        prefetch_data_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: prefetch_data_hits
+          order: 37
+          size:
+            - 0
+        prefetch_data_misses:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: prefetch_data_misses
+          order: 38
+          size:
+            - 0
+        prefetch_joins:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: prefetch_joins
+          order: 39
+          size:
+            - 0
+        prefetch_meta_size:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: prefetch_meta_size
+          order: 40
+          size:
+            - 0
+        prefetch_metadata_hits:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: prefetch_metadata_hits
+          order: 41
+          size:
+            - 0
+        prefetch_metadata_misses:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: prefetch_metadata_misses
+          order: 42
+          size:
+            - 0
+        prefetch_reads:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: prefetch_reads
+          order: 43
+          size:
+            - 0
+        prefetch_size:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: prefetch_size
+          order: 44
+          size:
+            - 0
+        size:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: size
+          order: 45
+          size:
+            - 0
+        snaptime:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: snaptime
+          order: 4
+          size:
+            - 0
+        timestamp:
+          data_type: timestamptz
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: timestamp
+          order: 3
+          size:
+            - 0
+      indices:
+        - fields:
+            - host_fk
+          name: arcstat_idx_host_fk
+          options: []
+          type: NORMAL
+      name: arcstat
+      options: []
+      order: 3
+    fsoplat:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - fsoplat_id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - host_fk
+          match_type: ''
+          name: fsoplat_fk_host_fk
+          on_delete: CASCADE
+          on_update: CASCADE
+          options: []
+          reference_fields:
+            - host_id
+          reference_table: host
+          type: FOREIGN KEY
+      fields:
+        count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: count
+          order: 7
+          size:
+            - 0
+        fsop:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: fsop
+          order: 4
+          size:
+            - 12
+        fsoplat_id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: fsoplat_id
+          order: 1
+          size:
+            - 0
+        fstype:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: fstype
+          order: 5
+          size:
+            - 8
+        host_fk:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: host_fk
+          order: 2
+          size:
+            - 0
+        latrange:
+          data_type: int8range
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: latrange
+          order: 6
+          size:
+            - 0
+        timestamp:
+          data_type: timestamptz
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: timestamp
+          order: 3
+          size:
+            - 0
+      indices:
+        - fields:
+            - host_fk
+          name: fsoplat_idx_host_fk
+          options: []
+          type: NORMAL
+      name: fsoplat
+      options: []
+      order: 4
+    fsoplatjson:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - fsoplatjson_id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - host_fk
+          match_type: ''
+          name: fsoplatjson_fk_host_fk
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields:
+            - host_id
+          reference_table: host
+          type: FOREIGN KEY
+      fields:
+        fsoplatjson_id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: fsoplatjson_id
+          order: 1
+          size:
+            - 0
+        host_fk:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: host_fk
+          order: 2
+          size:
+            - 0
+        interval_data:
+          data_type: jsonb
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: interval_data
+          order: 4
+          size:
+            - 0
+        timestamp:
+          data_type: timestamptz
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: timestamp
+          order: 3
+          size:
+            - 0
+      indices:
+        - fields:
+            - host_fk
+          name: fsoplatjson_idx_host_fk
+          options: []
+          type: NORMAL
+      name: fsoplatjson
+      options: []
+      order: 5
+    host:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - host_id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+      fields:
+        host_id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: host_id
+          order: 1
+          size:
+            - 0
+        name:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: name
+          order: 2
+          size:
+            - 32
+        time_zone:
+          data_type: varchar
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: time_zone
+          order: 3
+          size:
+            - 64
+      indices: []
+      name: host
+      options: []
+      order: 1
+    memstat:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - memstat_id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - host_fk
+          match_type: ''
+          name: memstat_fk_host_fk
+          on_delete: CASCADE
+          on_update: CASCADE
+          options: []
+          reference_fields:
+            - host_id
+          reference_table: host
+          type: FOREIGN KEY
+      fields:
+        anon_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: anon_bytes
+          order: 19
+          size:
+            - 0
+        anon_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: anon_page_count
+          order: 20
+          size:
+            - 0
+        anon_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: anon_pct_of_total
+          order: 21
+          size:
+            - 0
+        defdump_prealloc_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: defdump_prealloc_bytes
+          order: 7
+          size:
+            - 0
+        defdump_prealloc_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: defdump_prealloc_page_count
+          order: 8
+          size:
+            - 0
+        defdump_prealloc_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: defdump_prealloc_pct_of_total
+          order: 9
+          size:
+            - 0
+        exec_and_libs_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: exec_and_libs_bytes
+          order: 10
+          size:
+            - 0
+        exec_and_libs_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: exec_and_libs_page_count
+          order: 11
+          size:
+            - 0
+        exec_and_libs_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: exec_and_libs_pct_of_total
+          order: 12
+          size:
+            - 0
+        free_cachelist_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: free_cachelist_bytes
+          order: 4
+          size:
+            - 0
+        free_cachelist_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: free_cachelist_page_count
+          order: 5
+          size:
+            - 0
+        free_cachelist_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: free_cachelist_pct_of_total
+          order: 6
+          size:
+            - 0
+        free_freelist_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: free_freelist_bytes
+          order: 13
+          size:
+            - 0
+        free_freelist_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: free_freelist_page_count
+          order: 14
+          size:
+            - 0
+        free_freelist_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: free_freelist_pct_of_total
+          order: 15
+          size:
+            - 0
+        host_fk:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: host_fk
+          order: 2
+          size:
+            - 0
+        kernel_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: kernel_bytes
+          order: 28
+          size:
+            - 0
+        kernel_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: kernel_page_count
+          order: 29
+          size:
+            - 0
+        kernel_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: kernel_pct_of_total
+          order: 30
+          size:
+            - 0
+        memstat_id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: memstat_id
+          order: 1
+          size:
+            - 0
+        page_cache_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: page_cache_bytes
+          order: 22
+          size:
+            - 0
+        page_cache_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: page_cache_page_count
+          order: 23
+          size:
+            - 0
+        page_cache_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: page_cache_pct_of_total
+          order: 24
+          size:
+            - 0
+        timestamp:
+          data_type: timestamptz
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: timestamp
+          order: 3
+          size:
+            - 0
+        total_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: total_bytes
+          order: 31
+          size:
+            - 0
+        total_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: total_page_count
+          order: 32
+          size:
+            - 0
+        total_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: total_pct_of_total
+          order: 33
+          size:
+            - 0
+        zfs_file_data_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: zfs_file_data_bytes
+          order: 16
+          size:
+            - 0
+        zfs_file_data_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: zfs_file_data_page_count
+          order: 17
+          size:
+            - 0
+        zfs_file_data_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: zfs_file_data_pct_of_total
+          order: 18
+          size:
+            - 0
+        zfs_metadata_bytes:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: zfs_metadata_bytes
+          order: 25
+          size:
+            - 0
+        zfs_metadata_page_count:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: zfs_metadata_page_count
+          order: 26
+          size:
+            - 0
+        zfs_metadata_pct_of_total:
+          data_type: smallint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: zfs_metadata_pct_of_total
+          order: 27
+          size:
+            - 0
+      indices:
+        - fields:
+            - host_fk
+          name: memstat_idx_host_fk
+          options: []
+          type: NORMAL
+      name: memstat
+      options: []
+      order: 6
+    timeseriesgap:
+      constraints: []
+      fields:
+        entity_fk:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: entity_fk
+          order: 1
+          size:
+            - 0
+        timestamp:
+          data_type: timestamptz
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: timestamp
+          order: 2
+          size:
+            - 0
+        value:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: value
+          order: 3
+          size:
+            - 0
+      indices: []
+      name: timeseriesgap
+      options: []
+      order: 2
+    vmstat:
+      constraints:
+        - deferrable: 1
+          expression: ''
+          fields:
+            - vmstat_id
+          match_type: ''
+          name: ''
+          on_delete: ''
+          on_update: ''
+          options: []
+          reference_fields: []
+          reference_table: ''
+          type: PRIMARY KEY
+        - deferrable: 1
+          expression: ''
+          fields:
+            - host_fk
+          match_type: ''
+          name: vmstat_fk_host_fk
+          on_delete: CASCADE
+          on_update: CASCADE
+          options: []
+          reference_fields:
+            - host_id
+          reference_table: host
+          type: FOREIGN KEY
+      fields:
+        freemem:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: freemem
+          order: 4
+          size:
+            - 0
+        host_fk:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: host_fk
+          order: 2
+          size:
+            - 0
+        sr:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: sr
+          order: 6
+          size:
+            - 0
+        swap:
+          data_type: bigint
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: swap
+          order: 5
+          size:
+            - 0
+        timestamp:
+          data_type: timestamptz
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: timestamp
+          order: 3
+          size:
+            - 0
+        vmstat_id:
+          data_type: integer
+          default_value: ~
+          is_auto_increment: 1
+          is_nullable: 0
+          is_primary_key: 1
+          is_unique: 0
+          name: vmstat_id
+          order: 1
+          size:
+            - 0
+        w:
+          data_type: integer
+          default_value: ~
+          is_nullable: 0
+          is_primary_key: 0
+          is_unique: 0
+          name: w
+          order: 7
+          size:
+            - 0
+      indices:
+        - fields:
+            - host_fk
+          name: vmstat_idx_host_fk
+          options: []
+          type: NORMAL
+      name: vmstat
+      options: []
+      order: 7
+  triggers: {}
+  views: {}
+translator:
+  add_drop_table: 0
+  filename: ~
+  no_comments: 0
+  parser_args:
+    sources:
+      - Arcstat
+      - Fsoplat
+      - Fsoplatjson
+      - Host
+      - Memstat
+      - TimeSeriesGap
+      - Vmstat
+  parser_type: SQL::Translator::Parser::DBIx::Class
+  producer_args: {}
+  producer_type: SQL::Translator::Producer::YAML
+  show_warnings: 0
+  trace: 0
+  version: 0.11021
