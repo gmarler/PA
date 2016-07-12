@@ -9,7 +9,6 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
 use PA::Schema;
-use Data::Dumper;
 
 use JSON::MaybeXS;
 use DateTime             qw();
@@ -166,7 +165,7 @@ while (my $dhref = $mq->recv(0)) {
       }
     );
   } elsif ($stat_type eq "arcstats") {
-    insert_arcstat($host_record, $stat_ref);
+    #insert_arcstat($host_record, $stat_ref);
   }
 
 
@@ -198,13 +197,17 @@ while (my $dhref = $mq->recv(0)) {
           say "CANNOT HANDLE Filesystem Latency DATA! - $_[0]";
         }
       )->get;
-      #push @pending_futures, $f;
 
-      push @fsop_data,
-        [ qw( host_fk timestamp fsop fstype latrange count ) ];
-      push @fsop_data, @$fsop_data_aref;
-      #say Dumper( \@fsop_data );
-      $schema->resultset('Fsoplat')->populate( \@fsop_data );
+#     push @fsop_data,
+#       [ qw( host_fk timestamp interval_data ) ];
+#     push @fsop_data, @$fsop_data_aref;
+#     #say Dumper( \@fsop_data );
+#     $schema->resultset('Fsoplatjson')->populate( \@fsop_data );
+    $schema->resultset('Fsoplatjson')->create({
+      host_fk   => $fsop_data_aref->[0],
+      timestamp => $fsop_data_aref->[1],
+      interval_data => encode_json($fsop_data_aref->[2]),
+    });
   }
 
   if ($stat_type eq "memstat") {
@@ -264,21 +267,8 @@ sub fsop_lat_organize {
   my $timestamp = DateTime->from_epoch( epoch => $stat_ref->{timestamp},
                                         time_zone => 'UTC' ),
   my $host_id   = $host_record->id;
-  my $ret_aref = [];
 
-  foreach my $fsop_fstype (keys %$stat_href) {
-    my ($fsop, $fstype) = $fsop_fstype =~ m{([^:]+):(.+)};
-    my $latencies = $stat_href->{$fsop_fstype};
-    foreach my $lat_range_count (@$latencies) {
-      # "deflate" the latency range into something the DB will understand as a
-      # string
-      my $lat_range = "[ $lat_range_count->[0]->[0], $lat_range_count->[0]->[1] ]";
-      my $count     = $lat_range_count->[1];
-      push @$ret_aref, [ $host_id, $timestamp, $fsop, $fstype, $lat_range, $count ];
-    }
-  }
-
-  return $ret_aref;
+  return [ $host_id, $timestamp, $stat_href ];
 }
 
 

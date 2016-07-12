@@ -8,7 +8,7 @@ CREATE TABLE "fsoplatjson" (
   "fsoplatjson_id" serial NOT NULL,
   "host_fk" integer NOT NULL,
   "timestamp" timestamptz NOT NULL,
-  "interval_data" jsonb NOT NULL,
+  "interval_data" json NOT NULL,
   PRIMARY KEY ("fsoplatjson_id")
 );
 CREATE INDEX "fsoplatjson_idx_host_fk" on "fsoplatjson" ("host_fk");
