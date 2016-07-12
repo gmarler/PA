@@ -125,21 +125,25 @@ sub _build_timer {
         }
       );
 
-      my %reduced_agg;
-      $reduced_agg{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
-      $reduced_agg{interval_data}  = [ ];
-      foreach my $aggid (keys %$agg) {
-        push @{$reduced_agg{interval_data}}, $agg->{$aggid};
+      # Only bother publishing data if there's something to actually publish.
+      # We don't want to publish NULL data for the DB to fail on
+      if (keys %$agg) {
+        my %reduced_agg;
+        $reduced_agg{timestamp} = DateTime->now( time_zone => 'UTC' )->epoch;
+        $reduced_agg{interval_data}  = [ ];
+        foreach my $aggid (keys %$agg) {
+          push @{$reduced_agg{interval_data}}, $agg->{$aggid};
+        }
+
+        my @publish_futures;
+        my ($routing_key) = $client->client_hostname . "." . $self->stat_name;
+        push @publish_futures, $client->send($routing_key, \%reduced_agg);
+
+        # Wait for all of the publishing futures to complete
+        my $publishing_future = Future->wait_all( @publish_futures );
+        $publishing_future->get;
       }
-
-      my @publish_futures;
-      my ($routing_key) = $client->client_hostname . "." . $self->stat_name;
-      push @publish_futures, $client->send($routing_key, \%reduced_agg);
-
-      # Wait for all of the publishing futures to complete
-      my $publishing_future = Future->wait_all( @publish_futures );
-      $publishing_future->get;
-    },
+  },
   );
 
   $timer->start;
