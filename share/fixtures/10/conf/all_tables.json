@@ -1,0 +1,41 @@
+{
+   "belongs_to" : {
+      "fetch" : 0
+   },
+   "might_have" : {
+      "fetch" : 0
+   },
+   "sets" : [
+      {
+         "class" : "TimeSeriesGap",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Arcstat"
+      },
+      {
+         "class" : "Fsoplat",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Host"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Vmstat"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Fsoplatjson"
+      },
+      {
+         "class" : "Memstat",
+         "quantity" : "all"
+      }
+   ],
+   "has_many" : {
+      "fetch" : 0
+   }
+}
