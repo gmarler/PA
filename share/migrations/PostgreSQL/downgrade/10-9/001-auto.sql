@@ -7,12 +7,6 @@ BEGIN;
 ALTER TABLE host ALTER COLUMN name TYPE character varying(32);
 
 ;
-DROP TABLE timeseriesgap CASCADE;
-
-;
-DROP TABLE fsoplatjson CASCADE;
-
-;
 
 COMMIT;
 
