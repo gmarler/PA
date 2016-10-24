@@ -60,6 +60,14 @@ __PACKAGE__->config(
     #        __PACKAGE__->path_to( 'root', 'src' ),
     #    ],
     #},
+    'View::TT' => {
+      INCLUDE_PATH => [
+        __PACKAGE__->path_to('root', 'src'),
+      ],
+      TEMPLATE_EXTENSION => '.tt',
+      CATALYST_VAR       => 'c',
+      TIMER              => 0,
+    },
     'Plugin::ConfigLoader' => {
       file => __PACKAGE__->path_to('conf'),
     },
