@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Performance Analytics Host Administration</title>
+</head>
+<body>
+
+<h1>Host List</h1>
+
+[% WHILE (host = hosts_rs.next) %]
+  <div>
+    <span>[% host.host_id %]</span>
+    <span>[% host.name %]</span>
+    <span>[% host.time_zone %]</span>
+  </div>
+[% END %]
+
+</body>
+</html>

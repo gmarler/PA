@@ -34,15 +34,10 @@ sub admin : PathPart('admin') Chained('/') CaptureArgs(0) {
 sub hosts : PathPart('hosts') Chained('admin') Args(0) {
   my ( $self, $c ) = @_;
 
-  my %host_list;
-  my $host_rs = $c->model('DB::Host')->search;
-  while ( my $host_row = $host_rs->next ) {
-    $host_list{ $host_row->name } =
-      { id => $host_row->host_id,
-        time_zone => $host_row->time_zone,
-      };
-  }
-  $c->response->body('Fetched list of hosts to administer.');
+  $c->stash->{'template'} = 'admin/hosts.tt';
+  $c->stash->{'current_view'} = 'TT';
+  $c->stash->{'hosts_rs'} = $c->model('DB::Host');
+  #$c->response->body('Fetched list of hosts to administer.');
 }
 
 sub host : PathPart('host') Chained('admin') CaptureArgs(1) {
