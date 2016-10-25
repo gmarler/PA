@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Performance Analytics Host Administration</title>
+    <link rel="stylesheet"
+          href="/static/css/admin_hosts.css" type="text/css"
+          media="screen" title="no title" charset="utf-8">
 </head>
 <body>
 
