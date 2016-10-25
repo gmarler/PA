@@ -1,4 +1,6 @@
 package PA::Web::Controller::Admin;
+
+use v5.22.0;
 use Moose;
 use namespace::autoclean;
 
@@ -41,12 +43,25 @@ sub hosts : PathPart('hosts') Chained('admin') Args(0) {
 }
 
 sub host : PathPart('host') Chained('admin') CaptureArgs(1) {
-  my ($self, $c ) = @_;
+  my ($self, $c, $host_id ) = @_;
+
+  $c->stash->{host_id} = $host_id;
 }
 
 sub delete :PathPart('delete') : Chained('host'): Args(0) {
   my ($self, $c ) = @_;
-  # TODO: After deleting host, redirect back to host admin page
+
+  my $host_id  = $c->stash->{host_id};
+  my $hosts_rs = $c->model('DB::Host');
+  my $host = $hosts_rs->search( { host_id => $host_id } );
+  if ($host) {
+    #say "FOUND $host_id!";
+    $host->delete();
+  } else {
+    say "ERROR: NO host found for $host_id";
+  }
+
+  # After deleting host, redirect back to host admin page
   return $c->res->redirect( $c->uri_for('/admin/hosts') );
 }
 
