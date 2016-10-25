@@ -3,20 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <title>Performance Analytics Host Administration</title>
+<!--
     <link rel="stylesheet"
           href="/static/css/admin_hosts.css" type="text/css"
+          media="screen" title="no title" charset="utf-8">
+-->
+    <link rel="stylesheet"
+          href="/bower_components/bootstrap/dist/css/bootstrap.min.css"
           media="screen" title="no title" charset="utf-8">
 </head>
 <body>
 
-  <table>
-    <tr><th>Host ID</th><th>Hostname</th><th>Time Zone</th></tr>
+  <table class="table table-striped table-bordered">
+    <tr>
+      <th>Host ID</th>
+      <th>Hostname</th>
+      <th>Time Zone</th>
+      <th>Delete?</th>
+    </tr>
 
     [% WHILE (host = hosts_rs.next) %]
     <tr>
       <td>[% host.host_id %]</td>
       <td>[% host.name %]</td>
       <td>[% host.time_zone %]</td>
+      <td><a 
+           href="[%-
+           c.uri_for(c.controller('admin').action_for('delete'), [ host.host_id ]) %]"
+           class="btn btn-default">Delete</a></td>
     </tr>
     [% END %]
   </table>
