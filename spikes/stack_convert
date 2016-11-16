@@ -172,6 +172,17 @@ use IO::File;
 use Data::Dumper;
 use JSON::MaybeXS              qw(decode_json encode_json);
 
+my ($raw_stack_file) = $ARGV[0];
+
+my $usage = '
+Usage: stack_convert <File Containing Stacks>
+';
+
+unless (-f $raw_stack_file) {
+  say $usage;
+  exit(1);
+}
+
 sub raw {
   my ($filename, $live) = @_;
 
@@ -189,10 +200,15 @@ sub raw {
     chomp($line);
 
     next if ($line =~ m/^\s*$/);
+    # Skip PID:... lines, from dtrace_ustack captures
+    next if ($line =~ m/^PID:/);
 
     if ($line =~ m/^$/) {
       next;
     }
+
+    # TODO: Capture Date/Timestamp
+    next if ($line =~ m/^2016\s+/);
 
     if ($line =~ m/^\s*(\d+)$/) {
       my $count = $1;
@@ -213,10 +229,10 @@ sub raw {
     $frame =~ s/(::.*)[(<].*/$1/;
     $frame = "-" if $frame eq "";
 
-    if ($frame !~ m/^(\S+)`(\S+)$/) {
-      say "UNKNOWN LINE: $frame";
-      next;
-    }
+    #if ($frame !~ m/^(\S+)`(\S+)$/) {
+    #  say "UNKNOWN LINE: $frame";
+    #  next;
+    #}
 
     if ($profile->stack_is_open()) {
         say "Sending to profile addFrame with: ($frame, undef)";
@@ -271,5 +287,5 @@ sub raw {
   say $encoder->encode( $res );
 }
 
-raw("/tmp/stacks", undef);
+raw($raw_stack_file, undef);
 
