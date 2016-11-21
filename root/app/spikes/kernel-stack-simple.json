@@ -1,0 +1,10 @@
+dtrace: description 'profile-997 ' matched 2 probes
+CPU     ID                    FUNCTION:NAME
+1  92741                        :tick-10s
+
+
+          unix`mach_cpu_idle+0x17
+          unix`cpu_idle+0xcf
+          unix`idle+0x11a
+          unix`thread_start+0x8
+        19199
