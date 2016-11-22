@@ -3,12 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <title>D3 v4 Flamegraph Tests</title>
-  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <!-- <script src="https://d3js.org/d3.v4.min.js"></script> -->
+  <style>
+    .chart {
+      background:    lightgray;
+      border:        1px solid black;
+      min-width:     1024px;
+      min-height:     768px;
+    }
+  </style>
 </head>
 <body>
 
+  <div class="chart"></div>
 
-  <!-- <script type="text/javascript" src="d3v4-flamegraph.js"></script> -->
   <script type="text/javascript" src="d3v4/d3.min.js"></script>
   <script type="text/javascript">
 //    var flamegraph = d3.flameGraph()
@@ -21,10 +29,12 @@
 //      d3.select("#chart")
 //        .data(data)
 //        .call(flamegraph);
-      var  width  = 1024;
-      var height  = 768;
+      var  width      = 1024;
+      var height      = 1024;
+      var cell_height =   18;
 
-      // var xScale = d3.scale().range([width,height]).domain(0,1);
+      var xScale = d3.scale.linear().range([0, width]),
+          yScale = d3.scale.linear().range([0, cell_height]);
 
       var root = d3.hierarchy(data)
         .sum(function (d) { return d.children ? 0 : 1; })
@@ -36,6 +46,11 @@
 
       partition(root);
 
+      var svg = d3.select('.chart')
+        .append('svg')
+          .attr('width', width)  // properly size the svg element to contain elems
+          .attr('height', height);
+
       var nodes = svg.selectAll('rect')
           .data(root.descendants())
         .enter()
@@ -44,13 +59,16 @@
           return "purple";
         })
         .attr('stroke', 'black')
-        .attr("x", function(d) { return d.y0; })
-        .attr("y", function(d) { return d.x0; })
-        .attr("width", function(d) { return d.y1 - d.y0; })
-        .attr("height", function(d) { return d.x1 - d.x0; });
+        .attr("x", function(d) { return d.x0; })
+        .attr("y", function(d) { return d.y0; })
+        .attr("height", function(d) { return cell_height; // d.y1 - d.y0;
+        })
+        .attr("width", function(d) { return d.x1 - d.x0; });
 
     });
   </script>
+
+
 
 </body>
 </html>
