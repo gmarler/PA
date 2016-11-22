@@ -56,13 +56,10 @@
           .data(root.descendants())
         .enter()
           .append('g')
-          .attr('transform', function (d, i) {  return 'translate(0, ' + i * d.y0 + ')'; });
+          .attr('transform', function (d, i) {  return 'translate(0, ' + i * cell_height + ')'; });
 
 
       var nodes = bars
-          .append('rect')
-          .data(root.descendants())
-        .enter()
           .append('rect')
         .attr('fill', function(d) {
           return "purple";
