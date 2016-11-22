@@ -27,7 +27,7 @@
       // var xScale = d3.scale().range([width,height]).domain(0,1);
 
       var root = d3.hierarchy(data)
-        .sum(function (d) { return d.value })
+        .sum(function (d) { return d.children ? 0 : 1; })
         .sort(null);
 
       var partition = d3.partition()
