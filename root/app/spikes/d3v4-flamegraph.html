@@ -33,8 +33,8 @@
       var height      = 1024;
       var cell_height =   18;
 
-      var xScale = d3.scale.linear().range([0, width]),
-          yScale = d3.scale.linear().range([0, cell_height]);
+      var xScale = d3.scaleLinear().range([0, width]),
+          yScale = d3.scaleLinear().range([0, cell_height]);
 
       var root = d3.hierarchy(data)
         .sum(function (d) { return d.children ? 0 : 1; })
@@ -51,7 +51,16 @@
           .attr('width', width)  // properly size the svg element to contain elems
           .attr('height', height);
 
-      var nodes = svg.selectAll('rect')
+      var bars = svg
+          .selectAll('g')
+          .data(root.descendants())
+        .enter()
+          .append('g')
+          .attr('transform', function (d, i) {  return 'translate(0, ' + i * d.y0 + ')'; });
+
+
+      var nodes = bars
+          .append('rect')
           .data(root.descendants())
         .enter()
           .append('rect')
