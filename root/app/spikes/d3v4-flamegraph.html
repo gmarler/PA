@@ -8,7 +8,8 @@
 <body>
 
 
-  <script type="text/javascript" src="d3v4-flamegraph.js"></script>
+  <!-- <script type="text/javascript" src="d3v4-flamegraph.js"></script> -->
+  <script type="text/javascript" src="d3v4/d3.min.js"></script>
   <script type="text/javascript">
 //    var flamegraph = d3.flameGraph()
 //      .width(1024)
@@ -24,6 +25,30 @@
       var height  = 768;
 
       // var xScale = d3.scale().range([width,height]).domain(0,1);
+
+      var root = d3.hierarchy(data)
+        .sum(function (d) { return d.value })
+        .sort(null);
+
+      var partition = d3.partition()
+        .size([height, width])
+        .padding(0);
+
+      partition(root);
+
+      var nodes = svg.selectAll('rect')
+          .data(root.descendants())
+        .enter()
+          .append('rect')
+        .attr('fill', function(d) {
+          return "purple";
+        })
+        .attr('stroke', 'black')
+        .attr("x", function(d) { return d.y0; })
+        .attr("y", function(d) { return d.x0; })
+        .attr("width", function(d) { return d.y1 - d.y0; })
+        .attr("height", function(d) { return d.x1 - d.x0; });
+
     });
   </script>
 
