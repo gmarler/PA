@@ -16,30 +16,27 @@
 <body>
 
   <div class="chart"></div>
+  <button onclick="simple_stacks()">Simple Kernel Stack</button>
+  <button onclick="kernel_stacks2()">Kernel Stacks 2</button>
 
   <script type="text/javascript" src="d3v4/d3.min.js"></script>
   <script type="text/javascript">
 
-    d3.json("kernel-stack-simple.json", function(error, data) {
-      if (error) return console.warn("WE DIED: " + error);
-      console.log(data);
 
-      var  width      =  768;
-      var height      =  768;
-      var cell_height =   18;
+    var  width      =  768;
+    var height      =  768;
+    var cell_height =   18;
 
-      function doSort(a,b) {
-        return d3.ascending(a.name, b.name);
-      }
+    function doSort(a,b) {
+      return d3.ascending(a.name, b.name);
+    }
 
-      var xScale = d3.scaleLinear().range([0, width]),
-          yScale = d3.scaleLinear().range([0, cell_height]);
+    function update(data) {
 
       var root = d3.hierarchy(data)
           .sort(doSort)
           .sum(function (d) { return d.children ? 0 : 1; })
         ;
-
 
       var partition = d3.partition()
         .size([height, width])
@@ -49,21 +46,21 @@
 
       var svg = d3.select('.chart')
         .append('svg')
-          .attr('width', width)  // properly size the svg element to contain elems
-          .attr('height', height);
+        .attr('width', width)  // properly size the svg element to contain elems
+        .attr('height', height);
 
       var bars = svg
-          .selectAll('g')
-          .data(root.descendants())
+        .selectAll('g')
+        .data(root.descendants())
         .enter()
-          .append('g')
-          .attr('transform',
-            function (d, i) {  return 'translate(' + xScale(d.x0) + ',' +
-                                                 (height - yScale(d.depth) - cell_height) + ')'; });
+        .append('g')
+        .attr('transform',
+          function (d, i) {  return 'translate(' + xScale(d.x0) + ',' +
+            (height - yScale(d.depth) - cell_height) + ')'; });
 
 
       var nodes = bars
-          .append('rect')
+        .append('rect')
         .attr('fill', function(d) {
           return "white";
         })
@@ -79,8 +76,29 @@
           return d.data.name;
         })
         .attr('y', cell_height - 3);
+    }
 
-    });
+    var xScale = d3.scaleLinear().range([0, width]),
+        yScale = d3.scaleLinear().range([0, cell_height]);
+
+
+    function simple_stacks() {
+      d3.select('svg').remove();
+      d3.json("kernel-stack-simple.json", function (error, data) {
+        if (error) return console.warn("WE DIED: " + error);
+        console.log(data);
+        update(data);
+      });
+    }
+
+    function kernel_stacks2() {
+      d3.select('svg').remove();
+      d3.json("kernel-stacks2.json", function (error, data) {
+        if (error) return console.warn("WE DIED: " + error);
+        console.log(data);
+        update(data);
+      });
+    }
   </script>
 
 
