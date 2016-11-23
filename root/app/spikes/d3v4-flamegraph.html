@@ -8,7 +8,7 @@
     .chart {
       background:    lightgray;
       border:        1px solid black;
-      min-width:     1024px;
+      min-width:      768px;
       min-height:     768px;
     }
   </style>
@@ -29,12 +29,12 @@
 //      d3.select("#chart")
 //        .data(data)
 //        .call(flamegraph);
-      var  width      = 1024;
-      var height      = 1024;
+      var  width      =  768;
+      var height      =  768;
       var cell_height =   18;
 
-      var xScale = d3.scaleLinear().range([0, width]),
-          yScale = d3.scaleLinear().range([0, cell_height]);
+      var xScale = d3.scaleLinear().range([0, width]).domain([0,1024]),
+          yScale = d3.scaleLinear().range([height, 0]).domain([0,100]);
 
       var root = d3.hierarchy(data)
         .sum(function (d) { return d.children ? 0 : 1; })
@@ -56,7 +56,9 @@
           .data(root.descendants())
         .enter()
           .append('g')
-          .attr('transform', function (d, i) {  return 'translate(0, ' + i * cell_height + ')'; });
+          .attr('transform',
+            function (d, i) {  return 'translate(' + xScale(d.x0) + ',' +
+                                      height - yScale(d.depth) - cell_height + ')'; });
 
 
       var nodes = bars
