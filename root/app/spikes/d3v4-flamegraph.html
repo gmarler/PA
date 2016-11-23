@@ -73,6 +73,12 @@
         })
         .attr("width", function(d) { return d.x1 - d.x0; });
 
+      bars.append('text')
+        .text(function(d) {
+          console.log(d);
+          return d.data.name;
+        });
+
     });
   </script>
 
