@@ -28,12 +28,17 @@
       var height      =  768;
       var cell_height =   18;
 
-      var xScale = d3.scaleLinear().range([0, width]).domain([0,width]),
-          yScale = d3.scaleLinear().range([height, 0]).domain([0, height]);
+      function doSort(a,b) {
+        return d3.ascending(a.name, b.name);
+      }
+
+      var xScale = d3.scaleLinear().range([0, width]),
+          yScale = d3.scaleLinear().range([0, cell_height]);
 
       var root = d3.hierarchy(data)
-        .sum(function (d) { return d.children ? 0 : 1; })
-        .sort(null);
+          .sort(doSort)
+          .sum(function (d) { return d.children ? 0 : 1; })
+        ;
 
 
       var partition = d3.partition()
@@ -54,7 +59,7 @@
           .append('g')
           .attr('transform',
             function (d, i) {  return 'translate(' + xScale(d.x0) + ',' +
-                                                 (yScale(i * cell_height)) + ')'; });
+                                                 (height - yScale(d.depth) - cell_height) + ')'; });
 
 
       var nodes = bars
