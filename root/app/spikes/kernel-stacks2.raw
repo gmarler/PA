@@ -1,0 +1,66 @@
+ CPU     ID                    FUNCTION:NAME
+ 127  92802                      :tick-30sec 
+
+
+              unix`default_mutex_lock_delay+0x74
+              unix`default_mutex_lock_delay+0x6c
+              unix`mutex_vector_enter+0x17c
+              genunix`issig_forreal+0x1c
+              genunix`cv_wait_sig_swap_core+0x1a0
+              genunix`lwp_park+0x128
+              genunix`syslwp_park+0x58
+              unix`syscall_trap+0x228
+               36
+
+              unix`lock_try+0xc
+              unix`run_interrupt_thread
+              genunix`thread_lock+0x54
+              genunix`yield+0xc
+              unix`syscall_trap+0x228
+               40
+
+              unix`atomic_add_64+0x10
+              unix`run_interrupt_thread
+              unix`pg_ev_thread_swtch+0x154
+              unix`swtch+0xc4
+              genunix`yield+0x40
+              unix`syscall_trap+0x228
+               51
+
+              unix`atomic_add_64+0x18
+              unix`run_interrupt_thread
+              unix`pg_ev_thread_swtch+0x154
+              unix`swtch+0xc4
+              genunix`yield+0x40
+              unix`syscall_trap+0x228
+               71
+
+              unix`shipit+0x30
+              unix`run_interrupt_thread
+              unix`send_one_mondo+0x48
+              unix`xt_one_unchecked+0xf0
+              genunix`yield+0x30
+              unix`syscall_trap+0x228
+               74
+
+              unix`default_mutex_lock_delay+0x78
+              unix`default_mutex_lock_delay+0x6c
+              unix`lock_set_spl_spin+0xd4
+              unix`disp_getbest+0x4
+              unix`disp_getwork+0x414
+              unix`disp+0xa0
+              unix`swtch+0x8c
+              genunix`yield+0x40
+              unix`syscall_trap+0x228
+               91
+
+              unix`default_mutex_lock_delay+0x74
+              unix`default_mutex_lock_delay+0x6c
+              unix`lock_set_spl_spin+0xd4
+              unix`disp_getbest+0x4
+              unix`disp_getwork+0x414
+              unix`disp+0xa0
+              unix`swtch+0x8c
+              genunix`yield+0x40
+              unix`syscall_trap+0x228
+               97

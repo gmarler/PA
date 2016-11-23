@@ -1,0 +1,5 @@
+unix`syscall_trap;genunix`syslwp_park;genunix`lwp_park;genunix`cv_wait_sig_swap_core;genunix`issig_forreal;unix`mutex_vector_enter;unix`default_mutex_lock_delay;unix`default_mutex_lock_delay 36
+unix`syscall_trap;genunix`yield;genunix`thread_lock;unix`run_interrupt_thread;unix`lock_try 40
+unix`syscall_trap;genunix`yield;unix`swtch;unix`disp;unix`disp_getwork;unix`disp_getbest;unix`lock_set_spl_spin;unix`default_mutex_lock_delay;unix`default_mutex_lock_delay 188
+unix`syscall_trap;genunix`yield;unix`swtch;unix`pg_ev_thread_swtch;unix`run_interrupt_thread;unix`atomic_add_64 122
+unix`syscall_trap;genunix`yield;unix`xt_one_unchecked;unix`send_one_mondo;unix`run_interrupt_thread;unix`shipit 74
