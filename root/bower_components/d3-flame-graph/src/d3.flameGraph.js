@@ -3,8 +3,8 @@
 
   function flameGraph() {
 
-    var w = 960, // graph width
-      h = 540, // graph height
+    var w = 1024, // graph width
+      h = 2048, // graph height
       c = 18, // cell height
       selection = null, // selection
       tooltip = true, // enable tooltip

@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
 
+use v5.22;
 use strict;
 use warnings;
-use v5.20;
 
 use Data::Dumper;
 use Moose;
@@ -10,8 +10,12 @@ use namespace::autoclean;
 
 package Node;
 
+use v5.22;
+use strict;
+use warnings;
 use Moose;
 use namespace::autoclean;
+no warnings 'recursion';
 
 has name => (
   is       => 'rw',
@@ -72,9 +76,13 @@ sub serialize {
 
 package Profile;
 
+use v5.22;
+use strict;
+use warnings;
 use Moose;
 use namespace::autoclean;
 use Node;
+use Data::Dumper;
 
 has samples => (
   is       => 'rw',
@@ -114,7 +122,19 @@ sub openStack {
 sub addFrame {
   my ($self, $func, $mod) = @_;
 
-  # TODO: Skip process names and some punctuation
+  # eliminate some punctuation
+  $func =~ s/;/:/;    # replace ; with :
+  #$func =~ s/<//;    # remove '<'
+  #$func =~ s/>//;    # remove '>'
+  $func =~ s/\\//;    # remove '\'
+  $func =~ s/"//;     # remove '"'
+  # Remove arguments from C++ function names
+  $func =~ s/(::.*)[(<].*/$1/;
+  $func =~ s/[(].+//; # remove everything after '('
+
+  if ($func =~ m/^$/) {
+    $func = "-"; # separator between user and kernel stacks
+  }
 
   unshift(@{$self->stack}, $func);
 }
@@ -123,6 +143,7 @@ sub closeStack {
   my ($self,$value) = @_;
 
   unshift(@{$self->stack}, $self->name);
+  #say STDERR "Closing stack:\n" . Data::Dumper::Dumper($self->stack);
   $self->samples->add($self->stack, $value);
   $self->stack([]);
   $self->name(undef);
@@ -131,6 +152,9 @@ sub closeStack {
 
 package Recording;
 
+use v5.22;
+use strict;
+use warnings;
 use Moose;
 use namespace::autoclean;
 use Profile;
@@ -166,6 +190,9 @@ sub serialize {
 
 package main;
 
+use v5.22;
+use strict;
+use warnings;
 use Node;
 use Profile;
 use IO::File;
@@ -179,7 +206,7 @@ Usage: stack_convert <File Containing Stacks>
 ';
 
 unless (-f $raw_stack_file) {
-  say $usage;
+  say STDERR $usage;
   exit(1);
 }
 
@@ -210,13 +237,13 @@ sub raw {
     # TODO: Capture Date/Timestamp
     next if ($line =~ m/^2016\s+/);
 
-    if ($line =~ m/^\s*(\d+)$/) {
+    if ($line =~ m/^\s+(\d+)$/) {
       my $count = $1;
       if ($profile->stack_is_open()) {
         $profile->closeStack($count);
       } else {
         # There is no open profile stack to close
-        say "ERROR: $line";
+        say STDERR "ERROR: $line";
       }
       next;
     }
@@ -230,16 +257,16 @@ sub raw {
     $frame = "-" if $frame eq "";
 
     #if ($frame !~ m/^(\S+)`(\S+)$/) {
-    #  say "UNKNOWN LINE: $frame";
+    #  say STDERR "UNKNOWN LINE: $frame";
     #  next;
     #}
 
     if ($profile->stack_is_open()) {
-        say "Sending to profile addFrame with: ($frame, undef)";
+        #say STDERR "Sending to profile addFrame with: ($frame, undef)";
         $profile->addFrame($frame, undef);
     } else {
       $profile->openStack('kernel');
-      say "Sending to profile addFrame with: ($frame, undef)";
+      #say STDERR "Sending to profile addFrame with: ($frame, undef)";
       $profile->addFrame($frame, undef);
     }
 
@@ -252,7 +279,7 @@ sub raw {
 #      my $re2 = qr/^\s*(\w+)\s*(.+) \((\s*)\)/x;
 #
 #      if ($line =~ m/$re2/g) {
-#        say "Sending to profile addFrame with: ($2, $3)";
+#        say STDERR "Sending to profile addFrame with: ($2, $3)";
 #        $profile->addFrame($2, $3);
 #      } else {
 #        my $re3 = qr/^$/;
@@ -267,9 +294,9 @@ sub raw {
 #          my $re4 = qr/^#/;
 #
 #          if ($line =~ m/$re4/g) {
-#            say "Hit a comment line";
+#            say STDERR "Hit a comment line";
 #          } else {
-#            say "Unknown line type: $line";
+#            say STDERR "Unknown line type: $line";
 #          }
 #        }
 #      }
@@ -284,6 +311,7 @@ sub raw {
 
   #my $encoder = JSON::MaybeXS->new->ascii->pretty;
   my $encoder = JSON::MaybeXS->new->ascii;
+  say STDERR "Max depth of encoder: " . $encoder->get_max_depth;
   say $encoder->encode( $res );
 }
 
