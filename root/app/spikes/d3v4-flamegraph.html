@@ -34,7 +34,7 @@
       var cell_height =   18;
 
       var xScale = d3.scaleLinear().range([0, width]).domain([0,1024]),
-          yScale = d3.scaleLinear().range([height, 0]).domain([0,100]);
+          yScale = d3.scaleLinear().range([height, 0]).domain([0,10]);
 
       var root = d3.hierarchy(data)
         .sum(function (d) { return d.children ? 0 : 1; })
@@ -58,7 +58,7 @@
           .append('g')
           .attr('transform',
             function (d, i) {  return 'translate(' + xScale(d.x0) + ',' +
-                                      height - yScale(d.depth) - cell_height + ')'; });
+                                                 (height - yScale(d.depth) - cell_height) + ')'; });
 
 
       var nodes = bars
