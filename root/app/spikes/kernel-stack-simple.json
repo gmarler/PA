@@ -1,22 +1,22 @@
 {
-  "name": "all",
+  "name": "root",
   "value": 19199,
   "children": [
     {
-      "name": "unix`mach_cpu_idle",
-      "value": 1,
+      "name": "unix`thread_start",
+      "value": 19199,
       "children": [
         {
-          "name": "unix`cpu_idle",
-          "value": 1,
+          "name": "unix`idle",
+          "value": 19199,
           "children": [
             {
-              "name": "unix`idle",
-              "value": 1,
+              "name": "unix`cpu_idle",
+              "value": 19199,
               "children": [
                 {
-                  "name": "unix`thread_start",
-                  "value": 1
+                  "name": "unix`mach_cpu_idle",
+                  "value": 19199
                 }
               ]
             }
