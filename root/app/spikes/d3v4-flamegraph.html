@@ -33,12 +33,13 @@
       var height      =  768;
       var cell_height =   18;
 
-      var xScale = d3.scaleLinear().range([0, width]).domain([0,1024]),
-          yScale = d3.scaleLinear().range([height, 0]).domain([0,10]);
+      var xScale = d3.scaleLinear().range([0, width]).domain([0,width]),
+          yScale = d3.scaleLinear().range([height, 0]).domain([0, height]);
 
       var root = d3.hierarchy(data)
         .sum(function (d) { return d.children ? 0 : 1; })
         .sort(null);
+
 
       var partition = d3.partition()
         .size([height, width])
@@ -58,26 +59,26 @@
           .append('g')
           .attr('transform',
             function (d, i) {  return 'translate(' + xScale(d.x0) + ',' +
-                                                 (height - yScale(d.depth) - cell_height) + ')'; });
+                                                 (yScale(i * cell_height)) + ')'; });
 
 
       var nodes = bars
           .append('rect')
         .attr('fill', function(d) {
-          return "purple";
+          return "white";
         })
         .attr('stroke', 'black')
-        .attr("x", function(d) { return d.x0; })
-        .attr("y", function(d) { return d.y0; })
-        .attr("height", function(d) { return cell_height; // d.y1 - d.y0;
-        })
+        .attr("x", function(d) { return 0; })
+        .attr("y", function(d) { return 0; })
+        .attr("height", function(d) { return cell_height; })
         .attr("width", function(d) { return d.x1 - d.x0; });
 
       bars.append('text')
         .text(function(d) {
           console.log(d);
           return d.data.name;
-        });
+        })
+        .attr('y', cell_height - 3);
 
     });
   </script>
