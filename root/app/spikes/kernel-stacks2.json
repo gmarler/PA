@@ -1,0 +1,152 @@
+{
+  "name": "all",
+  "value": 460,
+  "children": [
+    {
+      "name": "unix`syscall_trap",
+      "value": 460,
+      "children": [
+        {
+          "name": "genunix`syslwp_park",
+          "value": 36,
+          "children": [
+            {
+              "name": "genunix`lwp_park",
+              "value": 36,
+              "children": [
+                {
+                  "name": "genunix`cv_wait_sig_swap_core",
+                  "value": 36,
+                  "children": [
+                    {
+                      "name": "genunix`issig_forreal",
+                      "value": 36,
+                      "children": [
+                        {
+                          "name": "unix`mutex_vector_enter",
+                          "value": 36,
+                          "children": [
+                            {
+                              "name": "unix`default_mutex_lock_delay",
+                              "value": 36,
+                              "children": [
+                                {
+                                  "name": "unix`default_mutex_lock_delay",
+                                  "value": 36
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "genunix`yield",
+          "value": 424,
+          "children": [
+            {
+              "name": "genunix`thread_lock",
+              "value": 40,
+              "children": [
+                {
+                  "name": "unix`run_interrupt_thread",
+                  "value": 40,
+                  "children": [
+                    {
+                      "name": "unix`lock_try",
+                      "value": 40
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "unix`swtch",
+              "value": 310,
+              "children": [
+                {
+                  "name": "unix`disp",
+                  "value": 188,
+                  "children": [
+                    {
+                      "name": "unix`disp_getwork",
+                      "value": 188,
+                      "children": [
+                        {
+                          "name": "unix`disp_getbest",
+                          "value": 188,
+                          "children": [
+                            {
+                              "name": "unix`lock_set_spl_spin",
+                              "value": 188,
+                              "children": [
+                                {
+                                  "name": "unix`default_mutex_lock_delay",
+                                  "value": 188,
+                                  "children": [
+                                    {
+                                      "name": "unix`default_mutex_lock_delay",
+                                      "value": 188
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "name": "unix`pg_ev_thread_swtch",
+                  "value": 122,
+                  "children": [
+                    {
+                      "name": "unix`run_interrupt_thread",
+                      "value": 122,
+                      "children": [
+                        {
+                          "name": "unix`atomic_add_64",
+                          "value": 122
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "unix`xt_one_unchecked",
+              "value": 74,
+              "children": [
+                {
+                  "name": "unix`send_one_mondo",
+                  "value": 74,
+                  "children": [
+                    {
+                      "name": "unix`run_interrupt_thread",
+                      "value": 74,
+                      "children": [
+                        {
+                          "name": "unix`shipit",
+                          "value": 74
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
