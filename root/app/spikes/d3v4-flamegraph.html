@@ -19,16 +19,11 @@
 
   <script type="text/javascript" src="d3v4/d3.min.js"></script>
   <script type="text/javascript">
-//    var flamegraph = d3.flameGraph()
-//      .width(1024)
-//      .height(768);
 
     d3.json("kernel-stack-simple.json", function(error, data) {
       if (error) return console.warn("WE DIED: " + error);
       console.log(data);
-//      d3.select("#chart")
-//        .data(data)
-//        .call(flamegraph);
+
       var  width      =  768;
       var height      =  768;
       var cell_height =   18;
