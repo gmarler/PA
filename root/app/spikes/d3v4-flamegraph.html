@@ -27,7 +27,10 @@
     var height      =  768;
     var cell_height =   18;
 
+    // Color Theme
+    var color_theme = "hot";
     // Background color gradient related
+    // TODO: Set these based on the color theme
     var bgcolor1 = "#eeeeee",
         bgcolor2 = "#eeeeb0";
 
@@ -130,6 +133,38 @@
         console.log(data);
         update(data);
       });
+    }
+
+    function color(type, hash, name) {
+      var v1, v2, v3;
+      var r, g, b;
+
+      v1 = Math.random();
+      v2 = Math.random();
+      v3 = Math.random();
+
+      // Theme palettes
+      if ((typeof type !== 'undefined') &&
+          (type === "hot")) {
+        r = 205 + Math.floor(50 * v3);
+        g =   0 + Math.floor(230 * v1);
+        b =   0 + Math.floor(55 * v2);
+        return "rgb(" + r + "," + g + ","  + b + ")";
+      }
+      if ((typeof type !== 'undefined') &&
+        (type === "mem")) {
+        r =   0;
+        g = 190 + Math.floor(50 * v2);
+        b =   0 + Math.floor(210 * v1);
+        return "rgb(" + r + "," + g + ","  + b + ")";
+      }
+      if ((typeof type !== 'undefined') &&
+        (type === "io")) {
+        r =  80 + Math.floor(60 * v1);
+        g =   r;
+        b = 190 + Math.floor(55 * v2);
+        return "rgb(" + r + "," + g + ","  + b + ")";
+      }
     }
   </script>
 
