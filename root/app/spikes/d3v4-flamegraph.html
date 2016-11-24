@@ -27,8 +27,38 @@
     var height      =  768;
     var cell_height =   18;
 
+    // Background color gradient related
+    var bgcolor1 = "#eeeeee",
+        bgcolor2 = "#eeeeb0";
+
     function doSort(a,b) {
       return d3.ascending(a.name, b.name);
+    }
+
+    function background_gradient(svg, bgcolor1, bgcolor2, width, height) {
+      var gradient = svg.append("defs")
+        .append("linearGradient")
+        .attr("id", "background")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "0%")
+        .attr("y2", "100%")
+        .attr("spreadMethod", "pad");
+
+      gradient.append("stop")
+        .attr("offset", "5%")
+        .attr("stop-color", bgcolor1)
+        .attr("stop-opacity", 1);
+
+      gradient.append("stop")
+        .attr("offset", "95%")
+        .attr("stop-color", bgcolor2)
+        .attr("stop-opacity", 1);
+
+      svg.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "url(#background)");
     }
 
     function update(data) {
@@ -48,6 +78,8 @@
         .append('svg')
         .attr('width', width)  // properly size the svg element to contain elems
         .attr('height', height);
+
+      background_gradient(svg, bgcolor1, bgcolor2, width, height);
 
       var bars = svg
         .selectAll('g')
