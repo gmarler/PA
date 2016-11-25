@@ -97,7 +97,8 @@
       var nodes = bars
         .append('rect')
         .attr('fill', function(d) {
-          return "white";
+          // return "white";
+          return color(color_theme);
         })
         .attr('stroke', 'black')
         .attr("x", function(d) { return 0; })
@@ -139,9 +140,10 @@
       var v1, v2, v3;
       var r, g, b;
 
-      v1 = Math.random();
-      v2 = Math.random();
-      v3 = Math.random();
+      // Random numbers between 0 and 1
+      v1 = d3.randomUniform()();
+      v2 = d3.randomUniform()();
+      v3 = d3.randomUniform()();
 
       // Theme palettes
       if ((typeof type !== 'undefined') &&
