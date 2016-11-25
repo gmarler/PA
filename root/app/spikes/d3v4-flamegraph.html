@@ -11,6 +11,10 @@
       min-width:      768px;
       min-height:     768px;
     }
+    .stack-text {
+      font-family:  "Verdana";
+      font-size:    12px;
+    }
   </style>
 </head>
 <body>
@@ -22,6 +26,9 @@
   <script type="text/javascript" src="d3v4/d3.min.js"></script>
   <script type="text/javascript">
 
+    // Font related constants
+    var fontsize    =   12,
+        fontwidth   =   0.59; // Average width relative to fontsize
 
     var  width      =  768;
     var height      =  768;
@@ -112,11 +119,32 @@
         .attr("width", function(d) { return xScale(d.x1 - d.x0); });
 
       bars.append('text')
-        .text(function(d) {
-          console.log(d);
-          return d.data.name;
+        .text(function(d,i) {
+          var final_text_str;
+          // Select the previous sibling rect for this text
+          var rect = d3.select(this.previousSibling);
+          var rect_width = rect.attr("width");
+
+          var text_str = d.data.name;
+          // how many characters will fit in the rect's available width?
+          var chars_that_will_fit = rect_width / (fontsize * fontwidth);
+
+          if (rect_width < (2 * fontsize * fontwidth)) {
+            // nothing will fit
+            final_text_str = "";
+          } else if (text_str.length > chars_that_will_fit) {
+            // console.log(text_str + " will not fit in only " + chars_that_will_fit + " spaces");
+            // Just print what fits with a trailing ellipsis
+            final_text_str = text_str.substring(0,chars_that_will_fit - 2 + 1) + "..";
+          } else {
+            // the whole string fits, no problem
+            final_text_str = text_str;
+          }
+
+          return final_text_str;
         })
-        .attr('y', cell_height - 3);
+        .attr('y', cell_height - 3)
+        .attr("class", "stack-text");
     }
 
     var xScale = d3.scaleLinear().range([0, width]),
