@@ -16,10 +16,10 @@
 
 <script type="text/javascript">
   var flamegraph = d3.flameGraph()
-      .width(960)
-      .height(540);
+      .width(768)
+      .height(768);
 
-  d3.json("stacks-kernel.json", function(error, data) {
+  d3.json("kernel-stacks2.json", function(error, data) {
     if (error) return console.warn(error);
     d3.select("#chart")
         .datum(data)
