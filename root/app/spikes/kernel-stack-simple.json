@@ -1,0 +1,28 @@
+{
+  "name": "all",
+  "value": 19199,
+  "children": [
+    {
+      "name": "unix`thread_start",
+      "value": 19199,
+      "children": [
+        {
+          "name": "unix`idle",
+          "value": 19199,
+          "children": [
+            {
+              "name": "unix`cpu_idle",
+              "value": 19199,
+              "children": [
+                {
+                  "name": "unix`mach_cpu_idle",
+                  "value": 19199
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

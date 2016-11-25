@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>D3 v4 Flamegraph Tests</title>
+  <!-- <script src="https://d3js.org/d3.v4.min.js"></script> -->
+  <style>
+    .chart {
+      background:    lightgray;
+      border:        1px solid black;
+      min-width:      768px;
+      min-height:     768px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chart"></div>
+
+  <script type="text/javascript" src="d3v4/d3.min.js"></script>
+  <script type="text/javascript">
+
+    d3.json("kernel-stack-simple.json", function(error, data) {
+      if (error) return console.warn("WE DIED: " + error);
+      console.log(data);
+
+      var  width      =  768;
+      var height      =  768;
+      var cell_height =   18;
+
+      function doSort(a,b) {
+        return d3.ascending(a.name, b.name);
+      }
+
+      var xScale = d3.scaleLinear().range([0, width]),
+          yScale = d3.scaleLinear().range([0, cell_height]);
+
+      var root = d3.hierarchy(data)
+          .sort(doSort)
+          .sum(function (d) { return d.children ? 0 : 1; })
+        ;
+
+
+      var partition = d3.partition()
+        .size([height, width])
+        .padding(0);
+
+      partition(root);
+
+      var svg = d3.select('.chart')
+        .append('svg')
+          .attr('width', width)  // properly size the svg element to contain elems
+          .attr('height', height);
+
+      var bars = svg
+          .selectAll('g')
+          .data(root.descendants())
+        .enter()
+          .append('g')
+          .attr('transform',
+            function (d, i) {  return 'translate(' + xScale(d.x0) + ',' +
+                                                 (height - yScale(d.depth) - cell_height) + ')'; });
+
+
+      var nodes = bars
+          .append('rect')
+        .attr('fill', function(d) {
+          return "white";
+        })
+        .attr('stroke', 'black')
+        .attr("x", function(d) { return 0; })
+        .attr("y", function(d) { return 0; })
+        .attr("height", function(d) { return cell_height; })
+        .attr("width", function(d) { return d.x1 - d.x0; });
+
+      bars.append('text')
+        .text(function(d) {
+          console.log(d);
+          return d.data.name;
+        })
+        .attr('y', cell_height - 3);
+
+    });
+  </script>
+
+
+
+</body>
+</html>
