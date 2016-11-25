@@ -72,7 +72,7 @@
         ;
 
       // xScale.domain([0, d3.max(root.children, function(root) { return root.data.value; })]).nice();
-      xScale.domain([0, 768]).nice();
+      xScale.domain([0, width]);
 
       var partition = d3.partition()
         .size([width, height])
