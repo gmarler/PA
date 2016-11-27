@@ -1,0 +1,44 @@
+{
+  "name": "all",
+  "value": 1200,
+  "children": [
+    {
+      "name": "level1-1-100",
+      "value": 1200,
+      "children": [
+        {
+          "name": "level2-1-50",
+          "value": 600,
+          "children": [
+            {
+              "name": "level3-1-25",
+              "value": 300
+            },
+            {
+              "name": "level3-2-25",
+              "value": 300
+            }
+          ]
+        },
+        {
+          "name": "level2-2-50",
+          "value": 600,
+          "children": [
+            {
+              "name": "level3-1-33",
+              "value": 200
+            },
+            {
+              "name": "level3-2-33",
+              "value": 200
+            },
+            {
+              "name": "level3-3-33",
+              "value": 200
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -22,6 +22,7 @@
   <div class="chart"></div>
   <button onclick="simple_stacks()">Simple Kernel Stack</button>
   <button onclick="kernel_stacks2()">Kernel Stacks 2</button>
+  <button onclick="stack_layout()">Layout Test</button>
 
   <script type="text/javascript" src="d3v4/d3.min.js"></script>
   <script type="text/javascript">
@@ -85,7 +86,7 @@
 
       var root = d3.hierarchy(data)
           .sort(doSort)
-          .sum(function (d) { return d.children ? 0 : 1; })
+          .sum(function (d) { return d.children ? 0 : d.value; })
         ;
 
       // xScale.domain([0, d3.max(root.children, function(root) { return root.data.value; })]).nice();
@@ -117,7 +118,7 @@
         .append('g')
         .attr('transform',
           function (d, i) {
-            // console.log(d);
+            console.log(d);
             return 'translate(' + xScale(d.x0) + ',' +
                    (height - yScale(d.depth) - cell_height) + ')'; });
 
@@ -125,7 +126,6 @@
       var nodes = bars
         .append('rect')
         .attr('fill', function(d) {
-          // return "white";
           return color(color_theme);
         })
         .attr('stroke', 'black')
@@ -179,6 +179,15 @@
     function kernel_stacks2() {
       d3.select('svg').remove();
       d3.json("kernel-stacks2.json", function (error, data) {
+        if (error) return console.warn("WE DIED: " + error);
+        console.log(data);
+        update(data);
+      });
+    }
+
+    function stack_layout() {
+      d3.select('svg').remove();
+      d3.json("stack-layout.json", function (error, data) {
         if (error) return console.warn("WE DIED: " + error);
         console.log(data);
         update(data);
