@@ -38,6 +38,9 @@
     var height      =  768 - margin.top - margin.bottom;
     var cell_height =   18;
 
+    // Total value of all stack samples in root node
+    var totalValue;
+
     // Color Theme
     var color_theme = "hot";
     // Background color gradient related
@@ -99,6 +102,10 @@
 
       partition(root);
 
+      // we can now determine the total value of the root node
+      totalValue = root.data.value;
+      console.log("totalValue: " + totalValue);
+
       var svg = d3.select('.chart')
         .append('svg')
           // properly size the svg element to contain elems
@@ -114,7 +121,9 @@
         svg
           .append('g')
             .attr('transform','translate(0,' + (height) + ')')
+            .attr("id", "banner_container")
           .append('rect')
+            .attr("id", "banner_rect")
             .attr('fill', 'skyblue')
             .attr('stroke', 'green')
             .attr('x', 0)
@@ -132,7 +141,7 @@
         .append('g')
         .attr('transform',
           function (d, i) {
-            console.log(d);
+            // console.log(d);
             return 'translate(' + xScale(d.x0) + ',' +
                    (height - yScale(d.depth) - cell_height) + ')'; });
 
@@ -146,7 +155,8 @@
         .attr("x", function(d) { return 0; })
         .attr("y", function(d) { return 0; })
         .attr("height", function(d) { return cell_height; })
-        .attr("width", function(d) { return xScale(d.x1 - d.x0); });
+        .attr("width", function(d) { return xScale(d.x1 - d.x0); })
+        .on('mouseover',nodeMouseOver);
 
       bars.append('text')
         .text(function(d,i) {
@@ -163,7 +173,6 @@
             // nothing will fit
             final_text_str = "";
           } else if (text_str.length > chars_that_will_fit) {
-            // console.log(text_str + " will not fit in only " + chars_that_will_fit + " spaces");
             // Just print what fits with a trailing ellipsis
             final_text_str = text_str.substring(0,chars_that_will_fit - 2 + 1) + "..";
           } else {
@@ -185,7 +194,7 @@
       d3.select('svg').remove();
       d3.json("kernel-stack-simple.json", function (error, data) {
         if (error) return console.warn("WE DIED: " + error);
-        console.log(data);
+        // console.log(data);
         update(data);
       });
     }
@@ -194,7 +203,7 @@
       d3.select('svg').remove();
       d3.json("kernel-stacks2.json", function (error, data) {
         if (error) return console.warn("WE DIED: " + error);
-        console.log(data);
+        // console.log(data);
         update(data);
       });
     }
@@ -203,9 +212,24 @@
       d3.select('svg').remove();
       d3.json("stack-layout.json", function (error, data) {
         if (error) return console.warn("WE DIED: " + error);
-        console.log(data);
+        // console.log(data);
         update(data);
       });
+    }
+
+    function nodeMouseOver(d) {
+      console.log("in nodeMouseOver");
+      console.log(d);
+      var percentage = (100 * (d.value / totalValue)).toPrecision(3);
+      var percentageString = percentage + "%";
+      if (percentage < 0.1) {
+        percentageString = "< 0.1%";
+      }
+      // d3.select('#banner_rect').select('text').remove();
+      d3.select('#banner_container')
+        .append("text")
+        .attr("y", cell_height - 3)
+        .text(percentageString);
     }
 
     function color(type, hash, name) {
