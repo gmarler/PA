@@ -12,8 +12,14 @@
       min-height:     768px;
     }
     .stack-text {
-      font-family:  "Verdana";
-      font-size:    12px;
+      font-family:    "Verdana";
+      font-size:      12px;
+      pointer-events: none;
+      /* The following goes with the d3-flame-graph foreignObject concept */
+      /*white-space:    nowrap;*/
+      /*text-overflow:  ellipsis;*/
+      /*overflow:       hidden;*/
+      /*text-align:     left;*/
     }
   </style>
 </head>
@@ -163,8 +169,8 @@
         .text(function(d,i) {
           var final_text_str;
           // Select the previous sibling rect for this text
-          var rect = d3.select(this.previousSibling);
-          var rect_width = rect.attr("width");
+           var rect = d3.select(this.previousSibling);
+           var rect_width = rect.attr("width");
 
           var text_str = d.data.name;
           // how many characters will fit in the rect's available width?
@@ -175,7 +181,7 @@
             final_text_str = "";
           } else if (text_str.length > chars_that_will_fit) {
             // Just print what fits with a trailing ellipsis
-            final_text_str = text_str.substring(0,chars_that_will_fit - 2 + 1) + "..";
+            final_text_str = text_str.substring(0,chars_that_will_fit - 2) + "..";
           } else {
             // the whole string fits, no problem
             final_text_str = text_str;
@@ -184,6 +190,7 @@
           return final_text_str;
         })
         .attr('y', cell_height - 3)
+        .attr('x', 3)
         .attr("class", "stack-text");
     }
 
