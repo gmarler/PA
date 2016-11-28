@@ -156,7 +156,8 @@
         .attr("y", function(d) { return 0; })
         .attr("height", function(d) { return cell_height; })
         .attr("width", function(d) { return xScale(d.x1 - d.x0); })
-        .on('mouseover',nodeMouseOver);
+        .on('mouseover',nodeMouseOver)
+        .on('mouseout', nodeMouseOut);
 
       bars.append('text')
         .text(function(d,i) {
@@ -218,18 +219,23 @@
     }
 
     function nodeMouseOver(d) {
-      console.log("in nodeMouseOver");
-      console.log(d);
+      // console.log(d);
       var percentage = (100 * (d.value / totalValue)).toPrecision(3);
       var percentageString = percentage + "%";
       if (percentage < 0.1) {
         percentageString = "< 0.1%";
       }
+      var wholeString = "Function: " + d.data.name + " (" + d.data.value + " samples, " + percentageString + ")";
       // d3.select('#banner_rect').select('text').remove();
       d3.select('#banner_container')
         .append("text")
         .attr("y", cell_height - 3)
-        .text(percentageString);
+        .text(wholeString);
+    }
+
+    function nodeMouseOut(d) {
+      d3.select('#banner_container')
+        .selectAll('text').remove();
     }
 
     function color(type, hash, name) {
