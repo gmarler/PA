@@ -221,6 +221,7 @@
     }
 
     function nodeMouseOver(d) {
+      d3.select(this).attr('opacity', .25);
       // console.log(d);
       var percentage = (100 * (d.value / totalValue)).toPrecision(3);
       var percentageString = percentage + "%";
@@ -236,6 +237,7 @@
     }
 
     function nodeMouseOut(d) {
+      d3.select(this).attr('opacity', 1);
       d3.select('#banner_container')
         .selectAll('text').remove();
     }
