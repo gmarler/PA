@@ -49,8 +49,7 @@
 
     // Color Theme
     var color_theme = "hot";
-    // Background color gradient related
-    // TODO: Set these based on the color theme
+
     var color_themes = {
       hot:     { bgcolor1: "#eeeeee", bgcolor2: "#eeeeb0" },
       mem:     { bgcolor1: "#eeeeee", bgcolor2: "#e0e0ff" },
@@ -58,7 +57,9 @@
       io:      { bgcolor1: "#f8f8f8", bgcolor2: "#e8e8e8" },
       wakeup:  { bgcolor1: "#f8f8f8", bgcolor2: "#e8e8e8" },
       aqua:    { bgcolor1: "#f8f8f8", bgcolor2: "#e8e8e8" }
-    }
+    };
+    // Background color gradient related
+    // TODO: Set these based on the color theme
     var bgcolor1 = "#eeeeee",
         bgcolor2 = "#eeeeb0";
 
@@ -198,31 +199,25 @@
         yScale = d3.scaleLinear().range([0, cell_height]);
 
 
-    function simple_stacks() {
+    function display_chart(chart_data) {
+      // Eliminate existing SVG, if any
       d3.select('svg').remove();
-      d3.json("kernel-stack-simple.json", function (error, data) {
+      d3.json(chart_data, function (error, data) {
         if (error) return console.warn("WE DIED: " + error);
         // console.log(data);
         update(data);
       });
+    }
+    function simple_stacks() {
+      display_chart("kernel-stack-simple.json");
     }
 
     function kernel_stacks2() {
-      d3.select('svg').remove();
-      d3.json("kernel-stacks2.json", function (error, data) {
-        if (error) return console.warn("WE DIED: " + error);
-        // console.log(data);
-        update(data);
-      });
+      display_chart("kernel-stacks2.json");
     }
 
     function stack_layout() {
-      d3.select('svg').remove();
-      d3.json("stack-layout.json", function (error, data) {
-        if (error) return console.warn("WE DIED: " + error);
-        // console.log(data);
-        update(data);
-      });
+      display_chart("stack-layout.json");
     }
 
     function nodeMouseOver(d) {
