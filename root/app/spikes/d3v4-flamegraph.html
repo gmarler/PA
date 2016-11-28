@@ -100,14 +100,20 @@
           .sum(function (d) { return d.children ? 0 : d.value; })
         ;
 
-      // xScale.domain([0, d3.max(root.children, function(root) { return root.data.value; })]).nice();
-      xScale.domain([0, width]);
+
 
       var partition = d3.partition()
+        // This implicitly scales x0,y0,x1,y1
         .size([width, height])
         .padding(0);
 
       partition(root);
+
+      // We can now determine the proper scale domain(s)
+      // xScale.domain([0, d3.max(root.children, function(root) { return root.data.value; })]).nice();
+      console.log("X Domain MAX:" + root.data.value);
+      // xScale.domain([0, width]);
+      xScale.domain([0, root.data.value]);
 
       // we can now determine the total value of the root node
       totalValue = root.data.value;
@@ -136,7 +142,7 @@
             .attr('x', 0)
             .attr('y', 0)
             .attr("height", cell_height)
-            .attr("width", xScale(width))
+            .attr("width",  width)
         ;
 
       background_gradient(g_container, bgcolor1, bgcolor2, width, height);
@@ -146,11 +152,14 @@
         .data(root.descendants())
         .enter()
         .append('g')
-        .attr('transform',
-          function (d, i) {
-            // console.log(d);
-            return 'translate(' + xScale(d.x0) + ',' +
-                   (height - yScale(d.depth) - cell_height) + ')'; });
+          .attr('transform',
+            function (d, i) {
+              console.log(d, this);
+              // console.log("BARS: d.x0: " + d.x0 + ", scaled d.x0: " + xScale(d.x0) );
+              return 'translate(' + d.x0 + ',' +
+                     (height - yScale(d.depth) - cell_height) + ')';
+            }
+          );
 
 
       var nodes = bars
@@ -162,9 +171,11 @@
         .attr("x", function(d) { return 0; })
         .attr("y", function(d) { return 0; })
         .attr("height", function(d) { return cell_height; })
-        .attr("width", function(d) { return xScale(d.x1 - d.x0); })
+        .attr("width", function(d) { // return xScale(d.x1 - d.x0);
+                                     return (d.x1 - d.x0);})
         .on('mouseover',nodeMouseOver)
-        .on('mouseout', nodeMouseOut);
+        .on('mouseout', nodeMouseOut)
+        .on('click',  nodeClicked);
 
       bars.append('text')
         .text(function(d,i) {
@@ -234,6 +245,41 @@
         .append("text")
         .attr("y", cell_height - 3)
         .text(wholeString);
+    }
+
+    function nodeClicked(d) {
+      xScale.domain([d.x0, d.x0 + d.x1]);
+      // yScale.domain([d.y0, 1]).range([d.y0 ? 20 : 0, height]);
+
+      var kx = width / (1 - d.x0);
+      var ky = height / d.y0;
+
+      var g = d3.select('svg.g');
+
+      var t = g.attr("transform",
+                     function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
+
+      t.select("rect")
+        .attr("width", d.x1 * kx);
+
+      t.select("text")
+        .attr("transform", function(d) {
+          return "translate(0," + d.y1 * ky / 2 + ")";
+        });
+
+      var nodes = d3.selectAll("svg>g>g>rect")
+        // .transition()
+        // .duration(750)
+        .attr("x", function(d) { console.log(d);
+                                 return xScale(d.x0);
+                                 // return d.x0;
+        })
+        //.attr("y", function(d) { return yScale(d.y0); })
+        // .attr("height", function(d) { return yScale(d.y1 + d.y0) - yScale(d.y1); })
+        .attr("width", function(d) {
+          // return xScale(d.x1 - d.x0) - xScale(d.x1);
+          return (d.x1 - d.x0);
+        });
     }
 
     function nodeMouseOut(d) {
