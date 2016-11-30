@@ -319,6 +319,14 @@
         b = 190 + Math.floor(55 * v2);
         return "rgb(" + r + "," + g + ","  + b + ")";
       }
+
+      function orig_save(elem, attr, value) {
+        var d3_elem = d3.select(elem);
+        if ((d3_elem.attr("_orig_" + attr) != undefined)) return;
+        if (d3_elem.attr(attr) == undefined) return;
+        if (value == undefined) value = d3_elem.attr(attr).value;
+        d3_elem.attr("_orig_" + attr, value);
+      }
     }
   </script>
 
