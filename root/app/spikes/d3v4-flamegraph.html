@@ -160,7 +160,7 @@
                      (height - yScale(d.depth) - cell_height) + ')';
             }
           )
-          .on('click',  nodeClicked);
+          .on('click',  nodeZoom);
 
 
       var nodes = bars
@@ -299,10 +299,7 @@
 
     function nodeClicked(d) {
 
-      console.log(this);
-      console.log(d);
 
-      var rect_width = ‌d3.select(this).select('rect').attr('width');
       // nodeZoom(d);
 
 //      xScale.domain([d.x0, d.x0 + d.x1]);
@@ -340,10 +337,13 @@
     }
 
     function nodeZoom(node) {
-      console.log("nodeZoom node:");
-      console.log(node);
 
-      var width = d3.select(node).attr('width');
+      console.log(this);
+      console.log(d);
+
+      var rect_width = ‌d3.select(this).select('rect').attr('width');
+
+
     }
   </script>
 
