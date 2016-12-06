@@ -337,11 +337,23 @@
     }
 
     function nodeZoom(node) {
-
       console.log(this);
-      console.log(d);
+      console.log(node);
 
-      var rect_width = ‌d3.select(this).select('rect').attr('width');
+      var rect_width = d3.select(this).select('rect').attr('width');
+      var svg_rect = d3.select(this).select('rect');
+      var width = parseInt(svg_rect.attr('width'));
+      var xmin  = parseInt(svg_rect.attr('x'));
+      var xmax  = xmin + width;
+      var ymin  = parseInt(svg_rect.attr('y'));
+      var ratio = parseInt(d3.select('svg').attr('width')) / width;
+
+      console.log("WIDTH: " + width);
+      console.log("XMIN: "  + xmin);
+      console.log("XMAX: " + xmax);
+      console.log("YMIN: " + ymin);
+
+      console.log("RATIO: " + ratio);
 
 
     }
