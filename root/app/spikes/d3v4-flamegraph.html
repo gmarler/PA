@@ -348,11 +348,6 @@
       var ymin  = parseInt(svg_rect.attr('y'));
       var ratio = parseInt(d3.select('svg').attr('width')) / width;
 
-      console.log("WIDTH: " + width);
-      console.log("XMIN: "  + xmin);
-      console.log("XMAX: " + xmax);
-      console.log("YMIN: " + ymin);
-
       console.log("RATIO: " + ratio);
 
       var g_elems = d3.selectAll('svg>g>g').nodes();
@@ -373,7 +368,7 @@
 
         if (upstack) {
           // Direct ancestor
-          if (rect_x <= xmin && (rect_x + rect_width) >= xmax) {
+          if ((rect_x <= xmin) && ((rect_x + rect_width) >= xmax)) {
             d3.select(g_elems[i]).select('rect')
               .attr('opacity','0.5');
 //            zoom_parent(rect_elem);
@@ -389,20 +384,26 @@
         // children, maybe
         else {
           // no common path
-          if (rect_x < xmin || rect_x >= xmax) {
+          if ((rect_x < xmin) || (rect_x >= xmax)) {
             d3.select(g_elems[i])
               .attr('display','none');
           }
           else {
-            //zoom_child(g_elems[i], xmin, ratio);
+            zoom_child(g_elems[i], xmin, ratio);
             //d3.select(g_elems[i]).select('rect')
             //  .on('click', function (e) { nodeZoom(this); });
             // update_text(d3.select(g_elems[i]).node());
           }
         }
       }
+    }
 
+    function zoom_child(element, x, ratio) {
+      if (element.attributes != undefined) {
 
+      } else {
+        console.log("zoom_child: Element attributes undefined!");
+      }
     }
   </script>
 
