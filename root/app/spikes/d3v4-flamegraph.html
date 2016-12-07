@@ -21,6 +21,9 @@
       /*overflow:       hidden;*/
       /*text-align:     left;*/
     }
+    .d3-flame-graph .fade {
+      opacity: 0.6 !important;
+    }
   </style>
 </head>
 <body>
@@ -289,13 +292,6 @@
 
     }
 
-    function orig_save(elem, attr, value) {
-      var d3_elem = d3.select(elem);
-      if ((d3_elem.attr("_orig_" + attr) != undefined)) return;
-      if (d3_elem.attr(attr) == undefined) return;
-      if (value == undefined) value = d3_elem.attr(attr).value;
-      d3_elem.attr("_orig_" + attr, value);
-    }
 
     function nodeClicked(d) {
 
@@ -340,69 +336,60 @@
       console.log(this);
       console.log(node);
 
-      var rect_width = d3.select(this).select('rect').attr('width');
-      var svg_rect = d3.select(this).select('rect');
-      var width = parseInt(svg_rect.attr('width'));
-      var xmin  = parseInt(svg_rect.attr('x'));
-      var xmax  = xmin + width;
-      var ymin  = parseInt(svg_rect.attr('y'));
-      var ratio = parseInt(d3.select('svg').attr('width')) / width;
+      hideSiblings(node);
+      show(node);
+      fadeAncestors(node);
+      update();
+    }
 
-      console.log("RATIO: " + ratio);
+    function hideSiblings(d) {
+      var siblings = getSiblings(d);
 
-      var g_elems = d3.selectAll('svg>g>g').nodes();
-
-      for (var i = 0; i < g_elems.length; i++) {
-        var rect_elem = d3.select(g_elems[i]).select('rect').node();
-
-        var attrs = rect_elem.attributes;
-
-        var rect_x     = parseInt(attrs["x"].value);
-        var rect_width = parseInt(attrs["width"].value);
-
-        console.log("rect_x: " + rect_x);
-        console.log("rect_width: " + rect_width);
-
-        // Is this an ancestor of the element that was clicked on?
-        var upstack = parseInt(attrs["y"].value) > ymin;
-
-        if (upstack) {
-          // Direct ancestor
-          if ((rect_x <= xmin) && ((rect_x + rect_width) >= xmax)) {
-            d3.select(g_elems[i]).select('rect')
-              .attr('opacity','0.5');
-//            zoom_parent(rect_elem);
-//            d3.select(g_elems[i])
-//              .on('click', function (e) { nodeUnzoom(); nodeZoom(this); });
-//            update_text(d3.select(g_elems[i]).node());
-          }
-          // Not in current path
-          else
-            d3.select(g_elems[i]).select('rect')
-              .attr('display','none');
+      siblings.forEach(
+        function(s) {
+          hide(s);
         }
-        // children, maybe
-        else {
-          // no common path
-          if ((rect_x < xmin) || (rect_x >= xmax)) {
-            d3.select(g_elems[i])
-              .attr('display','none');
-          }
-          else {
-            zoom_child(g_elems[i], xmin, ratio);
-            //d3.select(g_elems[i]).select('rect')
-            //  .on('click', function (e) { nodeZoom(this); });
-            // update_text(d3.select(g_elems[i]).node());
-          }
-        }
+      );
+      if (d.parent) {
+        hideSiblings(d.parent);
       }
     }
 
-    function zoom_child(element, x, ratio) {
-      if (element.attributes != undefined) {
+    function getSiblings(d) {
+      var siblings = [];
 
-      } else {
-        console.log("zoom_child: Element attributes undefined!");
+      if (d.parent) {
+        var me = d.parent.children.indexOf(d);
+        siblings = d.parent.children.slice(0);
+        siblings.splice(me, 1);
+      }
+      return siblings;
+    }
+
+    function hide(d) {
+      if (!d.original) {
+        d.original = d.value;
+      }
+      d.value = 0;
+      if (d.children) {
+        d.children.forEach(hide);
+      }
+    }
+
+    function show(d) {
+      d.fade = false;
+      if (d.original) {
+        d.value = d.original;
+      }
+      if (d.children) {
+        d.children.forEach(show);
+      }
+    }
+
+    function fadeAncestors(d) {
+      if (d.parent) {
+        d.parent.fade = true;
+        fadeAncestors(d.parent);
       }
     }
   </script>
