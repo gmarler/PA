@@ -1,0 +1,18 @@
+<table class="table table-bordered table-hover">
+    <thead>
+    <tr>
+        <th data-ng-repeat="column in grid.columns"
+            data-ng-class="column.class"
+            style="cursor: pointer"
+            data-ng-click="orderBy(column)">
+            {{ column.title }}
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr data-ng-repeat="row in grid.data | filter: $filter | orderBy:$orderBy:$reverse | limitTo:$itemsPerPage:$itemsPerPage * ($currentPage - 1)"
+        data-ng-click="fire('tr.click', row)">
+        <td data-ng-repeat="column in grid.columns">{{ column.render(row) }}</td>
+    </tr>
+    </tbody>
+</table>

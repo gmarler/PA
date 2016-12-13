@@ -1,0 +1,15 @@
+<div>
+
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation"
+            data-ng-repeat="pane in panes"
+            data-ng-class="{'active':pane.active,'disabled':pane.disabled}">
+            <a data-ng-click="activate(pane)"
+               href=""
+               role="tab">{{ pane.title }}</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" ng-transclude></div>
+
+</div>

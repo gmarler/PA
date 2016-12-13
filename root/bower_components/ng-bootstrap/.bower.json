@@ -1,0 +1,35 @@
+{
+  "name": "ng-bootstrap",
+  "description": "Angular bootstrap components.",
+  "main": "",
+  "authors": [
+    "Beqa Bendeliani <b.bendeliani@gmail.com>"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "Angular",
+    "Bootstrap",
+    "ng",
+    "components"
+  ],
+  "homepage": "https://github.com/ifgroup/ng-bootstrap",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "version": "1.0.1",
+  "_release": "1.0.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "1.0.1",
+    "commit": "e20c0b4aa229fbd201cc89e6b0bbbed5027ba31e"
+  },
+  "_source": "https://github.com/ifgroup/ng-bootstrap.git",
+  "_target": "^1.0.1",
+  "_originalSource": "ng-bootstrap",
+  "_direct": true
+}

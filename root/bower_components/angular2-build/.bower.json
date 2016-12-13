@@ -1,0 +1,20 @@
+{
+  "name": "angular2-build",
+  "version": "2.0.0-alpha.34",
+  "main": "./angular2.dev.js",
+  "ignore": [
+    "Makefile"
+  ],
+  "dependencies": {},
+  "homepage": "https://github.com/mgcrea/bower-angular2-build",
+  "_release": "2.0.0-alpha.34",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.0.0-alpha.34",
+    "commit": "d7dd9682e5db20e8cce9c20aac639637ef55c60d"
+  },
+  "_source": "https://github.com/mgcrea/bower-angular2-build.git",
+  "_target": "^2.0.0-alpha.34",
+  "_originalSource": "angular2-build",
+  "_direct": true
+}

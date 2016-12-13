@@ -1,0 +1,22 @@
+<div data-ng-repeat="node in nodes">
+
+    <div class="list-group-item" data-ng-click="node.toggle()">
+
+        <span>{{ node.name }}</span>
+
+        <div class="pull-right">
+            <checkbox checked="node.checked"
+                      on-check="node.onCheck()"></checkbox>
+        </div>
+
+        <div class="pull-right">
+            <span class="badge">{{ node.count }}</span>
+        </div>
+
+    </div>
+
+    <div class="list-group-submenu" data-ng-if="node.expanded">
+        <treeview nodes="node.nodes"></treeview>
+    </div>
+
+</div>

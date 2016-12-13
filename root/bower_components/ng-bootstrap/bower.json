@@ -1,0 +1,24 @@
+{
+  "name": "ng-bootstrap",
+  "description": "Angular bootstrap components.",
+  "main": "",
+  "authors": [
+    "Beqa Bendeliani <b.bendeliani@gmail.com>"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "Angular",
+    "Bootstrap",
+    "ng",
+    "components"
+  ],
+  "homepage": "https://github.com/ifgroup/ng-bootstrap",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
