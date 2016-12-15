@@ -5,6 +5,10 @@
   <title>D3 v4 Flamegraph Tests</title>
   <!-- <script src="https://d3js.org/d3.v4.min.js"></script> -->
   <style>
+    .hidden {
+      visibility: "hidden";
+    }
+
     .chart {
       background:    lightgray;
       border:        1px solid black;
@@ -24,6 +28,64 @@
     .d3-flame-graph .fade {
       opacity: 0.6 !important;
     }
+
+    /* Tool Tip Styling */
+    .d3-flame-graph-tip {
+      line-height: 1;
+      font-family: Verdana;
+      font-size: 12px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    /* Creates a small triangle extender for the tooltip */
+    .d3-flame-graph-tip:after {
+      box-sizing: border-box;
+      display: inline;
+      font-size: 10px;
+      width: 100%;
+      line-height: 1;
+      color: rgba(0, 0, 0, 0.8);
+      position: absolute;
+      pointer-events: none;
+    }
+
+    /* Northward tooltips */
+    .d3-flame-graph-tip.n:after {
+      content: "\25BC";
+      margin: -1px 0 0 0;
+      top: 100%;
+      left: 0;
+      text-align: center;
+    }
+
+    /* Eastward tooltips */
+    .d3-flame-graph-tip.e:after {
+      content: "\25C0";
+      margin: -4px 0 0 0;
+      top: 50%;
+      left: -8px;
+    }
+
+    /* Southward tooltips */
+    .d3-flame-graph-tip.s:after {
+      content: "\25B2";
+      margin: 0 0 1px 0;
+      top: -8px;
+      left: 0;
+      text-align: center;
+    }
+
+    /* Westward tooltips */
+    .d3-flame-graph-tip.w:after {
+      content: "\25B6";
+      margin: -4px 0 0 -1px;
+      top: 50%;
+      left: 100%;
+    }
   </style>
 </head>
 <body>
@@ -33,7 +95,13 @@
   <button onclick="kernel_stacks2()">Kernel Stacks 2</button>
   <button onclick="stack_layout()">Layout Test</button>
 
+
+
+
+  <!-- This is D3 v4 -->
   <script type="text/javascript" src="../../bower_components/d3/d3.min.js"></script>
+
+  <!-- and our Javascript spike for Flame Graph -->
   <script type="text/javascript">
 
     // 18 pixel bottom margin to make room for informational banner
@@ -46,6 +114,11 @@
     var  width      =  768 - margin.left - margin.right;
     var height      =  768 - margin.top - margin.bottom;
     var cell_height =   18;
+    var sort        =  true,
+        tooltip     =  true,
+        selection   =  null,
+        title       =    "",
+        reversed    =  false;
 
     // Total value of all stack samples in root node
     var totalValue;
@@ -67,7 +140,16 @@
         bgcolor2 = "#eeeeb0";
 
     function doSort(a,b) {
-      return d3.ascending(a.name, b.name);
+      // If sort is a function, use it
+      if (typeof sort === 'function') {
+        return sort(a,b);
+      }
+      // Otherwise, if sort is truthy, use d3.ascending
+      else if (sort) {
+        return d3.ascending(a.name, b.name);
+      }
+      // Otherwise, do nothing
+      else { return 0; }
     }
 
     function background_gradient(selection, bgcolor1, bgcolor2, width, height) {
@@ -103,6 +185,12 @@
           .sum(function (d) { return d.children ? 0 : d.value; })
         ;
 
+      // Put a unique ID on each datum
+      root.each(
+        function(node) {
+          node.data.uniqueID = makeId();
+        }
+      );
 
 
       var partition = d3.partition()
@@ -163,6 +251,7 @@
                      (height - yScale(d.depth) - cell_height) + ')';
             }
           )
+          .attr("id", function(d) { return d.data.uniqueID; } )
           .on('click',  nodeZoom);
 
 
@@ -222,6 +311,7 @@
         update(data);
       });
     }
+
     function simple_stacks() {
       display_chart("kernel-stack-simple.json");
     }
@@ -332,14 +422,52 @@
 //        });
     }
 
-    function nodeZoom(node) {
+    function nodeZoom(datum, index, nodes) {
+      console.log("THIS:");
       console.log(this);
-      console.log(node);
+      console.log(datum);
+      // squirrel away DOM element 'this' for later use
+      var dom_g = this;
 
-      hideSiblings(node);
-      show(node);
-      fadeAncestors(node);
-      update();
+      var ancestors = datum.ancestors();
+      console.log("ANCESTORS:");
+      ancestors.forEach(
+        function (node, i) {
+          if (i == 0) { return; }
+          console.log(node.data.name);
+        }
+      );
+      var descendants = datum.descendants();
+      console.log("DESCENDANTS:");
+      descendants.forEach(
+        function (node, i) {
+          if (i == 0) { return; }
+          console.log(node.data.name);
+        }
+      );
+
+
+      var siblings = getSiblings(datum);
+      console.log("SIBLINGS:");
+      siblings.forEach(
+        function (node, i) {
+          console.log(node.data.name);
+          console.log("UNIQUE ID:", node.data.uniqueID);
+
+          // Disappear each sibling
+          var sibling_g = d3.select("#" + node.data.uniqueID);
+          var sibling_rect = sibling_g.select('rect');
+          var sibling_text = sibling_g.select('text');
+//          sibling_g.attr("visibility", "hidden");
+//          sibling_rect.attr("visibility", "hidden");
+//          sibling_text.attr("visibility", "hidden");
+          d3.select("#" + node.data.uniqueID).selectAll("*").attr("visibility","hidden");
+        }
+      );
+//      hideSiblings(datum);
+//      show(datum);
+//      fadeAncestors(datum);
+//      update();
     }
 
     function hideSiblings(d) {
@@ -356,14 +484,24 @@
     }
 
     function getSiblings(d) {
-      var siblings = [];
+      var oldsiblings = [];
+      var newsiblings = [];
+      var depth    = d.depth;
+      var myID     = d.data.uniqueID;
+
+      console.log("Selecting svg>g>g");
+      newsiblings = d3.selectAll("svg>g>g")
+        .filter(function(d) { return (depth == d.depth) && (myID != d.data.uniqueID);
+        })
+        .data();
 
       if (d.parent) {
         var me = d.parent.children.indexOf(d);
-        siblings = d.parent.children.slice(0);
-        siblings.splice(me, 1);
+        oldsiblings = d.parent.children.slice(0);
+        oldsiblings.splice(me, 1);
       }
-      return siblings;
+
+      return newsiblings;
     }
 
     function hide(d) {
@@ -391,6 +529,12 @@
         d.parent.fade = true;
         fadeAncestors(d.parent);
       }
+    }
+
+    function makeId(prefix) {
+      // HTML id's must begin with a letter of some sort
+      prefix || (prefix = 'X');
+      return prefix + (Math.random() * 1e16).toFixed(0);
     }
   </script>
 
