@@ -431,21 +431,24 @@
       var dom_g = this;
 
       var ancestors = datum.ancestors();
-      console.log("ANCESTORS:");
-      ancestors.forEach(
-        function (node, i) {
-          if (i == 0) { return; }
-          console.log(node.data.name);
-        }
-      );
+
+//      console.log("ANCESTORS:");
+//      ancestors.forEach(
+//        function (node, i) {
+//          if (i == 0) { return; }
+//          console.log(node.data.name);
+//        }
+//      );
+
       var descendants = datum.descendants();
-      console.log("DESCENDANTS:");
-      descendants.forEach(
-        function (node, i) {
-          if (i == 0) { return; }
-          console.log(node.data.name);
-        }
-      );
+
+//      console.log("DESCENDANTS:");
+//      descendants.forEach(
+//        function (node, i) {
+//          if (i == 0) { return; }
+//          console.log(node.data.name);
+//        }
+//      );
 
 
       var siblings = getSiblings(datum);
@@ -456,15 +459,31 @@
           console.log("UNIQUE ID:", node.data.uniqueID);
 
           // Disappear each sibling
-          var sibling_g = d3.select("#" + node.data.uniqueID);
-          var sibling_rect = sibling_g.select('rect');
-          var sibling_text = sibling_g.select('text');
-//          sibling_g.attr("visibility", "hidden");
-//          sibling_rect.attr("visibility", "hidden");
-//          sibling_text.attr("visibility", "hidden");
-          d3.select("#" + node.data.uniqueID).selectAll("*").classed("hidden","true");
+          d3
+            .select("#" + node.data.uniqueID)
+            .selectAll("*")
+            .classed("hidden","true");
         }
       );
+      // TODO:
+      // Also need to disappear any nodes that are "above" this one
+      // (depth is < this node's depth), AND aren't an ancestor of this node.
+
+      ancestors.forEach(
+        function (node, i) {
+          if (i == 0) { return; }
+          d3
+            .select("#" + node.data.uniqueID)
+            .selectAll("*")
+            .classed("fade", "true");
+        }
+      );
+
+      // TODO: Scale ancestors to 100%, if they aren't already
+      //       We get this node included for free in ancestors
+
+      // TODO: Scale the descendants
+
 //      hideSiblings(datum);
 //      show(datum);
 //      fadeAncestors(datum);
