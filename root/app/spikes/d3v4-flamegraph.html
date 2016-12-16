@@ -511,7 +511,10 @@
         }
       );
 
-      // TODO: Scale ancestors to 100%, if they aren't already
+      // TODO: Get the scaling factor, so we know what the scale the
+      //       descendants by
+
+      // Scale ancestors to 100%, if they aren't already
       //       We get the zoomed node included for free in ancestors
       ancestors.forEach(
         function (node, i) {
