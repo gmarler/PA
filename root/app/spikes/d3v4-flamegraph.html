@@ -458,6 +458,7 @@
 //      );
 
 
+      // Hide siblings
       var siblings = getSiblings(datum);
       console.log("SIBLINGS:");
       siblings.forEach(
@@ -473,7 +474,7 @@
         }
       );
       //
-      // Also need to disappear any nodes that are "above" this one
+      // Also need to hide any nodes that are "above" this one
       // (depth is < this node's depth), AND aren't an ancestor of this node.
       // start with root, and traverse descendants, capturing all until we hit this depth.
       // then use lodash to subtract the list of ancestors from this list
@@ -500,6 +501,8 @@
         }
       );
 
+      // TODO: Hide nodes "below" this node, which aren't a descendant of it
+
       // Now fade out our ancestors
       ancestors.forEach(
         function (node, i) {
@@ -515,7 +518,7 @@
       //       descendants by
 
       // Scale ancestors to 100%, if they aren't already
-      //       We get the zoomed node included for free in ancestors
+      // We get the zoomed node included for free in ancestors
       ancestors.forEach(
         function (node, i) {
           var g = d3.select("#" + node.data.uniqueID);
@@ -529,8 +532,12 @@
           // Set rect width to entire width
           g.select('rect')
             .attr("width",width);
+
+          // TODO: Text elements can become long enough to see, expand them
         }
       );
+
+
 
       // TODO: Scale the descendants
 
