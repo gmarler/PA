@@ -481,10 +481,9 @@
       // then mark whatever is left as hidden.
       var non_ancestors_above =
         _.filter(root_array,
-                 function (value,index, collection) { return value.depth < datum.depth; });
-        non_ancestors_above = _.difference(non_ancestors_above,ancestors);
-        //root
-        //  .filter(function(d) { return d.depth < datum.data.depth; });
+                 function (value, index, collection) { return value.depth < datum.depth; });
+      non_ancestors_above = _.difference(non_ancestors_above,ancestors);
+
       console.log("NON-ANCESTORS ABOVE NODE:");
       console.log(non_ancestors_above);
 
@@ -493,7 +492,7 @@
           console.log(node.data.name);
           console.log("UNIQUE ID:", node.data.uniqueID);
 
-          // Disappear each sibling
+          // Disappear each entity
           d3
             .select("#" + node.data.uniqueID)
             .selectAll("*")
@@ -501,7 +500,24 @@
         }
       );
 
-      // TODO: Hide nodes "below" this node, which aren't a descendant of it
+      // Hide nodes "below" this node, which aren't a descendant of it
+      var non_descendants_below =
+        _.filter(root_array,
+                 function (value, index, collection) { return value.depth > datum.depth; });
+      non_descendants_below = _.difference(non_descendants_below, descendants);
+
+      non_descendants_below.forEach(
+        function (node, i) {
+          console.log(node.data.name);
+          console.log("UNIQUE ID:", node.data.uniqueID);
+
+          // Disappear each entity
+          d3
+            .select("#" + node.data.uniqueID)
+            .selectAll("*")
+            .classed("hidden","true");
+        }
+      );
 
       // Now fade out our ancestors
       ancestors.forEach(
