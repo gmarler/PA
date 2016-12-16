@@ -101,7 +101,7 @@
 
   <!-- This is D3 v4 -->
   <script type="text/javascript" src="../../bower_components/d3/d3.min.js"></script>
-  <script type="text/javascript" src="../../bower_components/lodash/lodash.min.js"></script>
+  <script type="text/javascript" src="../../bower_components/lodash/dist/lodash.min.js"></script>
 
   <!-- and our Javascript spike for Flame Graph -->
   <script type="text/javascript">
@@ -124,6 +124,7 @@
 
     // Total value of all stack samples in root node
     var totalValue;
+    var root;
 
     // Color Theme
     var color_theme = "hot";
@@ -182,7 +183,7 @@
 
     function update(data) {
 
-      var root = d3.hierarchy(data)
+      root = d3.hierarchy(data)
           .sort(doSort)
           .sum(function (d) { return d.children ? 0 : d.value; })
         ;
@@ -193,7 +194,6 @@
           node.data.uniqueID = makeId();
         }
       );
-
 
       var partition = d3.partition()
         // This implicitly scales x0,y0,x1,y1
@@ -432,14 +432,20 @@
       var dom_g = this;
 
       var ancestors = datum.ancestors();
+      // Get entire array, in order
+      // TODO: We really only need the non-ancestor elements that are above
+      //       the node being Zoomed
+      var root_array = root.descendants();
+      // console.log(root_array);
 
-//      console.log("ANCESTORS:");
-//      ancestors.forEach(
-//        function (node, i) {
-//          if (i == 0) { return; }
-//          console.log(node.data.name);
-//        }
-//      );
+      console.log("ANCESTORS:");
+      ancestors.forEach(
+        function (node, i) {
+          if (i == 0) { return; }
+          console.log(node.data.name);
+        }
+      );
+      console.log(ancestors);
 
       var descendants = datum.descendants();
 
@@ -466,12 +472,33 @@
             .classed("hidden","true");
         }
       );
-      // TODO:
+      //
       // Also need to disappear any nodes that are "above" this one
       // (depth is < this node's depth), AND aren't an ancestor of this node.
       // start with root, and traverse descendants, capturing all until we hit this depth.
       // then use lodash to subtract the list of ancestors from this list
       // then mark whatever is left as hidden.
+      var non_ancestors_above =
+        _.filter(root_array,
+                 function (value,index, collection) { return value.depth < datum.depth; });
+        non_ancestors_above = _.difference(non_ancestors_above,ancestors);
+        //root
+        //  .filter(function(d) { return d.depth < datum.data.depth; });
+      console.log("NON-ANCESTORS ABOVE NODE:");
+      console.log(non_ancestors_above);
+
+      non_ancestors_above.forEach(
+        function (node, i) {
+          console.log(node.data.name);
+          console.log("UNIQUE ID:", node.data.uniqueID);
+
+          // Disappear each sibling
+          d3
+            .select("#" + node.data.uniqueID)
+            .selectAll("*")
+            .classed("hidden","true");
+        }
+      );
 
       ancestors.forEach(
         function (node, i) {
