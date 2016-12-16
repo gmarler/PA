@@ -500,6 +500,7 @@
         }
       );
 
+      // Now fade out our ancestors
       ancestors.forEach(
         function (node, i) {
           if (i == 0) { return; }
@@ -511,7 +512,22 @@
       );
 
       // TODO: Scale ancestors to 100%, if they aren't already
-      //       We get this node included for free in ancestors
+      //       We get the zoomed node included for free in ancestors
+      ancestors.forEach(
+        function (node, i) {
+          var g = d3.select("#" + node.data.uniqueID);
+          // http://stackoverflow.com/questions/38224875/replacing-d3-transform-in-d3-v4
+          // console.log("TRANSFORM");
+          // console.log(g.node().transform.baseVal[0].matrix.f);
+          var currentY = g.node().transform.baseVal[0].matrix.f;
+
+          // Translate g to far left, same height
+          g.attr('transform', 'translate(0,' + currentY + ')');
+          // Set rect width to entire width
+          g.select('rect')
+            .attr("width",width);
+        }
+      );
 
       // TODO: Scale the descendants
 
