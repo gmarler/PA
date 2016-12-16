@@ -468,6 +468,9 @@
       // TODO:
       // Also need to disappear any nodes that are "above" this one
       // (depth is < this node's depth), AND aren't an ancestor of this node.
+      // start with root, and traverse descendants, capturing all until we hit this depth.
+      // then use lodash to subtract the list of ancestors from this list
+      // then mark whatever is left as hidden.
 
       ancestors.forEach(
         function (node, i) {
