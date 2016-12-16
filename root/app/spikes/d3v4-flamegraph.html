@@ -532,6 +532,10 @@
 
       // TODO: Get the scaling factor, so we know what the scale the
       //       descendants by
+      // Can also use the rect's width, should it come to that, but that would
+      // require selecting it.
+      var multiplyFactor = width / (datum.x1 - datum.x0);
+      console.log("MULTIPLY FACTOR: " + multiplyFactor);
 
       // Scale ancestors to 100%, if they aren't already
       // We get the zoomed node included for free in ancestors
