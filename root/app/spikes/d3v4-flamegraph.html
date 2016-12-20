@@ -560,6 +560,23 @@
 
 
       // TODO: Scale the descendants
+      descendants.forEach(
+        function (node, i) {
+          var g = d3.select("#" + node.data.uniqueID);
+          var currentX = g.node().transform.baseVal[0].matrix.e;
+          var currentY = g.node().transform.baseVal[0].matrix.f;
+
+          // Translate g to currentX / multiplyFactor
+          g.attr('transform', 'translate(' + (currentX * multiplyFactor) + ',' + currentY + ')');
+
+          // Expand rect width * multiplyFactor
+          var current_width =
+            g.select('rect')
+              .attr("width");
+          g.select('rect')
+            .attr("width", current_width * multiplyFactor);
+        }
+      );
 
 //      hideSiblings(datum);
 //      show(datum);
