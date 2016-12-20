@@ -536,10 +536,10 @@
         }
       );
 
-      // TODO: Get the scaling factor, so we know what to scale the
-      //       descendants by
-      // Can also use the rect's width, should it come to that, but that would
-      // require selecting it.
+      // Get the scaling factor, so we know what to scale the
+      // descendants by
+      // NOTE: Can also use the rect's width, should it come to that, but that would
+      //       require selecting it.
       var multiplyFactor = width / (datum.x1 - datum.x0);
       console.log("MULTIPLY FACTOR: " + multiplyFactor);
 
