@@ -428,6 +428,12 @@
       console.log("THIS:");
       console.log(this);
       console.log(datum);
+
+      // Get the current X of the g element for the node being zoomed
+      var zoomedNode_g = d3.select("#" + datum.data.uniqueID);
+      var zoomedNode_g_currentX = zoomedNode_g.node().transform.baseVal[0].matrix.e;
+      console.log("zoomedNode_g_currentX: " + zoomedNode_g_currentX);
+
       // squirrel away DOM element 'this' for later use
       var dom_g = this;
 
@@ -557,17 +563,17 @@
         }
       );
 
-
+      // Scale the descendants
       // Calculation is: (child_g_currentX - zoomedNode_g_currentX) * multiplyFactor
-      // TODO: Scale the descendants
       descendants.forEach(
         function (node, i) {
+          if (i == 0) { return; }  // Don't alter the zoomed node itself
           var g = d3.select("#" + node.data.uniqueID);
           var currentX = g.node().transform.baseVal[0].matrix.e;
           var currentY = g.node().transform.baseVal[0].matrix.f;
 
           // Translate g to currentX / multiplyFactor
-          g.attr('transform', 'translate(' + (currentX * multiplyFactor) + ',' + currentY + ')');
+          g.attr('transform', 'translate(' + ((currentX - zoomedNode_g_currentX) * multiplyFactor) + ',' + currentY + ')');
 
           // Expand rect width * multiplyFactor
           var current_width =
