@@ -40,7 +40,7 @@ sub add {
     my $head  = $frames->[0];
     my $child = exists($self->children->{$head}) ?
                   $self->children->{$head} : undef;
-    if (not $child) {
+    if (not defined($child)) {
       $child = Node->new(name => $head);
       $self->children->{$head} = $child;
     }
