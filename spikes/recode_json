@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+
+#
+# Use to convert formatted JSON to more-compressed format JSON for comparison
+#
+#
+use strict;
+use warnings;
+use v5.20;
+
+use JSON::MaybeXS              qw(decode_json encode_json);
+use IO::File;
+
+my $json_file = $ARGV[0];
+
+my $fh = IO::File->new($json_file, "<") or
+  die "Unable to open [$json_file]: $!";
+
+my $c = do { local $/; <$fh>; };
+
+my $data_structure = decode_json($c);
+
+my $compressed_json = encode_json($data_structure);
+
+say $compressed_json;

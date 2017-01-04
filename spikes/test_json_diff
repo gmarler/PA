@@ -1,0 +1,30 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.20;
+
+use Test::Most;
+use JSON::MaybeXS  qw(decode_json);
+use IO::File;
+
+#
+# Use to test the difference in JSON by comparing after converting to Perl
+# data structures
+#
+
+my $fh1 = IO::File->new($ARGV[0],"<") or
+  die "Unable to open $ARGV[0]: $!";
+
+my $fh2 = IO::File->new($ARGV[1],"<") or
+  die "Unable to open $ARGV[1]: $!";
+
+my $c1 = do { local $/; <$fh1>; };
+my $c2 = do { local $/; <$fh2>; };
+
+my $ds1 = decode_json($c1);
+my $ds2 = decode_json($c2);
+
+cmp_deeply($ds1,$ds2,"JSON is the same");
+
+done_testing;
