@@ -200,7 +200,7 @@ sub raw {
         $profile->closeStack($count);
       } else {
         # There is no open profile stack to close
-        say "ERROR: $line";
+        say STDERR "ERROR: $line";
       }
       next;
     }
@@ -214,16 +214,16 @@ sub raw {
     $frame = "-" if $frame eq "";
 
     if ($frame !~ m/^(\S+)`(\S+)$/) {
-      say "UNKNOWN LINE: $frame";
+      say STDERR "UNKNOWN LINE: $frame";
       next;
     }
 
     if ($profile->stack_is_open()) {
-        say "Sending to profile addFrame with: ($frame, undef)";
+        say STDERR "Sending to profile addFrame with: ($frame, undef)";
         $profile->addFrame($frame, undef);
     } else {
       $profile->openStack('kernel');
-      say "Sending to profile addFrame with: ($frame, undef)";
+      say STDERR "Sending to profile addFrame with: ($frame, undef)";
       $profile->addFrame($frame, undef);
     }
 
@@ -271,5 +271,5 @@ sub raw {
   say $encoder->encode( $res );
 }
 
-raw("/tmp/stacks", undef);
+raw($ARGV[0], undef);
 
