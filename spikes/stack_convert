@@ -220,7 +220,7 @@ sub raw {
         say STDERR "Sending to profile addFrame with: ($frame, undef)";
         $profile->addFrame($frame, undef);
     } else {
-      $profile->openStack('kernel');
+      $profile->openStack('root');
       say STDERR "Sending to profile addFrame with: ($frame, undef)";
       $profile->addFrame($frame, undef);
     }
@@ -270,4 +270,5 @@ sub raw {
 }
 
 raw($ARGV[0], undef);
+
 
