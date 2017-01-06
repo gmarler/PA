@@ -1,0 +1,632 @@
+
+
+              unix`default_mutex_lock_delay+0x74
+              unix`default_mutex_lock_delay+0x6c
+              unix`mutex_vector_enter+0x17c
+              genunix`issig_forreal+0x1c
+              genunix`cv_wait_sig_swap_core+0x1a0
+              genunix`lwp_park+0x128
+              genunix`syslwp_park+0x58
+              unix`syscall_trap+0x228
+               45
+
+              unix`default_mutex_lock_delay+0x74
+              unix`default_mutex_lock_delay+0x6c
+              unix`mutex_vector_enter+0x17c
+              genunix`stop+0x8ac
+              genunix`issig_forreal+0x27c
+              genunix`cv_wait_sig_swap_core+0x1a0
+              genunix`lwp_park+0x128
+              genunix`syslwp_park+0x58
+              unix`syscall_trap+0x228
+               51
+
+              unix`shipit+0x30
+              unix`run_interrupt_thread
+              unix`send_one_mondo+0x48
+              unix`xt_one_unchecked+0xf0
+              genunix`yield+0x30
+              unix`syscall_trap+0x228
+               52
+
+              unix`default_mutex_lock_delay+0x78
+              unix`default_mutex_lock_delay+0x6c
+              unix`mutex_vector_enter+0x17c
+              genunix`stop+0x8ac
+              genunix`issig_forreal+0x27c
+              genunix`cv_wait_sig_swap_core+0x1a0
+              genunix`lwp_park+0x128
+              genunix`syslwp_park+0x58
+              unix`syscall_trap+0x228
+               63
+
+              unix`utl0+0x4c
+              230
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           20
+
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`issig_forreal+0x1c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           22
+
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           26
+
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x78
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           26
+
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x78
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           29
+
+1483635605907 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           20
+
+1483635605902 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`issig_forreal+0x1c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           22
+
+1483635605906 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           26
+
+1483635605907 
+unix`default_mutex_lock_delay+0x78
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           26
+
+1483635605906 
+unix`default_mutex_lock_delay+0x78
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           29
+
+
+
+              beam.smp`scheduler_wait+0x1f8
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+              219
+
+              beam.smp`scheduler_wait+0x20c
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+              235
+
+              libc.so.1`__lwp_park+0x10
+              libc.so.1`cond_wait_queue+0x4c
+              libc.so.1`cond_wait+0x10
+              libc.so.1`pthread_cond_wait+0x8
+              beam.smp`ethr_event_wait+0x5c
+              beam.smp`scheduler_wait+0x404
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+              279
+
+              libc.so.1`yield+0x8
+              beam.smp`scheduler_wait+0x218
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+              345
+
+              libc.so.1`yield+0x4
+              beam.smp`scheduler_wait+0x218
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+             1652
+
+
+              unix`shipit+0x30
+              unix`run_interrupt_thread
+              unix`send_one_mondo+0x48
+              unix`xt_one_unchecked+0xf0
+              genunix`yield+0x30
+              unix`syscall_trap+0x228
+
+              libc.so.1`yield+0x4
+              beam.smp`scheduler_wait+0x218
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+               59
+
+              unix`utl0+0x4c
+
+              libc.so.1`yield+0x4
+              beam.smp`scheduler_wait+0x218
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+              210
+
+              unix`run_interrupt_thread
+
+              beam.smp`scheduler_wait+0x1f8
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+              219
+
+              unix`run_interrupt_thread
+
+              beam.smp`scheduler_wait+0x20c
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+              235
+
+              unix`run_interrupt_thread
+
+              libc.so.1`yield+0x8
+              beam.smp`scheduler_wait+0x218
+              beam.smp`schedule+0x25c0
+              beam.smp`process_main+0x270
+              beam.smp`sched_thread_func+0x134
+              beam.smp`thr_wrapper+0x74
+              libc.so.1`_lwp_start
+              303
+2017 Jan  5 12:00:02 
+libc.so.1`yield+0x4
+beam.smp`scheduler_wait+0x218
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           32
+
+2017 Jan  5 11:59:58 
+libc.so.1`yield+0x4
+beam.smp`scheduler_wait+0x218
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           34
+
+2017 Jan  5 12:00:05 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           38
+
+2017 Jan  5 12:00:05 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           49
+
+2017 Jan  5 12:00:05 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           93
+
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+ 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           13
+
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x78
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+ 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           14
+
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`issig_forreal+0x1c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+ 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           16
+
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x78
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+ 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           31
+
+2017 Jan  5 12:00:05 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+ 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           38
+
+1483635602490 
+libc.so.1`yield+0x4
+beam.smp`scheduler_wait+0x218
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           32
+
+1483635598294 
+libc.so.1`yield+0x4
+beam.smp`scheduler_wait+0x218
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           34
+
+1483635605902 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           38
+
+1483635605906 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           49
+
+1483635605907 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+           93
+
+1483635605906 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+ 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           13
+
+1483635605906 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+ 
+unix`default_mutex_lock_delay+0x78
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           14
+
+1483635605902 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+ 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`issig_forreal+0x1c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           16
+
+1483635605907 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+ 
+unix`default_mutex_lock_delay+0x78
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           31
+
+1483635605907 
+libc.so.1`__lwp_park+0x10
+libc.so.1`cond_wait_queue+0x4c
+libc.so.1`cond_wait+0x10
+libc.so.1`pthread_cond_wait+0x8
+beam.smp`ethr_event_wait+0x5c
+beam.smp`scheduler_wait+0x404
+beam.smp`schedule+0x25c0
+beam.smp`process_main+0x270
+beam.smp`sched_thread_func+0x134
+beam.smp`thr_wrapper+0x74
+libc.so.1`_lwp_start
+ 
+unix`default_mutex_lock_delay+0x74
+unix`default_mutex_lock_delay+0x6c
+unix`mutex_vector_enter+0x17c
+genunix`stop+0x8ac
+genunix`issig_forreal+0x27c
+genunix`cv_wait_sig_swap_core+0x1a0
+genunix`lwp_park+0x128
+genunix`syslwp_park+0x58
+unix`syscall_trap+0x228
+           38
+
+
