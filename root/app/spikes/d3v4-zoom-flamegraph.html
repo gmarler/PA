@@ -217,10 +217,12 @@
         .attr('transform',
               function(d) {
                 var element = d3.select("#" + d.data.uniqueID);
-
+                // Get the currentX and currentY in the existing
+                // transform="translate(currentX,currentY) for each 'g' elements
+                // NOTE: this cannot possibly be the best way to do this!
                 var currentX = element.node().transform.baseVal[0].matrix.e;
-                var currentY = element.node().transform.baseVal[0].matric.f;
-                return "translate(" + t.applyX(xScale(currentX)) + "," + currentY +")" });
+                var currentY = element.node().transform.baseVal[0].matrix.f;
+                return "translate(" + transform.applyX(xScale(currentX)) + "," + currentY +")" });
 
       // TODO: for each gContainer, select the rect inside it and zoom the width
 
