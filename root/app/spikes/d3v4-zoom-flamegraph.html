@@ -15,11 +15,6 @@
       font-family:    "Verdana";
       font-size:      12px;
       pointer-events: none;
-      /* The following goes with the d3-flame-graph foreignObject concept */
-      /*white-space:    nowrap;*/
-      /*text-overflow:  ellipsis;*/
-      /*overflow:       hidden;*/
-      /*text-align:     left;*/
     }
   </style>
 </head>
@@ -34,8 +29,7 @@
   <!-- and our Javascript spike for Flame Graph -->
   <script type="text/javascript">
 
-    // 18 pixel bottom margin to make room for informational banner
-    var margin = { top: 0, right: 0, bottom: 18, left: 0 };
+    var margin = { top: 0, right: 0, bottom: 0, left: 0 };
 
     // Font related constants
     var fontsize    =   12,
@@ -56,14 +50,13 @@
     display_chart();
 
     function update(data) {
-      console.log(data);
 
       root = d3.hierarchy(data)
           .sort(true)
           .sum(function (d) { return d.children ? 0 : d.value; })
         ;
 
-      // Put a unique ID on each datum for ease of selection later
+      // Put a unique ID on each datum
       root.each(
         function(node) {
           node.data.uniqueID = makeId();
@@ -77,17 +70,11 @@
 
       partition(root);
 
-      console.log(root.data);
-
-      // We can now determine the proper scale domain(s)
-      // xScale.domain([0, d3.max(root.children, function(root) { return root.data.value; })]).nice();
-      console.log("X Domain MAX:" + root.data.value);
-      // xScale.domain([0, width]);
+      // We can now set the proper scale domain(s)
       xScale.domain([0, root.data.value]);
 
       // we can now determine the total value of the root node
       totalValue = root.data.value;
-      console.log("totalValue: " + totalValue);
 
       var svg = d3.select('.chart')
         .append('svg')
@@ -100,23 +87,6 @@
           .append('g')
           .attr('transform','translate(' + margin.left + ',' + margin.top + ')');
 
-      var banner_container =
-        svg
-          .append('g')
-            .attr('transform','translate(0,' + (height) + ')')
-            .attr("id", "banner_container")
-          .append('rect')
-            .attr("id", "banner_rect")
-            .attr('fill', 'skyblue')
-            .attr('stroke', 'green')
-            .attr('x', 0)
-            .attr('y', 0)
-            .attr("height", cell_height)
-            .attr("width",  width)
-        ;
-
-      // background_gradient(g_container, bgcolor1, bgcolor2, width, height);
-
       var bars = g_container
         .selectAll('g')
         .data(root.descendants())
@@ -124,8 +94,6 @@
         .append('g')
           .attr('transform',
             function (d, i) {
-              console.log(d, this);
-              // console.log("BARS: d.x0: " + d.x0 + ", scaled d.x0: " + xScale(d.x0) );
               return 'translate(' + d.x0 + ',' +
                      (height - yScale(d.depth) - cell_height) + ')';
             }
@@ -137,44 +105,17 @@
       var nodes = bars
         .append('rect')
         .attr('fill', function(d) {
-          return 'yellow'; // color(color_theme);
+          return 'yellow';
         })
         .attr('stroke', 'black')
         .attr("x", function(d) { return 0; })
         .attr("y", function(d) { return 0; })
         .attr("height", function(d) { return cell_height; })
-        .attr("width", function(d) { // return xScale(d.x1 - d.x0);
-                                     return (d.x1 - d.x0);})
-        .on('mouseover',nodeMouseOver)
-        .on('mouseout', nodeMouseOut);
+        .attr("width", function(d) { return (d.x1 - d.x0);});
 
-      bars.append('text')
-        .text(function(d,i) {
-          var final_text_str;
-          // Select the previous sibling rect for this text
-           var rect = d3.select(this.previousSibling);
-           var rect_width = rect.attr("width");
-
-          var text_str = d.data.name;
-          // how many characters will fit in the rect's available width?
-          var chars_that_will_fit = rect_width / (fontsize * fontwidth);
-
-          if (rect_width < (2 * fontsize * fontwidth)) {
-            // nothing will fit
-            final_text_str = "";
-          } else if (text_str.length > chars_that_will_fit) {
-            // Just print what fits with a trailing ellipsis
-            final_text_str = text_str.substring(0,chars_that_will_fit - 2) + "..";
-          } else {
-            // the whole string fits, no problem
-            final_text_str = text_str;
-          }
-
-          return final_text_str;
-        })
+      bars
         .attr('y', cell_height - 3)
-        .attr('x', 3)
-        .attr("class", "stack-text");
+        .attr('x', 3);
     }
 
 
@@ -227,20 +168,20 @@
           };
 
       // Eliminate existing SVG, if any
-
       d3.select('svg').remove();
       update(chart_data);
-//      d3.json(chart_data, function (error, data) {
-//        if (error) return console.warn("WE DIED: " + error);
-//        // console.log(data);
-//        update(data);
-//      });
     }
 
     function nodeZoom(datum, index, nodes) {
-      console.log("THIS:");
-      console.log(this);
-      console.log(datum);
+
+      // Here's the zooming goal when a node is clicked on:
+      // - Nothing in the Y dimension is touched
+      //   - Only X dimension is scaled/translated
+      // - X dimension is zoomed/scaled/translated such that the x0 position
+      //   of the container g element for the rect is aligned with the left
+      //   side of the svg's g container, and the x1 position of the
+      //   container g element for the rect is aligned with the right side of
+      //   the svg's g container.
 
       // Get the current X of the g element for the node being zoomed
       var zoomedNode_g = d3.select("#" + datum.data.uniqueID);
@@ -250,144 +191,12 @@
       // squirrel away DOM element 'this' for later use
       var dom_g = this;
 
-      var ancestors = datum.ancestors();
-      // Get entire array, in order
-      // TODO: We really only need the non-ancestor elements that are above
-      //       the node being Zoomed
-      var root_array = root.descendants();
-      // console.log(root_array);
-
-      console.log("ANCESTORS:");
-      ancestors.forEach(
-        function (node, i) {
-          if (i == 0) { return; }
-          console.log(node.data.name);
-        }
-      );
-      console.log(ancestors);
-
-      var descendants = datum.descendants();
-
-
-      // Hide siblings
-      var siblings = getSiblings(datum);
-      console.log("SIBLINGS:");
-      siblings.forEach(
-        function (node, i) {
-          console.log(node.data.name);
-          console.log("UNIQUE ID:", node.data.uniqueID);
-
-          // Disappear each sibling
-          d3
-            .select("#" + node.data.uniqueID)
-            .selectAll("*")
-            .classed("hidden","true");
-        }
-      );
-      //
-      // Also need to hide any nodes that are "above" this one
-      // (depth is < this node's depth), AND aren't an ancestor of this node.
-      // start with root, and traverse descendants, capturing all until we hit this depth.
-      // then use lodash to subtract the list of ancestors from this list
-      // then mark whatever is left as hidden.
-      var non_ancestors_above =
-        _.filter(root_array,
-                 function (value, index, collection) { return value.depth < datum.depth; });
-      non_ancestors_above = _.difference(non_ancestors_above,ancestors);
-
-      console.log("NON-ANCESTORS ABOVE NODE:");
-      console.log(non_ancestors_above);
-
-      non_ancestors_above.forEach(
-        function (node, i) {
-          console.log(node.data.name);
-          console.log("UNIQUE ID:", node.data.uniqueID);
-
-          // Disappear each entity
-          d3
-            .select("#" + node.data.uniqueID)
-            .selectAll("*")
-            .classed("hidden","true");
-        }
-      );
-
-      // Hide nodes "below" this node, which aren't a descendant of it
-      var non_descendants_below =
-        _.filter(root_array,
-                 function (value, index, collection) { return value.depth > datum.depth; });
-      non_descendants_below = _.difference(non_descendants_below, descendants);
-
-      non_descendants_below.forEach(
-        function (node, i) {
-          console.log(node.data.name);
-          console.log("UNIQUE ID:", node.data.uniqueID);
-
-          // Disappear each entity
-          d3
-            .select("#" + node.data.uniqueID)
-            .selectAll("*")
-            .classed("hidden","true");
-        }
-      );
-
-      // Now fade out our ancestors
-      ancestors.forEach(
-        function (node, i) {
-          if (i == 0) { return; }
-          d3
-            .select("#" + node.data.uniqueID)
-            .selectAll("*")
-            .classed("fade", "true");
-        }
-      );
-
       // Get the scaling factor, so we know what to scale the
       // descendants by
       // NOTE: Can also use the rect's width, should it come to that, but that would
       //       require selecting it.
       var multiplyFactor = width / (datum.x1 - datum.x0);
       console.log("MULTIPLY FACTOR: " + multiplyFactor);
-
-      // Scale ancestors to 100%, if they aren't already
-      // We get the zoomed node included for free in ancestors
-      ancestors.forEach(
-        function (node, i) {
-          var g = d3.select("#" + node.data.uniqueID);
-          // http://stackoverflow.com/questions/38224875/replacing-d3-transform-in-d3-v4
-          // console.log("TRANSFORM");
-          // console.log(g.node().transform.baseVal[0].matrix.f);
-          var currentY = g.node().transform.baseVal[0].matrix.f;
-
-          // Translate g to far left, same height
-          g.attr('transform', 'translate(0,' + currentY + ')');
-          // Set rect width to entire width
-          g.select('rect')
-            .attr("width",width);
-
-          // TODO: Text elements can become long enough to see, expand them
-        }
-      );
-
-      // Scale the descendants
-      // Calculation is: (child_g_currentX - zoomedNode_g_currentX) * multiplyFactor
-      descendants.forEach(
-        function (node, i) {
-          if (i == 0) { return; }  // Don't alter the zoomed node itself
-          var g = d3.select("#" + node.data.uniqueID);
-          var currentX = g.node().transform.baseVal[0].matrix.e;
-          var currentY = g.node().transform.baseVal[0].matrix.f;
-
-          // Translate g to currentX / multiplyFactor
-          g.attr('transform', 'translate(' + ((currentX - zoomedNode_g_currentX) * multiplyFactor) + ',' + currentY + ')');
-
-          // Expand rect width * multiplyFactor
-          var current_width =
-            g.select('rect')
-              .attr("width");
-          g.select('rect')
-            .attr("width", current_width * multiplyFactor);
-        }
-      );
 
     }
 
