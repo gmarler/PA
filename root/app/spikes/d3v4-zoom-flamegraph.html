@@ -205,13 +205,22 @@
       // tx = Translation for x (left x of clicked element) =
       //      (desired location of datum.x0) - k * xScale(datum.x0)
       var tx = 0 - k * xScale(datum.x0);
+
+      // The final resulting zoom transform
       var transform = d3.zoomIdentity.translate(tx, 0).scale(k);
 
       // select all 'g' elements
       var gContainers = d3.selectAll("svg > g > g");
+
       // for each g, take the transform=translate( x, y ), and zoom the x
       gContainers
-        .attr('transform', function(d) {});
+        .attr('transform',
+              function(d) {
+                var element = d3.select("#" + d.data.uniqueID);
+
+                var currentX = element.node().transform.baseVal[0].matrix.e;
+                var currentY = element.node().transform.baseVal[0].matric.f;
+                return "translate(" + t.applyX(xScale(currentX)) + "," + currentY +")" });
 
       // TODO: for each gContainer, select the rect inside it and zoom the width
 
