@@ -23,8 +23,7 @@
   <div class="chart"></div>
 
   <!-- D3 v4 -->
-  <script type="text/javascript" src="../../bower_components/d3/d3.min.js"></script>
-  <script type="text/javascript" src="../../bower_components/lodash/dist/lodash.min.js"></script>
+  <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
 
   <!-- and our Javascript spike for Flame Graph -->
   <script type="text/javascript">
@@ -195,8 +194,26 @@
       // descendants by
       // NOTE: Can also use the rect's width, should it come to that, but that would
       //       require selecting it.
-      var multiplyFactor = width / (datum.x1 - datum.x0);
-      console.log("MULTIPLY FACTOR: " + multiplyFactor);
+      // scale factor = k
+      // k = (desired width [which is width in this case]) /
+      //     ( xScale(datum.x1) - xScale(datum.x0) )
+      var scalingFactor = width / (datum.x1 - datum.x0);
+      console.log("SCALING FACTOR: " + scalingFactor);
+      var k = width / (xScale(datum.x1) - xScale(datum.x0));
+      console.log("k = " + k);
+
+      // tx = Translation for x (left x of clicked element) =
+      //      (desired location of datum.x0) - k * xScale(datum.x0)
+      var tx = 0 - k * xScale(datum.x0);
+      var transform = d3.zoomIdentity.translate(tx, 0).scale(k);
+
+      // select all 'g' elements
+      var gContainers = d3.selectAll("svg > g > g");
+      // for each g, take the transform=translate( x, y ), and zoom the x
+      gContainers
+        .attr('transform', function(d) {});
+
+      // TODO: for each gContainer, select the rect inside it and zoom the width
 
     }
 
