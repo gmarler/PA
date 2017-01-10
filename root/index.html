@@ -10,39 +10,53 @@
 <body>
 
   <div class="container-fluid">
+    <div pa>
 
-    <div host-info ng-controller="HostController as vm"></div>
-    <div subsystem-navbar ng-controller="SubsystemsController as vm"></div>
-    <div subsystem-metrics-navbar ng-controller="SubsystemsController as vm"></div>
-
-    <!--Use ng-if with an appropriate predicate function to select the appropriate
-        directive to display in each case-->
-    <div memstat-d3></div>
+    </div>
   </div>
 
-  <script src="bower_components/jquery/dist/jquery.min.js"></script>
-  <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-  <script src="bower_components/lodash/lodash.min.js"></script>
-  <script src="bower_components/angular/angular.js"></script>
-  <script src="bower_components/d3/d3.min.js"></script>
-  <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
-  <script src="bower_components/bootstrap-ui-datetime-picker/dist/datetime-picker.min.js"></script>
-  <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
-  <script src="bower_components/moment/min/moment.min.js"></script>
-  <script src="bower_components/angular-messages/angular-messages.min.js"></script>
 
-  <!-- Main AngularJS App -->
-  <script src="app/pa-app.js"></script>
-  <!-- AngularJS Components -->
-  <script src="app/host/host.js"></script>
-  <script src="app/subsystems/subsystems.js"></script>
-  <!-- Models/Services -->
-  <!-- <script src="app/common/models/host-model.js"></script> -->
-  <script src="app/common/models/subsystems-model.js"></script>
-  <script src="app/common/services/host-service.js"></script>
-  <script src="app/common/directives/memstat-d3.js"></script>
 
-  <!-- 3rd Party Libraries -->
-  <script src="app/3rdParty/d3.byte.js"></script>
+
+  <!--<div class="container-fluid">-->
+
+    <!--<div host-info ng-controller="HostController as vm"></div>-->
+    <!--<div subsystem-navbar ng-controller="SubsystemsController as vm"></div>-->
+    <!--<div subsystem-metrics-navbar ng-controller="SubsystemsController as vm"></div>-->
+
+    <!--&lt;!&ndash;Use ng-if with an appropriate predicate function to select the appropriate-->
+        <!--directive to display in each case&ndash;&gt;-->
+    <!--<div memstat-d3></div>-->
+  <!--</div>-->
+
+  <!--<script src="bower_components/jquery/dist/jquery.min.js"></script>-->
+  <!--<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>-->
+  <!--<script src="bower_components/lodash/lodash.min.js"></script>-->
+  <!--<script src="bower_components/angular/angular.js"></script>-->
+  <!--<script src="bower_components/d3/d3.min.js"></script>-->
+  <!--<script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>-->
+  <!--<script src="bower_components/bootstrap-ui-datetime-picker/dist/datetime-picker.min.js"></script>-->
+  <!--<script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>-->
+  <!--<script src="bower_components/moment/min/moment.min.js"></script>-->
+  <!--<script src="bower_components/angular-messages/angular-messages.min.js"></script>-->
+
+  <!--&lt;!&ndash; Main AngularJS App &ndash;&gt;-->
+  <!--<script src="app/pa-app.js"></script>-->
+  <!--&lt;!&ndash; AngularJS Components &ndash;&gt;-->
+  <!--<script src="app/host/host.js"></script>-->
+  <!--<script src="app/subsystems/subsystems.js"></script>-->
+  <!--&lt;!&ndash; Models/Services &ndash;&gt;-->
+  <!--&lt;!&ndash; <script src="app/common/models/host-model.js"></script> &ndash;&gt;-->
+  <!--<script src="app/common/models/subsystems-model.js"></script>-->
+  <!--<script src="app/common/services/host-service.js"></script>-->
+  <!--<script src="app/common/directives/memstat-d3.js"></script>-->
+
+  <!--&lt;!&ndash; 3rd Party Libraries &ndash;&gt;-->
+  <!--<script src="app/3rdParty/d3.byte.js"></script>-->
+
+  <!-- This is D3 v4 -->
+  <script type="text/javascript" src="bower_components/d3/d3.min.js"></script>
+  <script type="text/javascript" src="bower_components/lodash/dist/lodash.min.js"></script>
+
 </body>
 </html>
