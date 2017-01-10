@@ -224,14 +224,24 @@
                 // NOTE: this cannot possibly be the best way to do this!
                 var currentX = element.node().transform.baseVal[0].matrix.e;
                 var currentY = element.node().transform.baseVal[0].matrix.f;
-                return "translate(" + transform.applyX(xScale(currentX)) + "," + currentY +")";
+                // Only apply the zoom transform if the element isn't already up against
+                // the left side of the chart
+                if (currentX == 0) {
+                  return "translate(" + currentX + "," + currentY + ")";
+                } else {
+                  return "translate(" + transform.applyX(xScale(currentX)) + "," + currentY + ")";
+                }
               }
         );
 
       // For each gContainer, select the rect inside it and zoom the width
       gContainers
         .select('rect')
-        .attr('width', function(d) { return transform.applyX(xScale(width)); });
+        .attr('width', function(d) {
+          // TODO: Get the current width to determine if we need to scale or not
+          console.log(this);
+          return transform.applyX(xScale(width));
+        });
 
     }
 
