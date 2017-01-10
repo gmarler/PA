@@ -8,8 +8,8 @@
     .chart {
       background:    lightgray;
       border:        1px solid black;
-      min-width:      768px;
-      min-height:     768px;
+      /*min-width:      768px;*/
+      /*min-height:     768px;*/
     }
     .stack-text {
       font-family:    "Verdana";
@@ -224,11 +224,11 @@
                 // NOTE: this cannot possibly be the best way to do this!
                 var currentX = element.node().transform.baseVal[0].matrix.e;
                 var currentY = element.node().transform.baseVal[0].matrix.f;
-                return "translate(" + transform.applyX(xScale(currentX)) + "," + currentY +")"
+                return "translate(" + transform.applyX(xScale(currentX)) + "," + currentY +")";
               }
         );
 
-      // TODO: for each gContainer, select the rect inside it and zoom the width
+      // For each gContainer, select the rect inside it and zoom the width
       gContainers
         .select('rect')
         .attr('width', function(d) { return transform.applyX(xScale(width)); });
