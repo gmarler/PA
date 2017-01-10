@@ -37,6 +37,7 @@
     var  width      =  768 - margin.left - margin.right;
     var height      =  768 - margin.top - margin.bottom;
     var cell_height =   18;
+    var left_offset =    0;
     var sort        =  true;
 
     var xScale = d3.scaleLinear().range([0, width]),
@@ -114,7 +115,7 @@
 
       bars
         .attr('y', cell_height - 3)
-        .attr('x', 3);
+        .attr('x', left_offset);
     }
 
 
@@ -199,7 +200,7 @@
       //     ( xScale(datum.x1) - xScale(datum.x0) )
       var scalingFactor = width / (datum.x1 - datum.x0);
       console.log("SCALING FACTOR: " + scalingFactor);
-      var k = width / (xScale(datum.x1) - xScale(datum.x0));
+      var k = (width) / (xScale(datum.x1) - xScale(datum.x0));
       console.log("k = " + k);
 
       // tx = Translation for x (left x of clicked element) =
@@ -228,6 +229,9 @@
         );
 
       // TODO: for each gContainer, select the rect inside it and zoom the width
+      gContainers
+        .select('rect')
+        .attr('width', function(d) { return transform.applyX(xScale(width)); });
 
     }
 
