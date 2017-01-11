@@ -4,9 +4,68 @@ use strict;
 use warnings;
 use v5.20;
 
+package DateTime::Format::DTrace;
+
+use DateTime::Format::Builder (
+  # Accepted Formats:
+  # 2014 Nov  5 11:41:47  (output from DTrace's %Y format for walltimestamp)
+  # OR
+  # Epoch seconds
+  parsers => {
+    parse_datetime => [
+      {
+        # Parse epoch secs
+        params => [qw( epoch )],
+        regex  => qr/^ (\d+) $/x,
+        constructor => [ 'DateTime', 'from_epoch' ],
+      },
+      {
+        strptime => '%Y %B %d %H:%M:%S',
+      },
+      {
+        regex => qr/^(\d{4}) \s+ (\w{3}) \s+ (\d+) \s+
+                     (\d+):(\d+):(\d+)$/x,
+        params => [qw( year month day hour minute second )],
+      },
+      {
+        length => 8,
+        regex  => qr/^(\d{2}):(\d{2}):(\d{2})$/x,
+        params => [qw( hour minute second )],
+        extra  => { time_zone => 'floating' },
+        preprocess  => \&_add_in_fake_date,
+      }
+    ]
+  }
+);
+
+sub _add_in_fake_date {
+  my %args = @_;
+  my ($date, $p) = @args{qw( input parsed )};
+  # Yeah, the month and day have to be between 1 and 12
+  @{$p}{qw( year month day )} = (0, 1, 1);
+  return $date;
+}
+
+package main;
+
+use DateTime::Format::Strptime   qw();
+use DateTime                     qw();
+use DateTime::TimeZone           qw();
+
 my $datetime = "2017 Jan  9 15:48:00";
-my $epoch = "1483994938";
+my $epoch = "1483976880";
 my $TZ    = "US/Eastern";
+
+my $dt = DateTime::Format::DTrace->parse_datetime( $datetime );
+
+say $dt;
+
+$dt = DateTime::Format::DTrace->parse_datetime( $epoch );
+say $dt;
+
+
+exit(0);
+
 
 my $stack_k = q/
               SPARC-T5`hwblkclr+0x44
@@ -111,8 +170,74 @@ my $stack_ku = q/
                 1
 /;
 
+
 my $stack_epoch_k = "$epoch\n\n$stack_k";
+my $stack_epoch_multi_k = "$epoch\n\n$stack_k\n" .
+                          ++$epoch . "\n\n$stack_k\n" .
+                          ++$epoch . "\n\n$stack_k\n" ;
 my $stack_datetime_k = "$datetime\n\n$stack_k";
+my $stack_datetime_multi_k = "$epoch\n\n$stack_k\n" .
+                              ++$epoch . "\n\n$stack_k\n" .
+                              ++$epoch . "\n\n$stack_k\n" ;
+
+my $epoch_interval_regex =
+  qr/ (?<epoch> ^\d+) \n
+      (?<interval_stacks> .+?)
+      (?= (?: ^ \d+ \n | \z ) )
+    /smx;
+
+my $datetime_interval_regex =
+qr{^
+     (?: (?:Sun|Mon|Tue|Wed|Thu|Fri|Sat) \s+ # Day of week
+         (?:Jan|Feb|Mar|Apr|May|Jun|
+            Jul|Aug|Sep|Oct|Nov|Dec
+         ) \s+
+         \d+ \s+          # day of month
+         \d+:\d+:\d+ \s+  # HH:MM:DD  (24 hour clock)
+         \w+ \s+          # Time zone (useless)
+         \d{4}            # year
+         \n
+     )
+  }smx;
+
+my $match_count;
+while ($stack_k =~ m{$epoch_interval_regex}gsmx) {
+
+  # Strip away anything in the beginning that is useless
+  say "EPOCH " . $+{epoch};
+  say "STACKS   " . $+{interval_stacks};
+
+}
+
+
+while ($stack_epoch_k =~ m{$epoch_interval_regex}gsmx) {
+
+  $match_count++;
+  # Strip away anything in the beginning that is useless
+  say "EPOCH " . $+{epoch};
+  say "STACKS   " . $+{interval_stacks};
+
+}
+
+say "Match count for single interval: $match_count";
+
+$match_count = 0;
+say $stack_epoch_multi_k;
+while ($stack_epoch_multi_k =~ m{$epoch_interval_regex}gsmx) {
+
+  $match_count++;
+  # Strip away anything in the beginning that is useless
+  say "EPOCH " . $+{epoch};
+  say "STACKS   " . $+{interval_stacks};
+
+}
+
+say "Match count for multi interval: $match_count";
+
+
+
+exit(0);
+
 
 my $regex = qr/ (?<segment> .+?)
                 ^          \s+ (?<count>\d+)  \n
