@@ -183,6 +183,10 @@
       //   container g element for the rect is aligned with the right side of
       //   the svg's g container.
 
+      // TODO: Get the width of the selected g's rect
+      // Method 1: rect.node().getBBox()
+      // Method 2: rect.getBoundingClientRect()
+
       // Get the current X of the g element for the node being zoomed
       var zoomedNode_g = d3.select("#" + datum.data.uniqueID);
       var zoomedNode_g_currentX = zoomedNode_g.node().transform.baseVal[0].matrix.e;
@@ -198,13 +202,18 @@
       // scale factor = k
       // k = (desired width [which is width in this case]) /
       //     ( xScale(datum.x1) - xScale(datum.x0) )
-      var scalingFactor = width / (datum.x1 - datum.x0);
+      console.log("datum.x1: " + datum.x1 + ", datum.x0: " + datum.x0);
+      console.log("datum.x1 - datum.x0 = " + (datum.x1 - datum.x0));
+      console.log(this.getBBox());
+      var g_dimensions = this.getBBox();
+      var scalingFactor = width / (g_dimensions.width);
       console.log("SCALING FACTOR: " + scalingFactor);
-      var k = (width) / (xScale(datum.x1) - xScale(datum.x0));
+      var k = (width) / (xScale(g_dimensions.width));
       console.log("k = " + k);
 
       // tx = Translation for x (left x of clicked element) =
       //      (desired location of datum.x0) - k * xScale(datum.x0)
+      // TODO: Change from x0 to something from the getBBox()??
       var tx = 0 - k * xScale(datum.x0);
 
       // The final resulting zoom transform
@@ -227,22 +236,26 @@
                 // Only apply the zoom transform if the element isn't already up against
                 // the left side of the chart
                 if (currentX == 0) {
+                  // Keep what we've got
+                  console.log('No translation needed');
                   return "translate(" + currentX + "," + currentY + ")";
                 } else {
+                  console.log("Applying tranlate(" + transform.applyX(xScale(currentX)) + "," + currentY + ")");
                   return "translate(" + transform.applyX(xScale(currentX)) + "," + currentY + ")";
                 }
               }
         );
 
       // For each gContainer, select the rect inside it and zoom the width
+      console.log("xScaled width: " + xScale(width));
+      console.log("Regular width: " + width);
       gContainers
         .select('rect')
         .attr('width', function(d) {
-          // TODO: Get the current width to determine if we need to scale or not
-          console.log(this);
-          return transform.applyX(xScale(width));
+          // TODO: Get the current width to determine if we need to scale or not - but that only applies to the clicked-on g element, not these elements under it.
+          console.log(this.getBBox());
+          return transform.applyX(xScale(this.getBBox().width));
         });
-
     }
 
     function makeId(prefix) {
