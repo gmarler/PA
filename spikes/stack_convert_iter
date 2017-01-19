@@ -294,3 +294,15 @@ while ($stack_k =~ m{$regex}gsmx) {
   say "COUNT:   " . $+{count};
 
 }
+
+#
+# Structure:
+# - Read in enough data to determine if there are timestamps or not
+# - Iterator to break up stacks into either:
+#   - the entire file (no timestamps)
+#   - timestamps (epoch or date/time)
+# 
+#   - Iterator to break up individual stacks on counts
+#
+#     - Iterator to collapse individual stacks into hashrefs
+#
