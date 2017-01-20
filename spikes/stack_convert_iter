@@ -193,7 +193,7 @@ my $epoch_interval_regex =
     /smx;
 
 my $datetime_interval_regex =
-qr{^
+  qr{^
      (?<datetime>
          \d{4} \s+        # year
          (?:Jan|Feb|Mar|Apr|May|Jun|
@@ -217,7 +217,13 @@ qr{^
          \z
        )
      )
-  }smx;
+    }smx;
+
+my $stack_regex =
+  qr{
+     (?<stack> .+?)
+     ^(?<stack_count> \d+) \n  
+    }smx;
 
 my $match_count;
 while ($stack_k =~ m{$epoch_interval_regex}gsmx) {
@@ -301,7 +307,7 @@ while ($stack_k =~ m{$regex}gsmx) {
 # - Iterator to break up stacks into either:
 #   - the entire file (no timestamps)
 #   - timestamps (epoch or date/time)
-# 
+#
 #   - Iterator to break up individual stacks on counts
 #
 #     - Iterator to collapse individual stacks into hashrefs
