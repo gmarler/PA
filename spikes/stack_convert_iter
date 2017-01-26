@@ -54,6 +54,8 @@ package main;
 use DateTime::Format::Strptime   qw();
 use DateTime                     qw();
 use DateTime::TimeZone           qw();
+use List::MoreUtils;
+use Data::Dumper;
 
 my $datetime = "2017 Jan  9 15:48:00";
 my $epoch = "1483976880";
@@ -181,10 +183,16 @@ my $stack_epoch_k = "$epoch\n\n$stack_k";
 my $stack_epoch_multi_k = "$epoch\n\n$stack_k\n" .
                           ++$epoch . "\n\n$stack_k\n" .
                           ++$epoch . "\n\n$stack_k\n" ;
+
 my $stack_datetime_k = "$datetime\n\n$stack_k";
 my $stack_datetime_multi_k = $dt . "\n\n$stack_k\n" .
                              $dt->add(seconds => 1) . "\n\n$stack_k\n" .
                              $dt->add(seconds => 1) . "\n\n$stack_k\n" ;
+
+my $stack_datetime_ku = "$datetime\n\n$stack_ku";
+my $stack_datetime_multi_ku = $dt . "\n\n$stack_ku\n" .
+                              $dt->add(seconds => 1) . "\n\n$stack_ku\n" .
+                              $dt->add(seconds => 1) . "\n\n$stack_ku\n" ;
 
 my $epoch_interval_regex =
   qr/ (?<epoch> ^\d+) \n
@@ -279,27 +287,47 @@ while ($stack_datetime_multi_k =~ m{$datetime_interval_regex}gsmx) {
   $match_count++;
   say "DATETIME " . $+{datetime};
   #say "STACKS   " . $+{interval_stacks};
-
 }
 
 say "Match count for multi datetime intervals: $match_count";
 
+$match_count = 0;
 
+while ($stack_datetime_multi_ku =~ m{$datetime_interval_regex}gsmx) {
 
-exit(0);
+  $match_count++;
+  say "DATETIME " . $+{datetime};
+  #say "STACKS   " . $+{interval_stacks};
 
-
-my $regex = qr/ (?<segment> .+?)
-                ^          \s+ (?<count>\d+)  \n
-             /smx;
-# Grab everything up to a count on a line alone
-while ($stack_k =~ m{$regex}gsmx) {
-
-  # Strip away anything in the beginning that is useless
-  say "SEGMENT: " . $+{segment};
-  say "COUNT:   " . $+{count};
-
+  my $interval_stacks = $+{interval_stacks};
+  while ($interval_stacks =~ m{$stack_regex}gsmx) {
+    say "STACK:\n$+{stack}";
+    say "STACK_COUNT: $+{stack_count}";
+    my ($stack) = $+{stack};
+    # Tear down stack
+    # - split on newlines
+    my (@stack) = split /\n/, $stack;
+    # - delete blanks lines at beginning/end of the array
+    my $index = List::MoreUtils::first_index {$_ ne ''} @stack;
+    if (defined($index)) {
+      splice(@stack,0,$index);
+    }
+    foreach my $frame (@stack) {
+      # - Strip off leading whitespace
+      $frame =~ s{^\s+}{};
+      # - strip off +0x.+
+      $frame =~ s{\+.+}{};
+      # - Replace blank line in middle of stack with '-'
+      #   That's the dividing mark between user/kernel stacks
+      $frame =~ s{^$}{\-};
+    }
+    say Dumper(\@stack);
+  }
 }
+
+say "Match count for multi datetime kernel/user intervals: $match_count";
+
+
 
 #
 # Structure:
