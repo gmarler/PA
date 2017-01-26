@@ -300,6 +300,7 @@ while ($stack_datetime_multi_ku =~ m{$datetime_interval_regex}gsmx) {
   #say "STACKS   " . $+{interval_stacks};
 
   my $interval_stacks = $+{interval_stacks};
+  my $interval_href = { };
   while ($interval_stacks =~ m{$stack_regex}gsmx) {
     say "STACK:\n$+{stack}";
     say "STACK_COUNT: $+{stack_count}";
@@ -307,11 +308,19 @@ while ($stack_datetime_multi_ku =~ m{$datetime_interval_regex}gsmx) {
     # Tear down stack
     # - split on newlines
     my (@stack) = split /\n/, $stack;
-    # - delete blanks lines at beginning/end of the array
+    # - delete blanks lines at beginning of the array
     my $index = List::MoreUtils::first_index {$_ ne ''} @stack;
     if (defined($index)) {
       splice(@stack,0,$index);
     }
+    # - delete blanks lines at end of the array
+    #   Apparently unnecessary due to regex above
+    #   NOTE: below is BROKEN - fix if needed
+    #$index = List::MoreUtils::first_index {$_ ne ''} reverse @stack;
+    #if (defined($index)) {
+    #  say "INDEX: $index";
+    #  #splice(@stack,-1,$index);
+    #}
     foreach my $frame (@stack) {
       # - Strip off leading whitespace
       $frame =~ s{^\s+}{};
@@ -322,6 +331,7 @@ while ($stack_datetime_multi_ku =~ m{$datetime_interval_regex}gsmx) {
       $frame =~ s{^$}{\-};
     }
     say Dumper(\@stack);
+    say Dumper($interval_href);
   }
 }
 
