@@ -221,6 +221,9 @@ my $stack_ku = q/
 /;
 
 
+my $stack_datetime_simple_k =
+  "$datetime\n\n$stack_k_simple_raw\n";
+
 my $stack_epoch_k = "$epoch\n\n$stack_k";
 my $stack_epoch_multi_k = "$epoch\n\n$stack_k\n" .
                           ++$epoch . "\n\n$stack_k\n" .
@@ -335,7 +338,8 @@ say "Match count for multi datetime intervals: $match_count";
 
 $match_count = 0;
 
-while ($stack_datetime_multi_ku =~ m{$datetime_interval_regex}gsmx) {
+#while ($stack_datetime_multi_ku =~ m{$datetime_interval_regex}gsmx) {
+while ($stack_datetime_simple_k =~ m{$datetime_interval_regex}gsmx) {
 
   $match_count++;
   say "DATETIME " . $+{datetime};
@@ -378,7 +382,8 @@ while ($stack_datetime_multi_ku =~ m{$datetime_interval_regex}gsmx) {
       add($interval_href, \@stack, $+{stack_count});
     my $serialized =
       serialize($intermediate);
-    say($serialized);
+    $Data::Dumper::Indent = 1;
+    say Dumper($serialized);
   }
 }
 
@@ -405,6 +410,11 @@ sub add {
   return $this;
 }
 
+#
+# The trick here is that serialization converts the children from hrefs to
+# arefs, so that they'll more closely fit D3's JSON format requirements - this
+# can probably be improved.
+#
 sub serialize {
   my ($this) = @_;
   my ($result) = { name  => $this->{name},
