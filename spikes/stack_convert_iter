@@ -54,6 +54,7 @@ package main;
 use DateTime::Format::Strptime   qw();
 use DateTime                     qw();
 use DateTime::TimeZone           qw();
+use JSON::MaybeXS;
 use List::MoreUtils;
 use Data::Dumper;
 
@@ -377,13 +378,22 @@ while ($stack_datetime_simple_k =~ m{$datetime_interval_regex}gsmx) {
       $frame =~ s{^$}{\-};
     }
     say Dumper(\@stack);
-    say Dumper($interval_href);
     my $intermediate =
       add($interval_href, \@stack, $+{stack_count});
     my $serialized =
       serialize($intermediate);
     $Data::Dumper::Indent = 1;
     say Dumper($serialized);
+    my ($json) = encode_json($serialized);
+    say $json;
+    my ($json_orig_href) = decode_json($stack_k_simple_json);
+    my ($json_orig) = encode_json($json_orig_href);
+    say $json_orig;
+    if ($json eq $json_orig) {
+      say "ALL IS WELL";
+    } else {
+      say "ARRRRGGGHHH!";
+    }
   }
 }
 
