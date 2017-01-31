@@ -354,7 +354,8 @@ while ($stack_datetime_simple_k =~ m{$datetime_interval_regex}gsmx) {
     my ($stack) = $+{stack};
     # Tear down stack
     # - split on newlines
-    my (@stack) = split /\n/, $stack;
+    # - AND *reverse* to get order right
+    my (@stack) = reverse split /\n/, $stack;
     # - delete blanks lines at beginning of the array
     my $index = List::MoreUtils::first_index {$_ ne ''} @stack;
     if (defined($index)) {
