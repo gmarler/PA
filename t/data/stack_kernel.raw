@@ -1,0 +1,38 @@
+              SPARC-T5`hwblkclr+0x44
+              unix`run_interrupt_thread
+              unix`pagezero+0x68
+              genunix`anon_map_getpages+0x778
+              genunix`segvn_fault_anonpages+0x4f4
+              genunix`segvn_fault+0x508
+              genunix`as_fault+0x438
+              unix`pagefault+0x54
+              unix`trap+0xe74
+              unix`utl0+0x4c
+                1
+
+              SPARC-T5`hwblkclr+0x90
+              unix`run_interrupt_thread
+              unix`pagezero+0x68
+              genunix`anon_map_getpages+0x778
+              genunix`segvn_fault_anonpages+0x4f4
+              genunix`segvn_fault+0x508
+              genunix`as_fault+0x438
+              unix`pagefault+0x54
+              unix`trap+0xe74
+              unix`utl0+0x4c
+                1
+
+              genunix`anon_addhash+0xa0
+              unix`run_interrupt_thread
+              genunix`anon_alloc+0x144
+              genunix`anon_map_getpages+0x3f8
+              genunix`segvn_fault_anonpages+0x4f4
+              genunix`segvn_fault+0x508
+              genunix`as_fault+0x438
+              unix`pagefault+0x54
+              unix`trap+0xe74
+              unix`utl0+0x4c
+                2
+
+              unix`run_interrupt_thread
+                5
