@@ -1,0 +1,5 @@
+          unix`mach_cpu_idle+0x17
+          unix`cpu_idle+0xcf
+          unix`idle+0x11a
+          unix`thread_start+0x8
+        19199

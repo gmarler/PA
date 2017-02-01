@@ -4,6 +4,8 @@ package TF::PA::Parser::DTrace::Stack;
 use File::Temp          qw();
 use Data::Dumper        qw();
 use JSON::MaybeXS       qw();
+use Path::Class::File   qw();
+use IO::File            qw();
 # Possible alternative assertion methodology
 # use Devel::Assert     qw();
 
@@ -48,3 +50,21 @@ sub test_regexes {
   }
 }
 
+sub _load_mock_data {
+  my $datafile = shift;
+  my $filepath =
+    Path::Class::File->new(__FILE__)->parent->parent->parent->parent->parent
+                     ->file("data",$datafile)
+                     ->absolute->stringify;
+
+  if (not -f $filepath) { return;  }
+
+  my $fh       = IO::File->new($filepath,"<") or
+    die "Unable to open $filepath for reading";
+
+  my $content = do { local $/; <$fh>; };
+
+  $fh->close;
+  return $content;
+
+}
