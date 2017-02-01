@@ -50,6 +50,22 @@ sub test_regexes {
   }
 }
 
+sub test_add_recurse {
+  my ($test) = shift;
+
+  my $class = $test->class_name;
+  my $object = $class->new;
+  can_ok($object, 'add_recurse');
+}
+
+sub test_serialize_recurse {
+  my ($test) = shift;
+
+  my $class = $test->class_name;
+  my $object = $class->new;
+  can_ok($object, 'serialize_recurse');
+}
+
 sub _load_mock_data {
   my $datafile = shift;
   my $filepath =
