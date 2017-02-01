@@ -70,6 +70,9 @@ sub test_add_recurse {
   my $class = $test->class_name;
   my $object = $class->new;
   can_ok($object, 'add_recurse');
+
+  my $raw_stack = _load_mock_data('stack_kernel_simple.raw');
+  cmp_ok(length($raw_stack), ">", 0, 'simple kernel stack data loaded');
 }
 
 sub test_serialize_recurse {
@@ -84,6 +87,7 @@ sub _load_mock_data {
   my $datafile = shift;
   my $filepath =
     Path::Class::File->new(__FILE__)->parent->parent->parent->parent->parent
+                                    ->parent
                      ->file("data",$datafile)
                      ->absolute->stringify;
 
