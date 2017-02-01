@@ -11,6 +11,7 @@ use Moose;
 use List::MoreUtils             qw(first_index);
 use Data::Dumper;
 use JSON::MaybeXS               qw(encode_json decode_json);
+use PA::DateTime::Format::DTrace;
 use namespace::autoclean;
 
 has 'epoch_interval_regex' => (

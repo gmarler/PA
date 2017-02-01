@@ -1,16 +1,30 @@
 # NOTE: TF stands for TestsFor::...
 package TF::PA::Parser::DTrace::Stack;
 
-use File::Temp          qw();
-use Data::Dumper        qw();
-use JSON::MaybeXS       qw();
-use Path::Class::File   qw();
-use IO::File            qw();
+use File::Temp                   qw();
+use Data::Dumper                 qw();
+use JSON::MaybeXS                qw();
+use Path::Class::File            qw();
+use IO::File                     qw();
+use DateTime::Format::Strptime   qw();
+use PA::DateTime::Format::DTrace qw();
 # Possible alternative assertion methodology
 # use Devel::Assert     qw();
 
 use Test::Class::Moose;
 with 'Test::Class::Moose::Role::AutoUse';
+
+my $datetime = "2017 Jan  9 15:48:00";
+my $epoch    = "1483976880";
+my $TZ       = "US/Eastern";
+
+# A formatter that will allow us to increment a DateTime and print it again
+# NOTE: the pattern is set to reproduce the above output example exactly
+my $formatter = DateTime::Format::Strptime->new(pattern => '%Y %b %e %H:%M:%S');
+#
+my $dt = PA::DateTime::Format::DTrace->parse_datetime( $datetime );
+$dt->set_formatter( $formatter );
+
 
 
 # sub test_startup {
