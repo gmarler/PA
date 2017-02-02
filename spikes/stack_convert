@@ -122,7 +122,8 @@ sub addFrame {
 sub closeStack {
   my ($self,$value) = @_;
 
-  unshift(@{$self->stack}, $self->name);
+  # TODO: Figure out why this leads to 2 'root' items, so we had to remove it
+  #unshift(@{$self->stack}, $self->name);
   $self->samples->add($self->stack, $value);
   $self->stack([]);
   $self->name(undef);
@@ -264,8 +265,8 @@ sub raw {
     $res = $profile->samples->serialize();
   }
 
-  #my $encoder = JSON::MaybeXS->new->ascii->pretty;
-  my $encoder = JSON::MaybeXS->new->ascii;
+  my $encoder = JSON::MaybeXS->new->ascii->pretty;
+  #my $encoder = JSON::MaybeXS->new->ascii;
   say $encoder->encode( $res );
 }
 
