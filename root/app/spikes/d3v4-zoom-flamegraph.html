@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>D3 v4 Flamegraph Test</title>
+
+  <style>
+    .chart {
+      background:    lightgray;
+      border:        1px solid black;
+      /*min-width:      768px;*/
+      /*min-height:     768px;*/
+    }
+    .stack-text {
+      font-family:    "Verdana";
+      font-size:      12px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chart"></div>
+
+  <!-- D3 v4 -->
+  <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+
+  <!-- and our Javascript spike for Flame Graph -->
+  <script type="text/javascript">
+
+    var margin = { top: 0, right: 0, bottom: 0, left: 0 };
+
+    // Font related constants
+    var fontsize    =   12,
+        fontwidth   =   0.59; // Average width relative to fontsize
+
+    var  width      =  768 - margin.left - margin.right;
+    var height      =  768 - margin.top - margin.bottom;
+    var cell_height =   18;
+    var left_offset =    0;
+    var sort        =  true;
+
+    var xScale = d3.scaleLinear().range([0, width]),
+        yScale = d3.scaleLinear().range([0, cell_height]);
+
+    // Total value of all stack samples in root node
+    var totalValue;
+    var root;
+
+    display_chart();
+
+    function update(data) {
+
+      root = d3.hierarchy(data)
+          .sort(true)
+          .sum(function (d) { return d.children ? 0 : d.value; })
+        ;
+
+      // Put a unique ID on each datum
+      root.each(
+        function(node) {
+          node.data.uniqueID = makeId();
+        }
+      );
+
+      var partition = d3.partition()
+        // This implicitly scales x0,y0,x1,y1
+        .size([width, height])
+        .padding(0);
+
+      partition(root);
+
+      // We can now set the proper scale domain(s)
+      xScale.domain([0, root.data.value]);
+
+      // we can now determine the total value of the root node
+      totalValue = root.data.value;
+
+      var svg = d3.select('.chart')
+        .append('svg')
+          // properly size the svg element to contain elems
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom);
+
+      var g_container =
+        svg
+          .append('g')
+          .attr('transform','translate(' + margin.left + ',' + margin.top + ')');
+
+      var bars = g_container
+        .selectAll('g')
+        .data(root.descendants())
+        .enter()
+        .append('g')
+          .attr('transform',
+            function (d, i) {
+              return 'translate(' + d.x0 + ',' +
+                     (height - yScale(d.depth) - cell_height) + ')';
+            }
+          )
+          .attr("id", function(d) { return d.data.uniqueID; } )
+          .on('click',  nodeZoom);
+
+
+      var nodes = bars
+        .append('rect')
+        .attr('fill', function(d) {
+          return 'yellow';
+        })
+        .attr('stroke', 'black')
+        .attr("x", function(d) { return 0; })
+        .attr("y", function(d) { return 0; })
+        .attr("height", function(d) { return cell_height; })
+        .attr("width", function(d) { return (d.x1 - d.x0);});
+
+      bars
+        .attr('y', cell_height - 3)
+        .attr('x', left_offset);
+    }
+
+
+
+    function display_chart() {
+      var chart_data =
+          {
+            "name": "all",
+            "value": 1200,
+            "children": [
+              {
+                "name": "level1-1-100",
+                "value": 1200,
+                "children": [
+                  {
+                    "name": "level2-1-50",
+                    "value": 600,
+                    "children": [
+                      {
+                        "name": "level3-1-25",
+                        "value": 300
+                      },
+                      {
+                        "name": "level3-2-25",
+                        "value": 300
+                      }
+                    ]
+                  },
+                  {
+                    "name": "level2-2-50",
+                    "value": 600,
+                    "children": [
+                      {
+                        "name": "level3-1-33",
+                        "value": 200
+                      },
+                      {
+                        "name": "level3-2-33",
+                        "value": 200
+                      },
+                      {
+                        "name": "level3-3-33",
+                        "value": 200
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          };
+
+      // Eliminate existing SVG, if any
+      d3.select('svg').remove();
+      update(chart_data);
+    }
+
+    function nodeZoom(datum, index, nodes) {
+
+      // Here's the zooming goal when a node is clicked on:
+      // - Nothing in the Y dimension is touched
+      //   - Only X dimension is scaled/translated
+      // - X dimension is zoomed/scaled/translated such that the x0 position
+      //   of the container g element for the rect is aligned with the left
+      //   side of the svg's g container, and the x1 position of the
+      //   container g element for the rect is aligned with the right side of
+      //   the svg's g container.
+
+      // TODO: Get the width of the selected g's rect
+      // Method 1: rect.node().getBBox()
+      // Method 2: rect.getBoundingClientRect()
+
+      // Get the current X of the g element for the node being zoomed
+      var zoomedNode_g = d3.select("#" + datum.data.uniqueID);
+      var zoomedNode_g_currentX = zoomedNode_g.node().transform.baseVal[0].matrix.e;
+      console.log("zoomedNode_g_currentX: " + zoomedNode_g_currentX);
+
+      // squirrel away DOM element 'this' for later use
+      var dom_g = this;
+
+      // Get the scaling factor, so we know what to scale the
+      // descendants by
+      // NOTE: Can also use the rect's width, should it come to that, but that would
+      //       require selecting it.
+      // scale factor = k
+      // k = (desired width [which is width in this case]) /
+      //     ( xScale(datum.x1) - xScale(datum.x0) )
+      console.log("datum.x1: " + datum.x1 + ", datum.x0: " + datum.x0);
+      console.log("datum.x1 - datum.x0 = " + (datum.x1 - datum.x0));
+      console.log(this.getBBox());
+      var g_dimensions = this.getBBox();
+      var scalingFactor = width / (g_dimensions.width);
+      console.log("SCALING FACTOR: " + scalingFactor);
+      var k = (width) / (xScale(g_dimensions.width));
+      console.log("k = " + k);
+
+      // tx = Translation for x (left x of clicked element) =
+      //      (desired location of datum.x0) - k * xScale(datum.x0)
+      // TODO: Change from x0 to something from the getBBox()??
+      var tx = 0 - k * xScale(datum.x0);
+
+      // The final resulting zoom transform
+      var transform = d3.zoomIdentity.translate(tx, 0).scale(k);
+
+      // select all 'g' elements
+      var gContainers = d3.selectAll("svg > g > g");
+
+      // for each g, take the transform=translate( x, y ), and zoom the x part
+      // of the translate
+      gContainers
+        .attr('transform',
+              function(d) {
+                var element = d3.select("#" + d.data.uniqueID);
+                // Get the currentX and currentY in the existing
+                // transform="translate(currentX,currentY) for each 'g' elements
+                // NOTE: this cannot possibly be the best way to do this!
+                var currentX = element.node().transform.baseVal[0].matrix.e;
+                var currentY = element.node().transform.baseVal[0].matrix.f;
+                // Only apply the zoom transform if the element isn't already up against
+                // the left side of the chart
+                if (currentX == 0) {
+                  // Keep what we've got
+                  console.log('No translation needed');
+                  return "translate(" + currentX + "," + currentY + ")";
+                } else {
+                  console.log("Applying tranlate(" + transform.applyX(xScale(currentX)) + "," + currentY + ")");
+                  return "translate(" + transform.applyX(xScale(currentX)) + "," + currentY + ")";
+                }
+              }
+        );
+
+      // For each gContainer, select the rect inside it and zoom the width
+      console.log("xScaled width: " + xScale(width));
+      console.log("Regular width: " + width);
+      gContainers
+        .select('rect')
+        .attr('width', function(d) {
+          // TODO: Get the current width to determine if we need to scale or not - but that only applies to the clicked-on g element, not these elements under it.
+          console.log(this.getBBox());
+          return transform.applyX(xScale(this.getBBox().width));
+        });
+    }
+
+    function makeId(prefix) {
+      // HTML id's must begin with a letter of some sort
+      prefix || (prefix = 'X');
+      return prefix + (Math.random() * 1e16).toFixed(0);
+    }
+
+  </script>
+
+
+
+</body>
+</html>
