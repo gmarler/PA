@@ -101,7 +101,7 @@ sub interval_parse_recurse {
       my ($stack) = $+{stack};
       # Tear down stack
       # - split on newlines
-      # - AND *reverse* to get order right
+      # - AND *reverse* to get order right for visualizing
       my (@stack) = reverse split /\n/, $stack;
       # - delete blanks lines at beginning of the array
       my $index = List::MoreUtils::first_index {$_ ne ''} @stack;
@@ -110,7 +110,8 @@ sub interval_parse_recurse {
       }
       # - delete blanks lines at end of the array
       #   Apparently unnecessary due to regex above
-      #   NOTE: below is BROKEN - fix if needed
+      #   NOTE: below is BROKEN - fix if we later determine it is actually
+      #         needed
       #$index = List::MoreUtils::first_index {$_ ne ''} reverse @stack;
       #if (defined($index)) {
       #  say "INDEX: $index";
