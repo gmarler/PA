@@ -73,6 +73,54 @@ sub test_add_recurse {
 
   my $raw_stack = _load_mock_data('stack_kernel_simple.raw');
   cmp_ok(length($raw_stack), ">", 0, 'simple kernel stack data loaded');
+
+  my $interval_href = { name => 'root', value => 0, children => {} };
+
+  my $stack =
+    [
+      'unix`thread_start',
+      'unix`idle',
+      'unix`cpu_idle',
+      'unix`mach_cpu_idle'
+    ];
+  my $stack_count = 19199;
+
+  my $expected_add_result =
+  {
+    'name' => 'all',
+    'value' => 19199,
+    'children' => {
+      'unix`thread_start' => {
+        'name' => 'unix`thread_start',
+        'value' => 19199,
+        'children' => {
+          'unix`idle' => {
+            'children' => {
+              'unix`cpu_idle' => {
+                'value' => 19199,
+                'children' => {
+                  'unix`mach_cpu_idle' => {
+                    'children' => {},
+                    'value' => 19199,
+                    'name' => 'unix`mach_cpu_idle'
+                  }
+                },
+                'name' => 'unix`cpu_idle'
+              }
+            },
+            'value' => 19199,
+            'name' => 'unix`idle'
+          }
+        }
+      }
+    }
+  };
+
+  my $actual_add_result =
+    $object->add_recurse($interval_href, $stack, $stack_count);
+
+  is_deeply( $actual_add_result, $expected_add_result,
+             "simple kernel stack recursive add" );
 }
 
 sub test_serialize_recurse {

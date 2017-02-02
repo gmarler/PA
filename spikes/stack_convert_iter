@@ -384,6 +384,7 @@ while ($stack_datetime_simple_k =~ m{$datetime_interval_regex}gsmx) {
     my $serialized =
       serialize($intermediate);
     $Data::Dumper::Indent = 1;
+    say Dumper($intermediate);
     say Dumper($serialized);
     my ($json) = encode_json($serialized);
     say $json;
