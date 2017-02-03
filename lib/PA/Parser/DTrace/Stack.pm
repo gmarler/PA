@@ -85,7 +85,7 @@ sub interval_parse_recurse {
   #
   my $interval_regex = $self->datetime_interval_regex;
   my $stack_regex    = $self->stack_regex;
-  my ($match_count);
+  my ($match_count,$json);
 
   while ($raw_stack =~ m{$interval_regex}gsmx) {
 
@@ -133,10 +133,11 @@ sub interval_parse_recurse {
         $self->serialize_recurse($intermediate);
       $Data::Dumper::Indent = 1;
       say Dumper($serialized);
-      my ($json) = encode_json($serialized);
+      $json = encode_json($serialized);
     }
   }
 
+  return $json;
 }
 
 =method add_recurse

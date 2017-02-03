@@ -87,7 +87,7 @@ sub test_add_recurse {
 
   my $expected_add_result =
   {
-    'name' => 'all',
+    'name' => 'root',
     'value' => 19199,
     'children' => {
       'unix`thread_start' => {
@@ -129,6 +129,61 @@ sub test_serialize_recurse {
   my $class = $test->class_name;
   my $object = $class->new;
   can_ok($object, 'serialize_recurse');
+
+  my $raw_stack = _load_mock_data('stack_kernel_simple.raw');
+  cmp_ok(length($raw_stack), ">", 0, 'simple kernel stack data loaded');
+
+  # TODO: store results of add_recurse and pass in directly in to
+  #       serialize_recurse
+  my $interval_href = { name => 'root', value => 0, children => {} };
+
+  my $stack =
+    [
+      'unix`thread_start',
+      'unix`idle',
+      'unix`cpu_idle',
+      'unix`mach_cpu_idle'
+    ];
+  my $stack_count = 19199;
+
+  my $actual_add_result =
+    $object->add_recurse($interval_href, $stack, $stack_count);
+
+  my $actual_serialize_result =
+    $object->serialize_recurse($actual_add_result);
+
+  my $expected_serialize_result =
+    {
+      'value' => 19199,
+      'children' => [
+        {
+          'name' => 'unix`thread_start',
+          'children' => [
+            {
+              'value' => 19199,
+              'children' => [
+                {
+                  'value' => 19199,
+                  'name' => 'unix`cpu_idle',
+                  'children' => [
+                    {
+                      'value' => 19199,
+                      'name' => 'unix`mach_cpu_idle'
+                    }
+                  ]
+                }
+              ],
+              'name' => 'unix`idle'
+            }
+          ],
+          'value' => 19199
+        }
+      ],
+      'name' => 'root'
+    };
+
+  is_deeply( $actual_serialize_result, $expected_serialize_result,
+             "simple kernel stack recursive serialize" );
 }
 
 sub _load_mock_data {
