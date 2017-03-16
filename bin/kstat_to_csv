@@ -1,0 +1,60 @@
+#!/usr/perl5/5.22.0/bin/perl
+
+use strict;
+use warnings;
+use v5.22.0;
+
+use IO::File;
+use Tie::IxHash;
+use Data::Dumper;
+
+my $filename = $ARGV[0];
+
+say STDERR "$filename\n";
+
+my $fh = IO::File->new($filename,"<") or
+  die "Unable to open $filename for reading";
+
+my $c = do { local $/; <$fh>; };
+
+$fh->close;
+
+my $count = 0;
+my $data = [];
+my %statnames;
+my $statnames = tie(%statnames, 'Tie::IxHash');
+
+say STDERR "SIZE: " . length($c) . " BYTES\n";
+
+my $interval_regex = qr{
+  ^ (?<datetime> (Mon|Tue|Wed|Thu|Fri|Sat|Sun) [^\n]+) \n
+    (?<interval_data> (?:[^\n]+ \n)+ )
+  (^$|\z)
+}smx;
+
+my $statregex = qr{
+  (?<statname> \S+) \s+ (?<statcount>\d+)
+}smx;
+
+while ($c =~ m/$interval_regex/g) {
+  my $datetime = $+{datetime};
+  my $interval = $+{interval_data};
+  my $line = "$datetime";
+  $count++;
+  while ($interval =~ m/$statregex/g) {
+    #say Dumper(\%+);
+    #say $+{statname} . ": " . $+{statcount};
+    my ($statname,$statcount) = @+{qw(statname statcount)};
+    $statname =~ s/^.+:(.+)$/$1/;
+    $statnames{$statname}++;
+    $line .= "," . $statcount;
+  }
+  push @$data, $line;
+}
+
+unshift(@$data,join(',',('DateTime',join(',', keys %statnames))));
+say STDERR "MATCHES: $count\n";
+
+foreach my $line (@$data) {
+  say $line;
+}
