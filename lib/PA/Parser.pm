@@ -135,7 +135,56 @@ sub parse_interval {
   return $dhref;
 }
 
+=method parse_interval_generator($output)
 
+Given a complete set of output, generate an iterator function that will whittle
+this down interval by interval.
+
+=cut
+
+sub parse_interval_generator {
+  my ($self, $output) = @_;
+
+  my ($dt_regex) = $self->dt_regex;
+  #my ($regex)    = $self->regex;
+  my ($regex)    =
+    qr/^ \d+ \n
+        (?<interval_data> .+?)
+        (?= (?: \d+ \n | \z ) )
+      /smx;
+
+  my $iterator = sub {
+    say "OUTPUT DECREASED TO: " . length($output);
+    my ($dt_stamp, $interval_data);
+    # Find and extract timestamp via timestamp regex
+    ($dt_stamp) = $output =~ m/ ($dt_regex) /smx;
+    chomp($dt_stamp);
+
+    # Rip out individual interval
+    ($interval_data = $output) =~ s/ $regex //smx;
+    say "INTERVAL BEGIN\n" . $interval_data . "\nINTERVAL END";
+    $output =~ s/ $regex //smx;
+
+    return undef if not $interval_data;
+
+    #
+    # Then parse the timestamp
+    # Well, not really - we don't need to do that actually
+    # TODO Remove references to parsing timestamps into epoch secs
+    #
+    # Then parse the interval data
+    my $dhref = $self->_parse_interval($interval_data);
+
+    #
+    # Add the timestamp to the gathered data and return it
+    #
+    $dhref->{timestamp} = $dt_stamp;
+    say Dumper( $dhref );
+    return $dhref;
+  };
+
+  return $iterator;
+}
 
 
 

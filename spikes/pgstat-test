@@ -1,0 +1,82 @@
+#!/usr/perl5/5.22.0/bin/perl
+
+use strict;
+use warnings;
+use v5.20;
+
+use Data::Dumper;
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+
+use PA::Parser::pgstat;
+
+my $file = qq($Bin/pgstat-sys.out-20170331-0700-1030);
+
+my $fh = IO::File->new($file,"<") or
+  die "Unable to open $file";
+
+my $c = do { local $/; <$fh>; };
+$fh->close;
+
+my ($interval_counter, $intervals_matched) = (0, 0);
+my $parser = PA::Parser::pgstat->new();
+
+#my $interval_parser = $parser->parse_interval_generator($c);
+
+my $interval_regex =
+  qr{
+    ^ (?<epoch> \d+ ) \n
+      (?<interval_data> .+? )
+    ((?= \n \d+ \n)|\z)
+  }smx;
+
+my $pgstat_sys_regex =
+  qr{^ ID \s+ RELATIONSHIP \s+ HW \s+ SW \s+ CPUS \n
+     ^ (?: \s+)? (?<id>\d+) \s+ System \s+ \( Software \) \s+ \- \s+
+          (?<sw_util> [\d\.]+ )\% \s+ (?<cpus> \d+ \- \d+) \n
+       .+?
+     ^ (?: \s+)? (?<int_id>\d+) \s+ System \s+ \( Integer_Pipeline \) \s+
+          (?<int_pipeline_util> [\d\.]+ )\% \s+ \- \s+ \d+ \- \d+
+     # no trailing newline
+    }smx;
+
+
+my $data = [];
+
+say "TIME,UTILIZATION";
+
+while ($c =~ m/$interval_regex/g) {
+  my $epoch = $+{epoch};
+  $interval_counter++;
+  my $data_point = {};
+  #say $+{interval_data};
+  if ($+{interval_data} =~ $pgstat_sys_regex) {
+    $intervals_matched++;
+    if ($+{int_pipeline_util} eq '-') {
+      $data_point->{util} = $+{sw_util};
+    } elsif ($+{sw_util} > $+{int_pipeline_util}) {
+      $data_point->{util} = $+{sw_util};
+    } else {
+      $data_point->{util} = $+{int_pipeline_util};
+    }
+  } else {
+    say "NO MATCH FOR THIS INTERVAL DATA:\n$+{interval_data}";
+  }
+  # NOTE:
+  #
+  # Actually record as IDLE, not utilization, for this test, for comparison with
+  # OSIU data
+  #
+  $data_point->{util} = 100 - $data_point->{util};
+  my $dt = DateTime->from_epoch( epoch => $epoch );
+  $data_point->{time} = $dt->set_time_zone('US/Eastern')->strftime('%T');
+  my $line = $data_point->{time};
+  $line .= "," . $data_point->{util};
+  say $line;
+  #say Dumper( $data_point );
+}
+
+say STDERR "Found $interval_counter Intervals";
+say STDERR "$intervals_matched of them matched";
+#say Dumper( $data );
