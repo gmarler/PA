@@ -42,20 +42,20 @@ Parse data for a single time interval
 sub _parse_interval {
   my ($self,$data) = @_;
 
-  my (%pgstat_data);
+  my (%iostat_data);
 
   #say "\nBEGIN:\n" . $data . "\nEND:\n";
-  my $pgstat_sys_regex =
+  my $iostat_sys_regex =
     qr{^ ID \s+ RELATIONSHIP \s+ HW \s+ SW \s+ CPUS \n
        ^ (?: \s+)? (?<id>\d+) \s+ System \s+ \( Software \) \s+ \- \s+
             (?<sw_util> [\d\.]+ )\% \s+ (?<cpus> \d+ \- \d+) \n
       }smx;
 
-  while ($data =~ m{ $pgstat_sys_regex }gsmx ) {
-    $pgstat_data{util} = "$+{sw_util}" . "%";
+  while ($data =~ m{ $iostat_sys_regex }gsmx ) {
+    $iostat_data{util} = "$+{sw_util}" . "%";
   }
 
-  return \%pgstat_data;
+  return \%iostat_data;
 }
 
 __PACKAGE__->meta->make_immutable;
