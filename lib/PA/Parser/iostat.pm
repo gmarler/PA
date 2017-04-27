@@ -13,24 +13,50 @@ use JSON::MaybeXS               qw(encode_json decode_json);
 use PA::DateTime::Format::pgstat;
 use namespace::autoclean;
 
-with 'PA::Parser';
+has 'epoch_interval_regex' => (
+  is         => 'ro',
+  isa        => 'RegexpRef',
+  default    =>
+    sub {
+      qr/ (?<epoch> ^\d+) \n
+          (?<interval_data> .+?)
+          (?= (?: ^ \d+ \n | \z ) )
+        /smx;
+    },
+);
 
-sub _build_dt_regex {
-  return qr{^
-            (?: \d+     # Epoch secs
-                \n
-            )
-           }smx;
-}
-
-sub _build_strptime_pattern {
-  return "%s";
-}
-
-sub _build_datetime_parser {
-  #return &parse_datetime;
-  return &PA::DateTime::Format::iostat->parse_datetime;
-}
+has 'datetime_interval_regex' => (
+  is         => 'ro',
+  isa        => 'RegexpRef',
+  default    =>
+    sub {
+      qr{^
+         (?<datetime>
+             \d{4} \s+        # year
+             (?:Jan|Feb|Mar|Apr|May|Jun|
+                Jul|Aug|Sep|Oct|Nov|Dec
+             ) \s+
+             \d+ \s+          # day of month
+             \d+:\d+:\d+ \s+  # HH:MM:DD  (24 hour clock)
+             \n
+         )
+         (?<interval_data> .+?)
+         (?=
+           (?:
+             \d{4} \s+        # year
+             (?:Jan|Feb|Mar|Apr|May|Jun|
+                Jul|Aug|Sep|Oct|Nov|Dec
+             ) \s+
+             \d+ \s+          # day of month
+             \d+:\d+:\d+ \s+  # HH:MM:DD  (24 hour clock)
+             \n
+             |
+             \z
+           )
+         )
+        }smx;
+    },
+);
 
 
 =head2 _parse_interval
