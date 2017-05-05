@@ -115,7 +115,8 @@ sub _parse_interval {
       $wbw *= $bw_multiplier;
       # TODO: Do something with the data
       #say "WPS: $wps";
-      $per_interval_reads += $rps;
+      $per_interval_reads  += $rps;
+      $per_interval_writes += $wps;
     }
     say "$epoch_time,$per_interval_reads,$per_interval_writes";
   }
