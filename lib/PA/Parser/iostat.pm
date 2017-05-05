@@ -70,7 +70,8 @@ Parse data for a single time interval
 sub _parse_interval {
   my ($self,$data) = @_;
 
-  say "Received " . length($data) . " bytes of iostat data!";
+  say STDERR "Received " . length($data) . " bytes of iostat data!";
+  say "Epoch,Read IOPs,Write IOPs";
 
   my (%iostat_data, $bw_multiplier, $intervals);
 
