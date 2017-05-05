@@ -12,4 +12,6 @@ my $data_fh = IO::File->new($ARGV[0]) or
 
 my $parser = PA::Parser::iostat->new( datastream => $data_fh );
 
-$parser->_parse_interval();
+my $c = do {local $/; <$data_fh>; };
+
+$parser->_parse_interval($c);

@@ -70,12 +70,14 @@ Parse data for a single time interval
 sub _parse_interval {
   my ($self,$data) = @_;
 
+  say "Received " . length($data) . " bytes of iostat data!";
+
   my (%iostat_data, $bw_multiplier);
 
   my $iostat_header_regex =
-    qr{^ \s+ extended \s+ device \s+ statistics \n
-       ^ \s+ r\/s \s+ w\/s \s+ (?<bwunit>k|M)r\/s \s+ (k|M)w\/s \s+ wait \s+
-             actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
+    qr{ \s+ extended \s+ device \s+ statistics [^\n]+ \n
+        \s+ r/s \s+ w/s \s+ (?<bwunit>k|M)r/s \s+ (k|M)w/s \s+ wait \s+
+            actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
       }smx;
   my $iostat_interval_regex =
     qr{ $iostat_header_regex
@@ -91,6 +93,7 @@ sub _parse_interval {
 
   # Iterate over the iostat headers, and the many device stats between each
   while ($data =~ m{ $iostat_header_regex }gsmx ) {
+    say "Match!";
     # Check whether BandWidth Units are in KB or MB
     if ($+{bwunit} eq "k") {
       $bw_multiplier = 1024;
