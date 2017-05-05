@@ -71,7 +71,8 @@ sub _parse_interval {
   my ($self,$data) = @_;
 
   say STDERR "Received " . length($data) . " bytes of iostat data!";
-  say "Epoch,Read IOPs,Write IOPs";
+  say "Epoch,Read IOPs,Write IOPs,Read Bytes,Write Bytes,actv,wsvc_t," .
+      "asvc_t";
 
   my (%iostat_data, $bw_multiplier, $intervals);
 
@@ -104,7 +105,9 @@ sub _parse_interval {
     }
     my ($epoch_time)    = $+{epoch_time};
     my ($interval_data) = $+{interval_data};
-    my ($per_interval_reads,$per_interval_writes) = (0, 0);
+    my ($per_interval_reads,$per_interval_writes,$per_interval_rbw,
+        $per_interval_wbw, $per_interval_actv, $per_interval_wsvc_t,
+        $per_interval_asvc_t) = (0, 0, 0, 0, 0, 0, 0);
 
     while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
       #say join(",", values %+);
@@ -115,10 +118,17 @@ sub _parse_interval {
       $wbw *= $bw_multiplier;
       # TODO: Do something with the data
       #say "WPS: $wps";
-      $per_interval_reads  += $rps;
-      $per_interval_writes += $wps;
+      $per_interval_reads    += $rps;
+      $per_interval_writes   += $wps;
+      $per_interval_rbw      += $rbw * $bw_multiplier;
+      $per_interval_wbw      += $wbw * $bw_multiplier;
+      $per_interval_actv     += $actv;
+      $per_interval_wsvc_t   += $wsvc_t;
+      $per_interval_asvc_t   += $asvc_t;
     }
-    say "$epoch_time,$per_interval_reads,$per_interval_writes";
+    say "$epoch_time,$per_interval_reads,$per_interval_writes," .
+        "$per_interval_rbw,$per_interval_wbw,$per_interval_actv," .
+        "$per_interval_wsvc_t,$per_interval_asvc_t";
   }
   say STDERR "Found $intervals INTERVALS";
 
