@@ -70,12 +70,17 @@ Parse data for a single time interval
 sub _parse_interval {
   my ($self,$data) = @_;
 
-  my (%iostat_data);
+  my (%iostat_data, $bw_multiplier);
 
   my $iostat_header_regex =
     qr{^ \s+ extended \s+ device \s+ statistics \n
-       ^ \s+ r\/s \s+ w\/s \s+ (k|M)r\/s \s+ (k|M)w\/s \s+ wait \s+
+       ^ \s+ r\/s \s+ w\/s \s+ (?<bwunit>k|M)r\/s \s+ (k|M)w\/s \s+ wait \s+
              actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
+      }smx;
+  my $iostat_interval_regex =
+    qr{ $iostat_header_regex
+        (?<interval_data>.+?)
+        (?!$iostat_header_regex)
       }smx;
   my $iostat_dev_regex =
     qr{ ^ \s+ (?<rps>[\d\.]+) \s+ (?<wps>[\d\.]+) \s+ (?<rbw>[\d\.]+) \s+
@@ -84,14 +89,24 @@ sub _parse_interval {
               (?<pctb>\d+) \s+ (?<device>\S+) \n
       }smx;
 
-  #say "\nBEGIN:\n" . $data . "\nEND:\n";
-  my $iostat_sys_regex =
-    qr{       ^ (?: \s+)? (?<id>\d+) \s+ System \s+ \( Software \) \s+ \- \s+
-            (?<sw_util> [\d\.]+ )\% \s+ (?<cpus> \d+ \- \d+) \n
-      }smx;
+  # Iterate over the iostat headers, and the many device stats between each
+  while ($data =~ m{ $iostat_header_regex }gsmx ) {
+    # Check whether BandWidth Units are in KB or MB
+    if ($+{bwunit} eq "k") {
+      $bw_multiplier = 1024;
+    } elsif ($+{bwunit} eq "M") {
+      $bw_multiplier = 1024 * 1024;
+    }
+    my ($interval_data) = $+{interval_data};
 
-  while ($data =~ m{ $iostat_sys_regex }gsmx ) {
-    $iostat_data{util} = "$+{sw_util}" . "%";
+    while ($interval_data =~ $iostat_dev_regex) {
+      my ($rps,$wps,$rbw,$wbw,$wait,$actv,$wsvc_t,$asvc_t,
+          $pctw,$pctb,$device) =
+        (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)});
+      $rbw *= $bw_multiplier;
+      $wbw *= $bw_multiplier;
+      # TODO: Do something with the data
+    }
   }
 
   return \%iostat_data;
