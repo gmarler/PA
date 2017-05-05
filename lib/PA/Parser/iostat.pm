@@ -92,7 +92,7 @@ sub _parse_interval {
       }smx;
 
   # Iterate over the iostat headers, and the many device stats between each
-  while ($data =~ m{ $iostat_header_regex }gsmx ) {
+  while ($data =~ m{ $iostat_interval_regex }gsmx ) {
     say "Match!";
     # Check whether BandWidth Units are in KB or MB
     if ($+{bwunit} eq "k") {
