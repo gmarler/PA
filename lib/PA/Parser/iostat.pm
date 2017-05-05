@@ -72,45 +72,53 @@ sub _parse_interval {
 
   say "Received " . length($data) . " bytes of iostat data!";
 
-  my (%iostat_data, $bw_multiplier);
+  my (%iostat_data, $bw_multiplier, $intervals);
 
   my $iostat_header_regex =
-    qr{ \s+ extended \s+ device \s+ statistics [^\n]+ \n
+    qr{ (?<epoch_time>\d+) \n
+        \s+ extended \s+ device \s+ statistics [^\n]+ \n
         \s+ r/s \s+ w/s \s+ (?<bwunit>k|M)r/s \s+ (k|M)w/s \s+ wait \s+
             actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
       }smx;
   my $iostat_interval_regex =
-    qr{ $iostat_header_regex
+    qr| $iostat_header_regex
         (?<interval_data>.+?)
-        (?!$iostat_header_regex)
-      }smx;
+        (?=${iostat_header_regex})
+      |smx;
   my $iostat_dev_regex =
-    qr{ ^ \s+ (?<rps>[\d\.]+) \s+ (?<wps>[\d\.]+) \s+ (?<rbw>[\d\.]+) \s+
+    qr{ ^ \s+ (?<rps>[\d\.]+) \s+ (?<wps>[\d\.]+) \s+ (?<rbw>[\d\.]+)  \s+
               (?<wbw>[\d\.]+) \s+ (?<wait>[\d\.]+) \s+ (?<actv>[\d\.]+) \s+
               (?<wsvc_t>[\d\.]+) \s+ (?<asvc_t>[\d\.]+) \s+ (?<pctw>\d+) \s+
-              (?<pctb>\d+) \s+ (?<device>\S+) \n
+              (?<pctb>\d+) \s+ (?<device>[^\n]+) \n
       }smx;
 
   # Iterate over the iostat headers, and the many device stats between each
   while ($data =~ m{ $iostat_interval_regex }gsmx ) {
-    say "Match!";
+    $intervals++;
     # Check whether BandWidth Units are in KB or MB
     if ($+{bwunit} eq "k") {
       $bw_multiplier = 1024;
     } elsif ($+{bwunit} eq "M") {
       $bw_multiplier = 1024 * 1024;
     }
+    my ($epoch_time)    = $+{epoch_time};
     my ($interval_data) = $+{interval_data};
+    my ($per_interval_reads,$per_interval_writes) = (0, 0);
 
-    while ($interval_data =~ $iostat_dev_regex) {
+    while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
+      #say join(",", values %+);
       my ($rps,$wps,$rbw,$wbw,$wait,$actv,$wsvc_t,$asvc_t,
           $pctw,$pctb,$device) =
         (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)});
       $rbw *= $bw_multiplier;
       $wbw *= $bw_multiplier;
       # TODO: Do something with the data
+      #say "WPS: $wps";
+      $per_interval_reads += $rps;
     }
+    say "$epoch_time,$per_interval_reads,$per_interval_writes";
   }
+  say "Found $intervals INTERVALS";
 
   return \%iostat_data;
 }
