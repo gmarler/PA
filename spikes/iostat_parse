@@ -1,0 +1,15 @@
+#!/usr/perl5/5.22.0/bin/perl
+
+use warnings;
+use strict;
+use v5.22;
+
+use PA::Parser::iostat;
+use IO::File;
+
+my $data_fh = IO::File->new($ARGV[0]) or
+  die "Unable to open $ARGV[0]";
+
+my $parser = PA::Parser::iostat->new( datastream => $data_fh );
+
+$parser->_parse_interval();

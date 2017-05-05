@@ -13,6 +13,8 @@ use JSON::MaybeXS               qw(encode_json decode_json);
 use PA::DateTime::Format::pgstat;
 use namespace::autoclean;
 
+# with 'PA::Parser';
+
 has 'epoch_interval_regex' => (
   is         => 'ro',
   isa        => 'RegexpRef',
@@ -70,10 +72,21 @@ sub _parse_interval {
 
   my (%iostat_data);
 
+  my $iostat_header_regex =
+    qr{^ \s+ extended \s+ device \s+ statistics \n
+       ^ \s+ r\/s \s+ w\/s \s+ (k|M)r\/s \s+ (k|M)w\/s \s+ wait \s+
+             actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
+      }smx;
+  my $iostat_dev_regex =
+    qr{ ^ \s+ (?<rps>[\d\.]+) \s+ (?<wps>[\d\.]+) \s+ (?<rbw>[\d\.]+) \s+
+              (?<wbw>[\d\.]+) \s+ (?<wait>[\d\.]+) \s+ (?<actv>[\d\.]+) \s+
+              (?<wsvc_t>[\d\.]+) \s+ (?<asvc_t>[\d\.]+) \s+ (?<pctw>\d+) \s+
+              (?<pctb>\d+) \s+ (?<device>\S+) \n
+      }smx;
+
   #say "\nBEGIN:\n" . $data . "\nEND:\n";
   my $iostat_sys_regex =
-    qr{^ ID \s+ RELATIONSHIP \s+ HW \s+ SW \s+ CPUS \n
-       ^ (?: \s+)? (?<id>\d+) \s+ System \s+ \( Software \) \s+ \- \s+
+    qr{       ^ (?: \s+)? (?<id>\d+) \s+ System \s+ \( Software \) \s+ \- \s+
             (?<sw_util> [\d\.]+ )\% \s+ (?<cpus> \d+ \- \d+) \n
       }smx;
 
