@@ -119,7 +119,7 @@ sub _parse_interval {
     }
     say "$epoch_time,$per_interval_reads,$per_interval_writes";
   }
-  say "Found $intervals INTERVALS";
+  say STDERR "Found $intervals INTERVALS";
 
   return \%iostat_data;
 }
