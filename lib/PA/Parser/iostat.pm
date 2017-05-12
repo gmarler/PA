@@ -15,6 +15,13 @@ use namespace::autoclean;
 
 # with 'PA::Parser';
 
+# Which datetime/epoch regex matches the data passed in
+has 'chosen_interval_regex' => (
+  is         => 'rw',
+  isa        => 'RegexpRef|Undef',
+  default    => undef,
+);
+
 has 'epoch_interval_regex' => (
   is         => 'ro',
   isa        => 'RegexpRef',
@@ -59,6 +66,27 @@ has 'datetime_interval_regex' => (
         }smx;
     },
 );
+
+=head2 _choose_datetime_regex
+
+Determine whether the intervals are delimited by epoch or locale based
+date/timestamps
+
+=cut
+
+sub _choose_datetime_regex {
+  my ($self,$data) = @_;
+
+  # Carve off the first 1 MB of the data
+
+  my $epoch_regex = $self->epoch_interval_regex;
+  my $datetime_regex = $self->datetime_interval_regex;
+
+  # Search through the carved off data slice to see which regex matches, then
+  # store that one away as the one to use throughout the parsing of intervals
+
+
+}
 
 
 =head2 _parse_interval
