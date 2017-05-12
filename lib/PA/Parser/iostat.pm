@@ -34,6 +34,41 @@ has 'epoch_interval_regex' => (
     },
 );
 
+  # Thu Mar 30 14:58:03 EDT 2017 (output from iostat's -T d option)
+  # pattern => '%a %b %d %H:%M:%S %Z %Y',
+my $datetime_regex =
+qr{
+   (
+     (?^ix:wednesday|saturday|thursday|tuesday|friday|monday|sunday|
+           fri|mon|sat|sun|thu|tue|wed)
+   )
+   \s+
+   (
+     (?^ix:september|december|february|november|january|october|august|
+           april|march|july|june|apr|aug|dec|feb|jan|jul|jun|mar|may|nov|
+           oct|sep
+     )
+   )
+   \s+
+   (
+     (?^:[0-9 ]?(?^:(?:[0-9])))
+   )
+   \s+
+   ( (?^:[0-9 ]?(?^:(?:[0-9]))))
+   \:
+   ( (?^:[0-9 ]?(?^:(?:[0-9]))))
+   \:
+   ( (?^:[0-9 ]?(?^:(?:[0-9]))))
+   \s+
+   (
+     (?^:[a-zA-Z]{1,6}|[\-\+](?^:(?:[0-9])){2})
+   )
+   \s+
+   (
+     (?^:(?^:(?:[0-9])){4})
+   )
+}smx;
+
 has 'datetime_interval_regex' => (
   is         => 'ro',
   isa        => 'RegexpRef',
@@ -41,23 +76,13 @@ has 'datetime_interval_regex' => (
     sub {
       qr{^
          (?<datetime>
-             \d{4} \s+        # year
-             (?:Jan|Feb|Mar|Apr|May|Jun|
-                Jul|Aug|Sep|Oct|Nov|Dec
-             ) \s+
-             \d+ \s+          # day of month
-             \d+:\d+:\d+ \s+  # HH:MM:DD  (24 hour clock)
-             \n
+          $datetime_regex
+           \n
          )
          (?<interval_data> .+?)
          (?=
            (?:
-             \d{4} \s+        # year
-             (?:Jan|Feb|Mar|Apr|May|Jun|
-                Jul|Aug|Sep|Oct|Nov|Dec
-             ) \s+
-             \d+ \s+          # day of month
-             \d+:\d+:\d+ \s+  # HH:MM:DD  (24 hour clock)
+             $datetime_regex
              \n
              |
              \z
@@ -81,23 +106,23 @@ sub _choose_datetime_regex {
   # Carve off the first 1 MB of the data
   my ($slice) = substr( $data, 0, 1048576 );
 
-  my $epoch_regex = $self->epoch_interval_regex;
-  my $datetime_regex = $self->datetime_interval_regex;
+  my $epoch_interval_regex = $self->epoch_interval_regex;
+  my $datetime_interval_regex = $self->datetime_interval_regex;
 
+  #say STDERR $slice;
+  #say STDERR $datetime_regex;
   # Search through the carved off data slice to see which regex matches, then
   # store that one away as the one to use throughout the parsing of intervals
-  if ($slice =~ m/$epoch_regex/gsmx) {
+  if ($slice =~ m/$epoch_interval_regex/gsmx) {
     say STDERR "Matched epoch regex";
-    $self->chosen_interval_regex($epoch_regex);
-  } elsif ($slice =~ m/$datetime_regex/gsmx) {
+    $self->chosen_interval_regex($epoch_interval_regex);
+  } elsif ($slice =~ m/$epoch_interval_regex/gsmx) {
     say STDERR "Matched datetime regex";
-    $self->chosen_interval_regex($datetime_regex);
+    $self->chosen_interval_regex($datetime_interval_regex);
   } else {
     say STDERR "NO DATE/TIME REGEX MATCHED!";
-    # return; # undef
+    return; # undef
   }
-
-  exit(0);
 }
 
 
@@ -110,14 +135,16 @@ Parse data for a single time interval
 sub _parse_interval {
   my ($self,$data) = @_;
 
+  my $time_regex = $self->chosen_interval_regex();
+
   say STDERR "Received " . length($data) . " bytes of iostat data!";
-  say "Epoch,Read IOPs,Write IOPs,Read Bytes,Write Bytes,actv,wsvc_t," .
-      "asvc_t";
+  say "Time (Epoch or DateTime),Read IOPs,Write IOPs,Read Bytes,Write Bytes," .
+      "actv,wsvc_t,asvc_t";
 
   my (%iostat_data, $bw_multiplier, $intervals);
 
   my $iostat_header_regex =
-    qr{ (?<epoch_time>\d+) \n
+    qr{ (?<time> $time_regex ) \n
         \s+ extended \s+ device \s+ statistics [^\n]+ \n
         \s+ r/s \s+ w/s \s+ (?<bwunit>k|M)r/s \s+ (k|M)w/s \s+ wait \s+
             actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
@@ -143,7 +170,7 @@ sub _parse_interval {
     } elsif ($+{bwunit} eq "M") {
       $bw_multiplier = 1024 * 1024;
     }
-    my ($epoch_time)    = $+{epoch_time};
+    my ($time)          = $+{time};
     my ($interval_data) = $+{interval_data};
     my ($per_interval_reads,$per_interval_writes,$per_interval_rbw,
         $per_interval_wbw, $per_interval_actv, $per_interval_wsvc_t,
