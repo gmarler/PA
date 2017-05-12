@@ -10,7 +10,7 @@ use v5.20;
 use Moose;
 use Data::Dumper;
 use JSON::MaybeXS               qw(encode_json decode_json);
-use PA::DateTime::Format::pgstat;
+use PA::DateTime::Format::iostat;
 use namespace::autoclean;
 
 # with 'PA::Parser';
@@ -77,15 +77,27 @@ date/timestamps
 sub _choose_datetime_regex {
   my ($self,$data) = @_;
 
+  say STDERR "Received " . length($data) . " bytes of iostat data!";
   # Carve off the first 1 MB of the data
+  my ($slice) = substr( $data, 0, 1048576 );
 
   my $epoch_regex = $self->epoch_interval_regex;
   my $datetime_regex = $self->datetime_interval_regex;
 
   # Search through the carved off data slice to see which regex matches, then
   # store that one away as the one to use throughout the parsing of intervals
+  if ($slice =~ m/$epoch_regex/gsmx) {
+    say STDERR "Matched epoch regex";
+    $self->chosen_interval_regex($epoch_regex);
+  } elsif ($slice =~ m/$datetime_regex/gsmx) {
+    say STDERR "Matched datetime regex";
+    $self->chosen_interval_regex($datetime_regex);
+  } else {
+    say STDERR "NO DATE/TIME REGEX MATCHED!";
+    # return; # undef
+  }
 
-
+  exit(0);
 }
 
 

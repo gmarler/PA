@@ -14,4 +14,5 @@ my $parser = PA::Parser::iostat->new( datastream => $data_fh );
 
 my $c = do {local $/; <$data_fh>; };
 
+$parser->_choose_datetime_regex($c);
 $parser->_parse_interval($c);
