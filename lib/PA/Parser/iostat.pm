@@ -257,7 +257,8 @@ sub _parse_interval {
     # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
     my $dt = $parser->parse_datetime($+{datetime});
     #$line .= "$+{datetime},";
-    $line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
+    #$line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
+    $line .= $dt->strftime("%H:%M:%S") . ",";
     # - Headers
     #   Need to extract read/write multiplier, as this can change over
     #   time, if metric collection is stopped/restarted
