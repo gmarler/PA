@@ -12,7 +12,7 @@ my $data_fh = IO::File->new($ARGV[0]) or
 
 my $parser = PA::Parser::iostat->new( datastream => $data_fh );
 
-my $c = do {local $/; <$data_fh>; };
+#my $c = do {local $/; <$data_fh>; };
 
-$parser->_choose_datetime_regex($c);
-$parser->_parse_interval($c);
+#$parser->_choose_datetime_regex($c);
+$parser->_parse_interval();
