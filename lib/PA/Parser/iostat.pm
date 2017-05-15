@@ -208,6 +208,7 @@ Parse data for a single time interval
 sub _parse_interval {
   my ($self) = @_;
 
+  my $parser     = PA::DateTime::Format::iostat->new;
   my $datastream = $self->datastream;
   my ($data) = do { local $/; <$datastream>; };
 
@@ -253,8 +254,10 @@ sub _parse_interval {
     my ($line) = '';
     my ($interval_data) = $+{interval_data};
     # Tear individual intervals into their respective:
-    # - Timestamp
-    $line .= "$+{datetime},";
+    # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
+    my $dt = $parser->parse_datetime($+{datetime});
+    #$line .= "$+{datetime},";
+    $line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
     # - Headers
     #   Need to extract read/write multiplier, as this can change over
     #   time, if metric collection is stopped/restarted
@@ -286,11 +289,11 @@ sub _parse_interval {
       $per_interval_wbw      += $wbw * $bw_multiplier;
       # These we need maxes and avgs for
       $per_interval_actv     += $actv;
-      $max_actv               = max $max_actv, $per_interval_actv;
+      $max_actv               = max($max_actv, $per_interval_actv);
       $per_interval_wsvc_t   += $wsvc_t;
-      $max_wsvc_t             = max $max_wsvc_t, $per_interval_wsvc_t;
+      $max_wsvc_t             = max($max_wsvc_t, $per_interval_wsvc_t);
       $per_interval_asvc_t   += $asvc_t;
-      $max_asvc_t             = max $max_asvc_t, $per_interval_asvc_t;
+      $max_asvc_t             = max($max_asvc_t, $per_interval_asvc_t);
       $count_for_avg++;
     }
     # If the interval had no data (completely possible), then skip it
