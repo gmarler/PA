@@ -210,6 +210,8 @@ sub _parse_interval {
 
   my $parser     = PA::DateTime::Format::iostat->new;
   my $datastream = $self->datastream;
+  # TODO: Read data off 1 MB at a time, parsing and returning the
+  #       info as needed
   my ($data) = do { local $/; <$datastream>; };
 
   say STDERR "PROCESSING " . length($data) . " BYTES OF DATA";
@@ -217,19 +219,13 @@ sub _parse_interval {
   my $interval_regex = $self->chosen_interval_regex();
   my $time_regex     = $self->chosen_time_regex();
 
+  # TODO: Move this to a method that aggregates over parsed intervals
   say "Time (Epoch or DateTime),Read IOPs,Write IOPs,Read Bytes,Write Bytes," .
       "actv,MAX actv,wsvc_t,MAX wsvc_t,asvc_t,MAX asvc_t";
 
   my (%iostat_data, $bw_multiplier, $intervals);
 
   my $iostat_header_regex =
-    qr{ (?<time> $time_regex ) \n
-        \s+ extended \s+ device \s+ statistics [^\n]+ \n
-        \s+ r/s \s+ w/s \s+ (?<bwunit>k|M)r/s \s+ (k|M)w/s \s+ wait \s+
-            actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
-      }smx;
-
-  my $iostat_header_regex2 =
     qr{
         \s+ extended \s+ device \s+ statistics [^\n]+ \n
         \s+ r/s \s+ w/s \s+ (?<bwunit>k|M)r/s \s+ (k|M)w/s \s+ wait \s+
@@ -262,7 +258,7 @@ sub _parse_interval {
     # - Headers
     #   Need to extract read/write multiplier, as this can change over
     #   time, if metric collection is stopped/restarted
-    if ($interval_data =~ m{ $iostat_header_regex2 }smx) {
+    if ($interval_data =~ m{ $iostat_header_regex }smx) {
       # Check whether BandWidth Units are in KB or MB
       if ($+{bwunit} eq "k") {
         $bw_multiplier = 1024;
@@ -280,9 +276,7 @@ sub _parse_interval {
       my ($rps,$wps,$rbw,$wbw,$wait,$actv,$wsvc_t,$asvc_t,
           $pctw,$pctb,$device) =
         (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)});
-      $rbw *= $bw_multiplier;
-      $wbw *= $bw_multiplier;
-      # TODO: Do something with the data
+      # Do something with the data
       #say "WPS: $wps";
       $per_interval_reads    += $rps;
       $per_interval_writes   += $wps;
