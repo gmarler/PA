@@ -19,10 +19,14 @@ my $parser = PA::Parser::iostat->new( datastream => $data_fh );
 
 #$parser->_parse_interval();
 
-my (@intervals);
 
-while( my $aref = $parser->parse_intervals()) {
-  push @intervals, @$aref;
-}
+$parser->parse_aggregate_intervals();
 
-say "Found " . scalar(@intervals) . " Intervals in file";
+#my (@intervals);
+#
+#while( my $aref = $parser->parse_intervals()) {
+#  push @intervals, @$aref;
+#  if (scalar(@intervals) % 100
+#}
+#
+#say "Found " . scalar(@intervals) . " Intervals in file";

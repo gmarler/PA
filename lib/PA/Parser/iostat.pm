@@ -469,9 +469,14 @@ sub parse_intervals {
     # Tear individual intervals into their respective:
     # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
     my $dt = $parser->parse_datetime($+{datetime});
+    #$line .= "$+{datetime},";
+    #$line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
+    my $formatted_dt = $dt->strftime("%H:%M:%S");
     my $epoch = $dt->epoch();
-    push @$intervals_aref, [ $epoch, [] ];
+
+    push @$intervals_aref, [ $formatted_dt, [] ];
     my $interval_aref = $intervals_aref->[-1]->[1];
+
     # Remove the single interval we just matched
     $remaining_data =~ s{ $interval_regex }{}smx;
     #say "REMAINING TO PARSE: " . length($remaining_data);
@@ -492,11 +497,13 @@ sub parse_intervals {
 
     while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
       # Do something with the data
-      push @$interval_aref,
-        [ (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)})] ;
+      my $devdata = 
+        [ (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)}) ] ;
       # multiply the read/write throughput by the appropriate multiplier
-      $interval_aref->[-1]->[2] *= $bw_multiplier;
-      $interval_aref->[-1]->[3] *= $bw_multiplier;
+      $devdata->[2] *= $bw_multiplier;
+      $devdata->[3] *= $bw_multiplier;
+
+      push @$interval_aref, $devdata;
     }
   }
 
@@ -524,7 +531,6 @@ statistics, producing a single line of output for each interval in CSV format.
 
 sub parse_aggregate_intervals {
   my ($self) = shift;
-  my ($line);
 
   # Aggregate over each interval
   say "Time (Epoch or DateTime),Read IOPs,Write IOPs,Read Bytes,Write Bytes," .
@@ -533,6 +539,46 @@ sub parse_aggregate_intervals {
   my ($arefs);
   while ($arefs = $self->parse_intervals()) {
     foreach my $interval_data (@$arefs) {
+      my ($line) = '';
+      # - Per device data to be aggregated
+      my ($per_interval_reads,$per_interval_writes,$per_interval_rbw,
+          $per_interval_wbw, $per_interval_actv, $per_interval_wsvc_t,
+          $per_interval_asvc_t, $count_for_avg, $max_actv, $max_wsvc_t,
+          $max_asvc_t) = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+      $line .= $interval_data->[0] . ",";
+      # TODO: create a constant as an accessor into each array
+      foreach my $devstat (@{$interval_data->[1]}) {
+        # Aggregate all of the device info for this interval into a single line
+        $per_interval_reads    += $devstat->[0];
+        $per_interval_writes   += $devstat->[1];
+        $per_interval_rbw      += $devstat->[2];
+        $per_interval_wbw      += $devstat->[3];
+        # These we need maxes and avgs for
+        $per_interval_actv     += $devstat->[5];
+        $max_actv               = max($max_actv, $per_interval_actv);
+        $per_interval_wsvc_t   += $devstat->[6];
+        $max_wsvc_t             = max($max_wsvc_t, $per_interval_wsvc_t);
+        $per_interval_asvc_t   += $devstat->[7];
+        $max_asvc_t             = max($max_asvc_t, $per_interval_asvc_t);
+        $count_for_avg++;
+      }
+      # If the interval had no data (completely possible), then skip it
+      if ($count_for_avg == 0) {
+        next;
+      }
+      # Calculate averages for the fields that need it
+      $per_interval_actv   /= $count_for_avg;
+      $per_interval_wsvc_t /= $count_for_avg;
+      $per_interval_asvc_t /= $count_for_avg;
+
+      $line .=
+          "$per_interval_reads,$per_interval_writes," .
+          "$per_interval_rbw,$per_interval_wbw,$per_interval_actv," .
+          "$max_actv,$per_interval_wsvc_t,$max_wsvc_t," .
+          "$per_interval_asvc_t,$max_asvc_t";
+
+      say $line;
     }
   }
 
