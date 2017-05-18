@@ -497,13 +497,12 @@ sub parse_intervals {
 
     while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
       # Do something with the data
-      my $devdata = 
+      push @$interval_aref,
         [ (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)}) ] ;
-      # multiply the read/write throughput by the appropriate multiplier
-      $devdata->[2] *= $bw_multiplier;
-      $devdata->[3] *= $bw_multiplier;
 
-      push @$interval_aref, $devdata;
+      # multiply the read/write throughput by the appropriate multiplier
+      $interval_aref->[-1]->[2] *= $bw_multiplier;
+      $interval_aref->[-1]->[3] *= $bw_multiplier;
     }
   }
 
