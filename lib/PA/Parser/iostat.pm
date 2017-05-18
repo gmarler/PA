@@ -23,10 +23,20 @@ class_type 'IO::File';
 class_type 'IO::All::File';
 class_type 'IO::Uncompress::Bunzip2';
 
-has 'datastream' => ( is       => 'rw',
-                      isa      => 'IO::Handle | IO::File | IO::All::File | IO::Uncompress::Bunzip2',
-                      required => 1,
-                    );
+has 'datastream' => (
+  is         => 'rw',
+  isa        => 'IO::Handle | IO::File | IO::All::File | IO::Uncompress::Bunzip2',
+  required   => 1,
+);
+
+# As we read the datastream, we will often end up with 'partial' intervals that
+# are incomplete, so we retain those to append to so that they are complete and
+# can therefore be parsed on the next read from the datastream.
+has 'remaining_data' => (
+  is         => 'rw',
+  isa        => Str,
+  default    => '',
+);
 
 has 'chosen_interval_regex' => (
   is         => 'rw',
@@ -207,11 +217,13 @@ Parse data for a single time interval
 
 sub _parse_interval {
   my ($self) = @_;
+  my ($output);
 
   my $parser     = PA::DateTime::Format::iostat->new;
   my $datastream = $self->datastream;
   # TODO: Read data off 1 MB at a time, parsing and returning the
   #       info as needed
+  #$datastream->read($output, 1024 * 1024);
   my ($data) = do { local $/; <$datastream>; };
 
   say STDERR "PROCESSING " . length($data) . " BYTES OF DATA";
@@ -314,6 +326,108 @@ sub _parse_interval {
   say STDERR "Found $intervals INTERVALS";
 
   return \%iostat_data;
+}
+
+=head2 parse_interval
+
+Parse data for several time intervals
+
+=cut
+
+sub parse_intervals {
+  my ($self) = @_;
+  my ($new_data);
+
+  my $parser     = PA::DateTime::Format::iostat->new;
+  my $datastream = $self->datastream;
+  my $remaining_data = $self->remaining_data;
+
+  # Read data off 1 MB at a time, parsing and returning the
+  # info as available in complete intervals
+  $datastream->read($new_data, 1024 * 1024);
+  # Append the data we just read to the previously remaining data, if any
+  $remaining_data .= $new_data;
+
+  my $interval_regex = $self->chosen_interval_regex();
+  my $time_regex     = $self->chosen_time_regex();
+
+  my (@iostat_data, $bw_multiplier, $intervals);
+
+  my $iostat_header_regex =
+    qr{
+        \s+ extended \s+ device \s+ statistics [^\n]+ \n
+        \s+ r/s \s+ w/s \s+ (?<bwunit>k|M)r/s \s+ (k|M)w/s \s+ wait \s+
+            actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
+      }smx;
+
+  my $iostat_interval_regex =
+    qr| $iostat_header_regex
+        (?<interval_data>.+?)
+        (?=${iostat_header_regex})
+      |smx;
+
+  my $iostat_dev_regex =
+    qr{ ^ \s+ (?<rps>[\d\.]+) \s+ (?<wps>[\d\.]+) \s+ (?<rbw>[\d\.]+)  \s+
+              (?<wbw>[\d\.]+) \s+ (?<wait>[\d\.]+) \s+ (?<actv>[\d\.]+) \s+
+              (?<wsvc_t>[\d\.]+) \s+ (?<asvc_t>[\d\.]+) \s+ (?<pctw>\d+) \s+
+              (?<pctb>\d+) \s+ (?<device>[^\n]+) \n
+      }smx;
+
+  # Iterate over each iostat interval, separated by timestamp of some form
+  while ($remaining_data =~ s{ $interval_regex }{}gsmx ) {
+    my ($interval_data) = $+{interval_data};
+    # Tear individual intervals into their respective:
+    # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
+    my $dt = $parser->parse_datetime($+{datetime});
+
+    # - Headers
+    #   Need to extract read/write multiplier, as this can change over
+    #   time, if metric collection is stopped/restarted
+    if ($interval_data =~ m{ $iostat_header_regex }smx) {
+      # Check whether BandWidth Units are in KB or MB
+      if ($+{bwunit} eq "k") {
+        $bw_multiplier = 1024;
+      } elsif ($+{bwunit} eq "M") {
+        $bw_multiplier = 1024 * 1024;
+      }
+    }
+    # - Per device data to be aggregated
+    my ($per_interval_reads,$per_interval_writes,$per_interval_rbw,
+        $per_interval_wbw, $per_interval_actv, $per_interval_wsvc_t,
+        $per_interval_asvc_t, $count_for_avg, $max_actv, $max_wsvc_t,
+        $max_asvc_t) = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
+      my ($rps,$wps,$rbw,$wbw,$wait,$actv,$wsvc_t,$asvc_t,
+          $pctw,$pctb,$device) =
+        (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)});
+      # Do something with the data
+    }
+    $intervals++;
+  }
+
+  say STDERR "Found $intervals INTERVALS";
+
+  # Store away any partial interval for the next time through
+  $self->remaining_data($remaining_data);
+
+  return \@iostat_data;
+}
+
+=head2 parse_aggregate_intervals
+
+Parse data for several time intervals and aggregate appropriately for the
+statistics.
+
+=cut
+
+sub parse_aggregate_intervals {
+  my ($self) = shift;
+
+  # TODO: Move this to a method that aggregates over parsed intervals
+  say "Time (Epoch or DateTime),Read IOPs,Write IOPs,Read Bytes,Write Bytes," .
+      "actv,MAX actv,wsvc_t,MAX wsvc_t,asvc_t,MAX asvc_t";
+
 }
 
 __PACKAGE__->meta->make_immutable;
