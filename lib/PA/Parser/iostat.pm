@@ -34,11 +34,18 @@ has 'datastream' => (
 # can therefore be parsed on the next read from the datastream.
 has 'remaining_data' => (
   is         => 'rw',
-  isa        => Str,
+  isa        => 'Str',
   default    => '',
 );
 
 has 'chosen_interval_regex' => (
+  is         => 'rw',
+  isa        => 'RegexpRef|Undef',
+  default    => undef,
+  lazy       => 1,
+);
+
+has 'chosen_interval_regex_no_eof' => (
   is         => 'rw',
   isa        => 'RegexpRef|Undef',
   default    => undef,
@@ -53,6 +60,46 @@ has 'chosen_time_regex' => (
   lazy       => 1,
 );
 
+# matches on interval boundary, but warning, will match incomplete intervals.
+# This regex is only intended to be used when you know for certain that you've
+# read the complete file/datastream containing the stat output.
+has 'epoch_interval_regex' => (
+  is         => 'ro',
+  isa        => 'RegexpRef',
+  lazy       => 1,
+  builder    => '_build_epoch_interval_regex',
+);
+
+# guaranteed to match exactly on interval boundary, to be used most of the time,
+# due to partial intervals at the end of each datastream read up to the point
+# where the entire file has been read in
+has 'epoch_interval_regex_no_eof' => (
+  is         => 'ro',
+  isa        => 'RegexpRef',
+  lazy       => 1,
+  builder    => '_build_epoch_interval_regex_no_eof',
+);
+
+# matches on interval boundary, but warning, will match incomplete intervals.
+# This regex is only intended to be used when you know for certain that you've
+# read the complete file/datastream containing the stat output.
+has 'datetime_interval_regex' => (
+  is         => 'ro',
+  isa        => 'RegexpRef',
+  lazy       => 1,
+  builder    => '_build_datetime_interval_regex',
+);
+
+# guaranteed to match exactly on interval boundary, to be used most of the time,
+# due to partial intervals at the end of each datastream read up to the point
+# where the entire file has been read in
+has 'datetime_interval_regex_no_eof' => (
+  is         => 'ro',
+  isa        => 'RegexpRef',
+  lazy       => 1,
+  builder    => '_build_datetime_interval_regex_no_eof',
+);
+
 has 'epoch_regex' => (
   is         => 'ro',
   isa        => 'RegexpRef',
@@ -63,12 +110,6 @@ has 'epoch_regex' => (
     },
 );
 
-has 'epoch_interval_regex' => (
-  is         => 'ro',
-  isa        => 'RegexpRef',
-  lazy       => 1,
-  builder    => '_build_epoch_interval_regex',
-);
 
 # Thu Mar 30 14:58:03 EDT 2017 (output from iostat's -T d option)
 # pattern => '%a %b %d %H:%M:%S %Z %Y',
@@ -111,13 +152,6 @@ has 'datetime_regex' => (
   },
 );
 
-has 'datetime_interval_regex' => (
-  is         => 'ro',
-  isa        => 'RegexpRef',
-  lazy       => 1,
-  builder    => '_build_datetime_interval_regex',
-);
-
 sub _build_epoch_interval_regex {
   my ($self) = @_;
   my ($epoch_regex) = $self->epoch_regex;
@@ -131,6 +165,22 @@ sub _build_epoch_interval_regex {
           \n            # Newline after epoch datetime
         (?<interval_data> .+?)
         (?= (?: $epoch_regex \n | \z ) )
+      /smx;
+}
+
+sub _build_epoch_interval_regex_no_eof {
+  my ($self) = @_;
+  my ($epoch_regex) = $self->epoch_regex;
+
+  return
+    qr/
+          # We call this datetime too, even though it's epoch
+        (?<datetime>
+         $epoch_regex   # Don't include newline in capture
+        )
+          \n            # Newline after epoch datetime
+        (?<interval_data> .+?)
+        (?= (?: $epoch_regex \n ) )
       /smx;
 }
 
@@ -156,13 +206,37 @@ sub _build_datetime_interval_regex {
     }smx;
 }
 
+sub _build_datetime_interval_regex_no_eof {
+  my ($self) = @_;
+  my ($datetime_regex) = $self->datetime_regex;
+
+  return
+  qr{^
+     (?<datetime>
+      $datetime_regex   # Don't include newline in capture
+     )
+       \n               # Newline after datetime
+     (?<interval_data> .+?)
+     (?=
+       (?:
+         $datetime_regex
+         \n
+       )
+     )
+    }smx;
+}
+
+
 sub BUILD {
   my ($self) = @_;
 
   $self->epoch_interval_regex();
+  $self->epoch_interval_regex_no_eof();
   $self->datetime_interval_regex();
+  $self->datetime_interval_regex_no_eof();
   $self->chosen_time_regex();
   $self->chosen_interval_regex();
+  $self->chosen_interval_regex_no_eof();
 }
 
 
@@ -184,11 +258,13 @@ sub _build_chosen_time_regex {
   # Reset datastream back to beginning
   $datastream->seek(0, 0);
 
-  my $epoch_regex             = $self->epoch_regex;
-  my $datetime_regex          = $self->datetime_regex;
+  my $epoch_regex                    = $self->epoch_regex;
+  my $datetime_regex                 = $self->datetime_regex;
 
-  my $epoch_interval_regex    = $self->epoch_interval_regex;
-  my $datetime_interval_regex = $self->datetime_interval_regex;
+  my $epoch_interval_regex           = $self->epoch_interval_regex;
+  my $epoch_interval_regex_no_eof    = $self->epoch_interval_regex_no_eof;
+  my $datetime_interval_regex        = $self->datetime_interval_regex;
+  my $datetime_interval_regex_no_eof = $self->datetime_interval_regex_no_eof;
 
   #say STDERR $slice;
   #say STDERR $datetime_regex;
@@ -198,10 +274,12 @@ sub _build_chosen_time_regex {
     say STDERR "Matched epoch regex";
     $self->chosen_time_regex($epoch_regex);
     $self->chosen_interval_regex($epoch_interval_regex);
+    $self->chosen_interval_regex_no_eof($epoch_interval_regex_no_eof);
   } elsif ($slice =~ m/$datetime_interval_regex/gsmx) {
     say STDERR "Matched datetime regex";
     $self->chosen_time_regex($datetime_regex);
     $self->chosen_interval_regex($datetime_interval_regex);
+    $self->chosen_interval_regex_no_eof($datetime_interval_regex_no_eof);
   } else {
     say STDERR "NO DATE/TIME REGEX MATCHED!";
     return; # undef
@@ -337,9 +415,14 @@ Parse data for several time intervals
 sub parse_intervals {
   my ($self) = @_;
   my ($new_data);
+  my ($intervals_aref);
+  my (@captured_intervals);
+
+  my $datastream = $self->datastream;
+  # If we've previously exhausted the datastream, there's nothing left to do
+  return if ($datastream->eof);   # undef
 
   my $parser     = PA::DateTime::Format::iostat->new;
-  my $datastream = $self->datastream;
   my $remaining_data = $self->remaining_data;
 
   # Read data off 1 MB at a time, parsing and returning the
@@ -348,7 +431,12 @@ sub parse_intervals {
   # Append the data we just read to the previously remaining data, if any
   $remaining_data .= $new_data;
 
-  my $interval_regex = $self->chosen_interval_regex();
+  my ($interval_regex);
+  if ($datastream->eof) {
+    $interval_regex = $self->chosen_interval_regex();
+  } else {
+    $interval_regex = $self->chosen_interval_regex_no_eof();
+  }
   my $time_regex     = $self->chosen_time_regex();
 
   my (@iostat_data, $bw_multiplier, $intervals);
@@ -360,12 +448,6 @@ sub parse_intervals {
             actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
       }smx;
 
-  my $iostat_interval_regex =
-    qr| $iostat_header_regex
-        (?<interval_data>.+?)
-        (?=${iostat_header_regex})
-      |smx;
-
   my $iostat_dev_regex =
     qr{ ^ \s+ (?<rps>[\d\.]+) \s+ (?<wps>[\d\.]+) \s+ (?<rbw>[\d\.]+)  \s+
               (?<wbw>[\d\.]+) \s+ (?<wait>[\d\.]+) \s+ (?<actv>[\d\.]+) \s+
@@ -373,12 +455,26 @@ sub parse_intervals {
               (?<pctb>\d+) \s+ (?<device>[^\n]+) \n
       }smx;
 
+  ## Parse all of the complete intervals just read in
+  #@captured_intervals = $remaining_data =~ m{ $interval_regex }gsmx;
+
+  #if (@captured_intervals) {
+  #} else {
+  #  return;  # undef
+  #}
+
   # Iterate over each iostat interval, separated by timestamp of some form
-  while ($remaining_data =~ s{ $interval_regex }{}gsmx ) {
+  while ($remaining_data =~ m{ $interval_regex }gsmx ) {
     my ($interval_data) = $+{interval_data};
     # Tear individual intervals into their respective:
     # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
     my $dt = $parser->parse_datetime($+{datetime});
+    my $epoch = $dt->epoch();
+    push @$intervals_aref, $epoch;
+    my $interval_aref = [];
+    # Remove the single interval we just matched
+    $remaining_data =~ s{ $interval_regex }{}smx;
+    #say "REMAINING TO PARSE: " . length($remaining_data);
 
     # - Headers
     #   Need to extract read/write multiplier, as this can change over
@@ -390,12 +486,9 @@ sub parse_intervals {
       } elsif ($+{bwunit} eq "M") {
         $bw_multiplier = 1024 * 1024;
       }
+    } else {
+      # If we don't match the header, we should probably skip this
     }
-    # - Per device data to be aggregated
-    my ($per_interval_reads,$per_interval_writes,$per_interval_rbw,
-        $per_interval_wbw, $per_interval_actv, $per_interval_wsvc_t,
-        $per_interval_asvc_t, $count_for_avg, $max_actv, $max_wsvc_t,
-        $max_asvc_t) = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
       my ($rps,$wps,$rbw,$wbw,$wait,$actv,$wsvc_t,$asvc_t,
@@ -403,30 +496,43 @@ sub parse_intervals {
         (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)});
       # Do something with the data
     }
-    $intervals++;
   }
-
-  say STDERR "Found $intervals INTERVALS";
 
   # Store away any partial interval for the next time through
   $self->remaining_data($remaining_data);
 
-  return \@iostat_data;
+  # TODO: If the datastream has been exhausted, and we still have remaining
+  #       data, make sure to call that fact out, and possibly output what that
+  #       data was
+  if ($remaining_data) {
+    #say "incomplete interval left over of length " . length($remaining_data) .
+    #    ":\n$remaining_data";
+  }
+
+  #return \@iostat_data;
+  return $intervals_aref;
 }
 
 =head2 parse_aggregate_intervals
 
 Parse data for several time intervals and aggregate appropriately for the
-statistics.
+statistics, producing a single line of output for each interval in CSV format.
 
 =cut
 
 sub parse_aggregate_intervals {
   my ($self) = shift;
+  my ($line);
 
-  # TODO: Move this to a method that aggregates over parsed intervals
+  # Aggregate over each interval
   say "Time (Epoch or DateTime),Read IOPs,Write IOPs,Read Bytes,Write Bytes," .
       "actv,MAX actv,wsvc_t,MAX wsvc_t,asvc_t,MAX asvc_t";
+
+  my ($arefs);
+  while ($arefs = $self->parse_intervals()) {
+    foreach my $interval_data (@$arefs) {
+    }
+  }
 
 }
 

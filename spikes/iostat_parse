@@ -6,6 +6,7 @@ use v5.22;
 
 use PA::Parser::iostat;
 use IO::File;
+use Data::Dumper;
 
 my $data_fh = IO::File->new($ARGV[0]) or
   die "Unable to open $ARGV[0]";
@@ -15,4 +16,13 @@ my $parser = PA::Parser::iostat->new( datastream => $data_fh );
 #my $c = do {local $/; <$data_fh>; };
 
 #$parser->_choose_datetime_regex($c);
-$parser->_parse_interval();
+
+#$parser->_parse_interval();
+
+my (@intervals);
+
+while( my $aref = $parser->parse_intervals()) {
+  push @intervals, @$aref;
+}
+
+say "Found " . scalar(@intervals) . " Intervals in file";
