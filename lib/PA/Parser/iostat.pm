@@ -415,7 +415,7 @@ Parse data for several time intervals
 sub parse_intervals {
   my ($self) = @_;
   my ($new_data);
-  my ($intervals_aref);
+  my ($intervals_aref) = [];
   my (@captured_intervals);
 
   my $datastream = $self->datastream;
@@ -470,8 +470,8 @@ sub parse_intervals {
     # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
     my $dt = $parser->parse_datetime($+{datetime});
     my $epoch = $dt->epoch();
-    push @$intervals_aref, $epoch;
-    my $interval_aref = [];
+    push @$intervals_aref, [ $epoch, [] ];
+    my $interval_aref = $intervals_aref->[-1]->[1];
     # Remove the single interval we just matched
     $remaining_data =~ s{ $interval_regex }{}smx;
     #say "REMAINING TO PARSE: " . length($remaining_data);
@@ -491,10 +491,12 @@ sub parse_intervals {
     }
 
     while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
-      my ($rps,$wps,$rbw,$wbw,$wait,$actv,$wsvc_t,$asvc_t,
-          $pctw,$pctb,$device) =
-        (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)});
       # Do something with the data
+      push @$interval_aref,
+        [ (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)})] ;
+      # multiply the read/write throughput by the appropriate multiplier
+      $interval_aref->[-1]->[2] *= $bw_multiplier;
+      $interval_aref->[-1]->[3] *= $bw_multiplier;
     }
   }
 
