@@ -23,6 +23,15 @@ class_type 'IO::File';
 class_type 'IO::All::File';
 class_type 'IO::Uncompress::Bunzip2';
 
+# If true, only process data for devices under MPxIO control
+# The way you tell this is that the device name in cXtYdZ format
+# will have a 'Y' component that is 33 characters long
+has 'mpxio_devs_only' => (
+  is         => 'ro',
+  isa        => 'Bool',
+  default    => 0,
+);
+
 has 'datastream' => (
   is         => 'rw',
   isa        => 'IO::Handle | IO::File | IO::All::File | IO::Uncompress::Bunzip2',
@@ -582,6 +591,21 @@ sub parse_aggregate_intervals {
   }
 
 }
+
+=head2 parse_aggregate_intervals_by_path
+
+Parse data for several time intervals and aggregate appropriately by path for
+the statistics, producing a separate column per unique path for each interval in
+CSV format.
+
+=cut
+
+sub parse_aggregate_intervals_by_path {
+  my ($self) = shift;
+
+}
+
+
 
 __PACKAGE__->meta->make_immutable;
 
