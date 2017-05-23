@@ -427,6 +427,7 @@ sub parse_intervals {
   my ($intervals_aref) = [];
   my (@captured_intervals);
 
+  my $mpxio_devs_only = $self->mpxio_devs_only;
   my $datastream = $self->datastream;
   # If we've previously exhausted the datastream, there's nothing left to do
   return if ($datastream->eof);   # undef
@@ -505,6 +506,10 @@ sub parse_intervals {
     }
 
     while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
+      if ($mpxio_devs_only and ($+{device} !~ m{^c\d+ t\d{33} d\d+$}x)) {
+        # If we're only interested in MPxIO devices, skip this one
+        next;
+      }
       # Do something with the data
       push @$interval_aref,
         [ (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)}) ] ;
