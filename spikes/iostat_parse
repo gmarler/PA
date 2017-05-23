@@ -11,7 +11,8 @@ use Data::Dumper;
 my $data_fh = IO::File->new($ARGV[0]) or
   die "Unable to open $ARGV[0]";
 
-my $parser = PA::Parser::iostat->new( datastream => $data_fh );
+my $parser = PA::Parser::iostat->new( datastream => $data_fh,
+                                      mpxio_devs_only => 1);
 
 #my $c = do {local $/; <$data_fh>; };
 

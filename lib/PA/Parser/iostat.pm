@@ -506,13 +506,16 @@ sub parse_intervals {
     }
 
     while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
-      if ($mpxio_devs_only and ($+{device} !~ m{^c\d+ t\d{33} d\d+$}x)) {
+      my $captured_stats =
+        [ (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)}) ] ;
+      if ($mpxio_devs_only and
+          not ($+{device} =~ m{^c\d+ t[0-9A-F]{32} d\d+}x)) {
         # If we're only interested in MPxIO devices, skip this one
+        #say "SKIPPING: $+{device}";
         next;
       }
       # Do something with the data
-      push @$interval_aref,
-        [ (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)}) ] ;
+      push @$interval_aref, $captured_stats;
 
       # multiply the read/write throughput by the appropriate multiplier
       $interval_aref->[-1]->[2] *= $bw_multiplier;
