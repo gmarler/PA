@@ -9,6 +9,7 @@ use v5.20;
 
 use Moose;
 use Data::Dumper;
+use DateTime                    qw();
 use List::Util                  qw(max);
 use JSON::MaybeXS               qw(encode_json decode_json);
 use PA::DateTime::Format::arcstat;
@@ -36,6 +37,18 @@ has 'remaining_data' => (
   is         => 'rw',
   isa        => 'Str',
   default    => '',
+);
+
+# Since arcstat.pl only emits time of day, and leaves out *which* day, if we're
+# parsing from a file from a different day, allow the constructor to specify the
+# date (but not the time) as a DateTime object being passed in.
+# Default to the current day.
+has 'date' => (
+  is         => 'ro',
+  isa        => 'DateTime',
+  default    => sub {
+    DateTime->today();
+  },
 );
 
 # matches on interval boundary, but warning, will match incomplete intervals.
@@ -314,23 +327,13 @@ sub parse_intervals {
 
     # Remove the single interval we just matched
     $remaining_data =~ s{ $interval_regex }{}smx;
-    #say "REMAINING TO PARSE: " . length($remaining_data);
 
-    while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
+    while ($interval_data =~ m/$arcstat_regex/gsmx) {
       my $captured_stats =
-        [ (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)}) ] ;
-      if ($mpxio_devs_only and
-          not ($+{device} =~ m{^c\d+ t[0-9A-F]{32} d\d+}x)) {
-        # If we're only interested in MPxIO devices, skip this one
-        #say "SKIPPING: $+{device}";
-        next;
-      }
+        [ (@+{qw(read miss miss_pct dmiss dmiss_pct pmiss pmiss_pct mmiss
+                 mmiss_pct arcsz argtgt)}) ] ;
       # Do something with the data
       push @$interval_aref, $captured_stats;
-
-      # multiply the read/write throughput by the appropriate multiplier
-      $interval_aref->[-1]->[2] *= $bw_multiplier;
-      $interval_aref->[-1]->[3] *= $bw_multiplier;
     }
   }
 
