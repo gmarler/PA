@@ -38,48 +38,6 @@ has 'remaining_data' => (
   default    => '',
 );
 
-has 'chosen_interval_regex' => (
-  is         => 'rw',
-  isa        => 'RegexpRef|Undef',
-  default    => undef,
-  lazy       => 1,
-);
-
-has 'chosen_interval_regex_no_eof' => (
-  is         => 'rw',
-  isa        => 'RegexpRef|Undef',
-  default    => undef,
-  lazy       => 1,
-);
-
-# Which datetime/epoch regex matches the data passed in
-has 'chosen_time_regex' => (
-  is         => 'rw',
-  isa        => 'RegexpRef|Undef',
-  builder    => '_build_chosen_time_regex',
-  lazy       => 1,
-);
-
-# matches on interval boundary, but warning, will match incomplete intervals.
-# This regex is only intended to be used when you know for certain that you've
-# read the complete file/datastream containing the stat output.
-has 'epoch_interval_regex' => (
-  is         => 'ro',
-  isa        => 'RegexpRef',
-  lazy       => 1,
-  builder    => '_build_epoch_interval_regex',
-);
-
-# guaranteed to match exactly on interval boundary, to be used most of the time,
-# due to partial intervals at the end of each datastream read up to the point
-# where the entire file has been read in
-has 'epoch_interval_regex_no_eof' => (
-  is         => 'ro',
-  isa        => 'RegexpRef',
-  lazy       => 1,
-  builder    => '_build_epoch_interval_regex_no_eof',
-);
-
 # matches on interval boundary, but warning, will match incomplete intervals.
 # This regex is only intended to be used when you know for certain that you've
 # read the complete file/datastream containing the stat output.
@@ -100,19 +58,8 @@ has 'datetime_interval_regex_no_eof' => (
   builder    => '_build_datetime_interval_regex_no_eof',
 );
 
-has 'epoch_regex' => (
-  is         => 'ro',
-  isa        => 'RegexpRef',
-  default    =>
-    sub {
-      # Epoch secs take at least 10 digits
-      qr/ (?: ^\d{10,}+ ) /smx;
-    },
-);
-
-
-# Thu Mar 30 14:58:03 EDT 2017 (output from iostat's -T d option)
-# pattern => '%a %b %d %H:%M:%S %Z %Y',
+# 14:58:03 (output from arcstat.pl)
+# pattern => '%H:%M:%S',
 has 'datetime_regex' => (
   is         => 'ro',
   isa        => 'RegexpRef',
@@ -151,38 +98,6 @@ has 'datetime_regex' => (
     }smx;
   },
 );
-
-sub _build_epoch_interval_regex {
-  my ($self) = @_;
-  my ($epoch_regex) = $self->epoch_regex;
-
-  return
-    qr/
-          # We call this datetime too, even though it's epoch
-        (?<datetime>
-         $epoch_regex   # Don't include newline in capture
-        )
-          \n            # Newline after epoch datetime
-        (?<interval_data> .+?)
-        (?= (?: $epoch_regex \n | \z ) )
-      /smx;
-}
-
-sub _build_epoch_interval_regex_no_eof {
-  my ($self) = @_;
-  my ($epoch_regex) = $self->epoch_regex;
-
-  return
-    qr/
-          # We call this datetime too, even though it's epoch
-        (?<datetime>
-         $epoch_regex   # Don't include newline in capture
-        )
-          \n            # Newline after epoch datetime
-        (?<interval_data> .+?)
-        (?= (?: $epoch_regex \n ) )
-      /smx;
-}
 
 sub _build_datetime_interval_regex {
   my ($self) = @_;
@@ -230,60 +145,8 @@ sub _build_datetime_interval_regex_no_eof {
 sub BUILD {
   my ($self) = @_;
 
-  $self->epoch_interval_regex();
-  $self->epoch_interval_regex_no_eof();
   $self->datetime_interval_regex();
   $self->datetime_interval_regex_no_eof();
-  $self->chosen_time_regex();
-  $self->chosen_interval_regex();
-  $self->chosen_interval_regex_no_eof();
-}
-
-
-=head2 _build_chosen_time_regex
-
-Determine whether the intervals are delimited by epoch or locale based
-date/timestamps
-
-=cut
-
-sub _build_chosen_time_regex {
-  my ($self) = @_;
-
-  my $datastream = $self->datastream;
-
-  # Carve off the first 1 MB of the data
-  my ($slice);
-  $datastream->read($slice, 1048576);
-  # Reset datastream back to beginning
-  $datastream->seek(0, 0);
-
-  my $epoch_regex                    = $self->epoch_regex;
-  my $datetime_regex                 = $self->datetime_regex;
-
-  my $epoch_interval_regex           = $self->epoch_interval_regex;
-  my $epoch_interval_regex_no_eof    = $self->epoch_interval_regex_no_eof;
-  my $datetime_interval_regex        = $self->datetime_interval_regex;
-  my $datetime_interval_regex_no_eof = $self->datetime_interval_regex_no_eof;
-
-  #say STDERR $slice;
-  #say STDERR $datetime_regex;
-  # Search through the carved off data slice to see which regex matches, then
-  # store that one away as the one to use throughout the parsing of intervals
-  if ($slice =~ m/$epoch_interval_regex/gsmx) {
-    say STDERR "Matched epoch regex";
-    $self->chosen_time_regex($epoch_regex);
-    $self->chosen_interval_regex($epoch_interval_regex);
-    $self->chosen_interval_regex_no_eof($epoch_interval_regex_no_eof);
-  } elsif ($slice =~ m/$datetime_interval_regex/gsmx) {
-    say STDERR "Matched datetime regex";
-    $self->chosen_time_regex($datetime_regex);
-    $self->chosen_interval_regex($datetime_interval_regex);
-    $self->chosen_interval_regex_no_eof($datetime_interval_regex_no_eof);
-  } else {
-    say STDERR "NO DATE/TIME REGEX MATCHED!";
-    return; # undef
-  }
 }
 
 
@@ -528,82 +391,6 @@ sub parse_intervals {
   #return \@iostat_data;
   return $intervals_aref;
 }
-
-=head2 parse_aggregate_intervals
-
-Parse data for several time intervals and aggregate appropriately for the
-statistics, producing a single line of output for each interval in CSV format.
-
-=cut
-
-sub parse_aggregate_intervals {
-  my ($self) = shift;
-
-  # Aggregate over each interval
-  say "Time (Epoch or DateTime),Read IOPs,Write IOPs,Read Bytes,Write Bytes," .
-      "actv,MAX actv,wsvc_t,MAX wsvc_t,asvc_t,MAX asvc_t";
-
-  my ($arefs);
-  while ($arefs = $self->parse_intervals()) {
-    foreach my $interval_data (@$arefs) {
-      my ($line) = '';
-      # - Per device data to be aggregated
-      my ($per_interval_reads,$per_interval_writes,$per_interval_rbw,
-          $per_interval_wbw, $per_interval_actv, $per_interval_wsvc_t,
-          $per_interval_asvc_t, $count_for_avg, $max_actv, $max_wsvc_t,
-          $max_asvc_t) = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-
-      $line .= $interval_data->[0] . ",";
-      # TODO: create a constant as an accessor into each array
-      foreach my $devstat (@{$interval_data->[1]}) {
-        # Aggregate all of the device info for this interval into a single line
-        $per_interval_reads    += $devstat->[0];
-        $per_interval_writes   += $devstat->[1];
-        $per_interval_rbw      += $devstat->[2];
-        $per_interval_wbw      += $devstat->[3];
-        # These we need maxes and avgs for
-        $per_interval_actv     += $devstat->[5];
-        $max_actv               = max($max_actv, $per_interval_actv);
-        $per_interval_wsvc_t   += $devstat->[6];
-        $max_wsvc_t             = max($max_wsvc_t, $per_interval_wsvc_t);
-        $per_interval_asvc_t   += $devstat->[7];
-        $max_asvc_t             = max($max_asvc_t, $per_interval_asvc_t);
-        $count_for_avg++;
-      }
-      # If the interval had no data (completely possible), then skip it
-      if ($count_for_avg == 0) {
-        next;
-      }
-      # Calculate averages for the fields that need it
-      $per_interval_actv   /= $count_for_avg;
-      $per_interval_wsvc_t /= $count_for_avg;
-      $per_interval_asvc_t /= $count_for_avg;
-
-      $line .=
-          "$per_interval_reads,$per_interval_writes," .
-          "$per_interval_rbw,$per_interval_wbw,$per_interval_actv," .
-          "$max_actv,$per_interval_wsvc_t,$max_wsvc_t," .
-          "$per_interval_asvc_t,$max_asvc_t";
-
-      say $line;
-    }
-  }
-
-}
-
-=head2 parse_aggregate_intervals_by_path
-
-Parse data for several time intervals and aggregate appropriately by path for
-the statistics, producing a separate column per unique path for each interval in
-CSV format.
-
-=cut
-
-sub parse_aggregate_intervals_by_path {
-  my ($self) = shift;
-
-}
-
 
 
 __PACKAGE__->meta->make_immutable;

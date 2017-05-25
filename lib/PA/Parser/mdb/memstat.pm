@@ -62,8 +62,10 @@ sub _parse_interval {
   #       pct_of_total column
   my $memstat_regex =
     qr{^ (?: (?<pgtype>(?:Page\sSummary|---)) [^\n]+ \n |   # memstat data headers
-             (?<pgtype>(?:Kernel|Defdump\sprealloc|Guest|ZFS\sMetadata|
-                          ZFS\sFile\sData|Anon|Exec\sand\slibs|Page\scache|
+             (?<pgtype>(?:Kernel|Kernel\s\(ZFS\sARC\sexcess\)|
+                          Defdump\sprealloc|Guest|ZFS\sKernel\sData|
+                          ZFS\sMetadata|ZFS\sFile\sData|Anon|
+                          Exec\sand\slibs|Page\scache|
                           Free\s\(cachelist\)|Free\s\(freelist\)|
                           In\stemporary\suse))          \s+
              (?<pgcount>\d+)               \s+
