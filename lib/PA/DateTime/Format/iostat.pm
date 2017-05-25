@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use v5.20;
 
+# VERSION
+
 use DateTime::Format::Builder (
   # Accepted Formats:
   # Thu Mar 30 14:58:03 EDT 2017 (output from iostat's -T d option)

@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use v5.20;
 
+# VERSION
+
 use DateTime::Format::Builder (
   # Accepted Formats:
   # 2014 Nov  5 11:41:47  (output from DTrace's %Y format for walltimestamp)

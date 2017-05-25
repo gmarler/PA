@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use v5.20;
 
+# VERSION
+
 use DateTime::Format::Builder (
   # Accepted Formats:
   # 14:58:03 (output from arcstat.pl)
