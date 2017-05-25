@@ -1,4 +1,4 @@
-package PA::DateTime::Format::iostat;
+package PA::DateTime::Format::arcstat;
 
 use strict;
 use warnings;
