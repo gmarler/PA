@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.012     2017-05-25 14:59:47-04:00 America/New_York
 Add iostat parsing
 Handle change in ::memstat output as of S11.3 SRU18.6
 
