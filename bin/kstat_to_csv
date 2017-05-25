@@ -4,6 +4,10 @@ use strict;
 use warnings;
 use v5.22.0;
 
+# VERSION
+# PODNAME: kstat_to_csv - turn kstat data into CSV
+#
+
 use IO::File;
 use Tie::IxHash;
 use Data::Dumper;
