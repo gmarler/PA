@@ -235,6 +235,11 @@ sub _build_datetime_interval_regex_no_eof {
     }smx;
 }
 
+=method BUILD
+
+Build order for our object
+
+=cut
 
 sub BUILD {
   my ($self) = @_;
@@ -415,7 +420,7 @@ sub _parse_interval {
   return \%iostat_data;
 }
 
-=head2 parse_interval
+=head2 parse_intervals
 
 Parse data for several time intervals
 
