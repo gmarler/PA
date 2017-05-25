@@ -165,7 +165,7 @@ sub parse_interval_generator {
     say "INTERVAL BEGIN\n" . $interval_data . "\nINTERVAL END";
     $output =~ s/ $regex //smx;
 
-    return undef if not $interval_data;
+    return if not $interval_data;
 
     #
     # Then parse the timestamp
