@@ -41,78 +41,54 @@ has 'remaining_data' => (
 # matches on interval boundary, but warning, will match incomplete intervals.
 # This regex is only intended to be used when you know for certain that you've
 # read the complete file/datastream containing the stat output.
-has 'datetime_interval_regex' => (
+has 'interval_regex' => (
   is         => 'ro',
   isa        => 'RegexpRef',
   lazy       => 1,
-  builder    => '_build_datetime_interval_regex',
+  builder    => '_build_interval_regex',
 );
 
 # guaranteed to match exactly on interval boundary, to be used most of the time,
 # due to partial intervals at the end of each datastream read up to the point
 # where the entire file has been read in
-has 'datetime_interval_regex_no_eof' => (
+has 'interval_regex_no_eof' => (
   is         => 'ro',
   isa        => 'RegexpRef',
   lazy       => 1,
-  builder    => '_build_datetime_interval_regex_no_eof',
+  builder    => '_build_interval_regex_no_eof',
 );
 
 # 14:58:03 (output from arcstat.pl)
 # pattern => '%H:%M:%S',
-has 'datetime_regex' => (
+has 'time_regex' => (
   is         => 'ro',
   isa        => 'RegexpRef',
   default    =>
   sub {
     qr{
-       (
-         (?^ix:wednesday|saturday|thursday|tuesday|friday|monday|sunday|
-               fri|mon|sat|sun|thu|tue|wed)
-       )
-       \s+
-       (
-         (?^ix:september|december|february|november|january|october|august|
-               april|march|july|june|apr|aug|dec|feb|jan|jul|jun|mar|may|nov|
-               oct|sep
-         )
-       )
-       \s+
-       (
-         (?^:[0-9 ]?(?^:(?:[0-9])))
-       )
-       \s+
        ( (?^:[0-9 ]?(?^:(?:[0-9]))))
        \:
        ( (?^:[0-9 ]?(?^:(?:[0-9]))))
        \:
        ( (?^:[0-9 ]?(?^:(?:[0-9]))))
-       \s+
-       (
-         (?^:[a-zA-Z]{1,6}|[\-\+](?^:(?:[0-9])){2})
-       )
-       \s+
-       (
-         (?^:(?^:(?:[0-9])){4})
-       )
     }smx;
   },
 );
 
-sub _build_datetime_interval_regex {
+sub _build_interval_regex {
   my ($self) = @_;
-  my ($datetime_regex) = $self->datetime_regex;
+  my ($time_regex) = $self->time_regex;
 
   return
   qr{^
      (?<datetime>
-      $datetime_regex   # Don't include newline in capture
+      $time_regex   # Don't include newline in capture
      )
-       \n               # Newline after datetime
      (?<interval_data> .+?)
+     \s+
      (?=
        (?:
-         $datetime_regex
+         $time_regex [^\n]+
          \n
          |
          \z
@@ -121,20 +97,20 @@ sub _build_datetime_interval_regex {
     }smx;
 }
 
-sub _build_datetime_interval_regex_no_eof {
+sub _build_interval_regex_no_eof {
   my ($self) = @_;
-  my ($datetime_regex) = $self->datetime_regex;
+  my ($time_regex) = $self->time_regex;
 
   return
   qr{^
      (?<datetime>
-      $datetime_regex   # Don't include newline in capture
+      $time_regex   # Don't include newline in capture
      )
-       \n               # Newline after datetime
+     \s+
      (?<interval_data> .+?)
      (?=
        (?:
-         $datetime_regex
+         $time_regex [^\n]+
          \n
        )
      )
@@ -150,8 +126,8 @@ Build order for our object
 sub BUILD {
   my ($self) = @_;
 
-  $self->datetime_interval_regex();
-  $self->datetime_interval_regex_no_eof();
+  $self->interval_regex();
+  $self->interval_regex_no_eof();
 }
 
 
@@ -165,23 +141,23 @@ sub _parse_interval {
   my ($self) = @_;
   my ($output);
 
-  my $parser     = PA::DateTime::Format::iostat->new;
+  my $parser     = PA::DateTime::Format::arcstat->new;
   my $datastream = $self->datastream;
-  # TODO: Read data off 1 MB at a time, parsing and returning the
-  #       info as needed
   #$datastream->read($output, 1024 * 1024);
   my ($data) = do { local $/; <$datastream>; };
-
-  say STDERR "PROCESSING " . length($data) . " BYTES OF DATA";
 
   my $interval_regex = $self->chosen_interval_regex();
   my $time_regex     = $self->chosen_time_regex();
 
-  # TODO: Move this to a method that aggregates over parsed intervals
-  say "Time (Epoch or DateTime),Read IOPs,Write IOPs,Read Bytes,Write Bytes," .
-      "actv,MAX actv,wsvc_t,MAX wsvc_t,asvc_t,MAX asvc_t";
+  #
+  #  Time  read  miss  miss%  dmis  dm%  pmis  pm%  mmis  mm%  arcsz     c
+  #
+  say "Time,Total ARC Accesses/sec,ARC Misses/sec,ARC Miss %," .
+      "Demand Data Misses/sec,Demand Data Misses %,Prefetch Misses/sec," .
+      "Prefetch Miss %,Metadata Misses/sec,Metadata Miss %,ARC Size," .
+      "ARC Target Size";
 
-  my (%iostat_data, $bw_multiplier, $intervals);
+  my (%arcstat_data, $intervals);
 
   my $iostat_header_regex =
     qr{
@@ -286,12 +262,11 @@ sub parse_intervals {
   my ($intervals_aref) = [];
   my (@captured_intervals);
 
-  my $mpxio_devs_only = $self->mpxio_devs_only;
   my $datastream = $self->datastream;
   # If we've previously exhausted the datastream, there's nothing left to do
   return if ($datastream->eof);   # undef
 
-  my $parser     = PA::DateTime::Format::iostat->new;
+  my $parser     = PA::DateTime::Format::arcstat->new;
   my $remaining_data = $self->remaining_data;
 
   # Read data off 1 MB at a time, parsing and returning the
@@ -302,37 +277,29 @@ sub parse_intervals {
 
   my ($interval_regex);
   if ($datastream->eof) {
-    $interval_regex = $self->chosen_interval_regex();
+    $interval_regex = $self->interval_regex();
   } else {
-    $interval_regex = $self->chosen_interval_regex_no_eof();
+    $interval_regex = $self->interval_regex_no_eof();
   }
   my $time_regex     = $self->chosen_time_regex();
 
-  my (@iostat_data, $bw_multiplier, $intervals);
+  my (@arcstat_data, $intervals);
 
-  my $iostat_header_regex =
-    qr{
-        \s+ extended \s+ device \s+ statistics [^\n]+ \n
-        \s+ r/s \s+ w/s \s+ (?<bwunit>k|M)r/s \s+ (k|M)w/s \s+ wait \s+
-            actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
+  #
+  #  Time  read  miss  miss%  dmis  dm%  pmis  pm%  mmis  mm%  arcsz     c
+  #
+
+  my $arcstat_regex =
+    qr{ ^ \s+ (?<read>\d+(?:K|M|G)?) \s+ (?<miss>\d+(?:K|M|G)?) \s+
+              (?<miss_pct>\d+)  \s+ (?<dmiss>\d+(?:K|M|G)?) \s+
+              (?<dmiss_pct>\d+) \s+ (?<pmiss>\d+(?:K|M|G)?) \s+
+              (?<pmiss_pct>\d+) \s+ (?<mmiss>\d+(?:K|M|G)?) \s+
+              (?<mmiss_pct>\d+) \s+ (?<arcsz>\d+(?:K|M|G)?) \s+
+              (?<arctgt>\d+(?:K|M|G)?) \n
       }smx;
 
-  my $iostat_dev_regex =
-    qr{ ^ \s+ (?<rps>[\d\.]+) \s+ (?<wps>[\d\.]+) \s+ (?<rbw>[\d\.]+)  \s+
-              (?<wbw>[\d\.]+) \s+ (?<wait>[\d\.]+) \s+ (?<actv>[\d\.]+) \s+
-              (?<wsvc_t>[\d\.]+) \s+ (?<asvc_t>[\d\.]+) \s+ (?<pctw>\d+) \s+
-              (?<pctb>\d+) \s+ (?<device>[^\n]+) \n
-      }smx;
-
-  ## Parse all of the complete intervals just read in
-  #@captured_intervals = $remaining_data =~ m{ $interval_regex }gsmx;
-
-  #if (@captured_intervals) {
-  #} else {
-  #  return;  # undef
-  #}
-
-  # Iterate over each iostat interval, separated by timestamp of some form
+  # Iterate over each stat interval, each on it's own line in the case of
+  # arcstat
   while ($remaining_data =~ m{ $interval_regex }gsmx ) {
     my ($interval_data) = $+{interval_data};
     # Tear individual intervals into their respective:
@@ -341,7 +308,6 @@ sub parse_intervals {
     #$line .= "$+{datetime},";
     #$line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
     my $formatted_dt = $dt->strftime("%H:%M:%S");
-    my $epoch = $dt->epoch();
 
     push @$intervals_aref, [ $formatted_dt, [] ];
     my $interval_aref = $intervals_aref->[-1]->[1];
@@ -349,20 +315,6 @@ sub parse_intervals {
     # Remove the single interval we just matched
     $remaining_data =~ s{ $interval_regex }{}smx;
     #say "REMAINING TO PARSE: " . length($remaining_data);
-
-    # - Headers
-    #   Need to extract read/write multiplier, as this can change over
-    #   time, if metric collection is stopped/restarted
-    if ($interval_data =~ m{ $iostat_header_regex }smx) {
-      # Check whether BandWidth Units are in KB or MB
-      if ($+{bwunit} eq "k") {
-        $bw_multiplier = 1024;
-      } elsif ($+{bwunit} eq "M") {
-        $bw_multiplier = 1024 * 1024;
-      }
-    } else {
-      # If we don't match the header, we should probably skip this
-    }
 
     while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
       my $captured_stats =
@@ -393,10 +345,17 @@ sub parse_intervals {
     #    ":\n$remaining_data";
   }
 
-  #return \@iostat_data;
   return $intervals_aref;
 }
 
+=head2 parse_to_csv
+
+Parse intervals and output as CSV
+
+=cut
+
+sub parse_to_csv {
+}
 
 __PACKAGE__->meta->make_immutable;
 
