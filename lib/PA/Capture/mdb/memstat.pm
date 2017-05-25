@@ -105,7 +105,7 @@ sub _build_timer {
     interval   => 30,
     reschedule => "drift",
     on_tick    => sub {
-      my $out = $mdb->capture_dcmd("time::print -d ! sed -e 's/^0t//' ; ::memstat");
+      my $out = $mdb->capture_dcmd("time::print -d ! sed -e 's/^0t//' ; ::memstat -v");
 
       if (defined($out)) {
         my $dhref = $self->extract($out);
