@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use v5.20;
 
+# VERSION
+
 # Taken from
 # https://metacpan.org/pod/distribution/DBIx-Class-Migration/lib/DBIx/Class/Migration/Tutorial/Catalyst.pod,
 # which shows how to integrate DBIx::Class::Migration with Catalyst's
