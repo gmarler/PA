@@ -31,13 +31,17 @@ with 'Test::Class::Moose::Role::AutoUse';
 #   Log::Log4perl::init( \$log_conf );
 # }
 
-#sub test_constructor {
-#  my ($test) = shift;
-#
-#  my $class = $test->class_name;
-#  can_ok $class, 'new';
-#  isa_ok my $object = $class->new, $class;
-#}
+sub test_constructor {
+  my ($test) = shift;
+
+  my $class = $test->class_name;
+  can_ok $class, 'new';
+
+  my ($datastream) = $test->_mock_data_filehandle("arcstat.out");
+  isa_ok($datastream, 'IO::File', 'Mock data for arcstat.pl available');
+
+  isa_ok my $object = $class->new(datastream => $datastream), $class;
+}
 
 sub test_mock_data_available {
   my ($test) = shift;
