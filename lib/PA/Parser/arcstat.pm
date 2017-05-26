@@ -5,7 +5,7 @@ use warnings;
 use v5.20;
 
 # VERSION
-# ABSTRACT: Parser for iostat output variants
+# ABSTRACT: Parser for arcstat output variants
 
 use Moose;
 use Data::Dumper;
@@ -95,8 +95,9 @@ sub _build_interval_regex {
   return
   qr{^
      (?<datetime>
-      $time_regex   # Don't include newline in capture
+      $time_regex
      )
+     \s+
      (?<interval_data> .+?)
      \s+
      (?=
@@ -117,7 +118,7 @@ sub _build_interval_regex_no_eof {
   return
   qr{^
      (?<datetime>
-      $time_regex   # Don't include newline in capture
+      $time_regex
      )
      \s+
      (?<interval_data> .+?)
@@ -172,19 +173,6 @@ sub _parse_interval {
 
   my (%arcstat_data, $intervals);
 
-  my $iostat_header_regex =
-    qr{
-        \s+ extended \s+ device \s+ statistics [^\n]+ \n
-        \s+ r/s \s+ w/s \s+ (?<bwunit>k|M)r/s \s+ (k|M)w/s \s+ wait \s+
-            actv \s+ wsvc_t \s+ asvc_t \s+ \%w \s+ \%b \s + device \n
-      }smx;
-
-  my $iostat_interval_regex =
-    qr| $iostat_header_regex
-        (?<interval_data>.+?)
-        (?=${iostat_header_regex})
-      |smx;
-
   my $iostat_dev_regex =
     qr{ ^ \s+ (?<rps>[\d\.]+) \s+ (?<wps>[\d\.]+) \s+ (?<rbw>[\d\.]+)  \s+
               (?<wbw>[\d\.]+) \s+ (?<wait>[\d\.]+) \s+ (?<actv>[\d\.]+) \s+
@@ -202,65 +190,12 @@ sub _parse_interval {
     #$line .= "$+{datetime},";
     #$line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
     $line .= $dt->strftime("%H:%M:%S") . ",";
-    # - Headers
-    #   Need to extract read/write multiplier, as this can change over
-    #   time, if metric collection is stopped/restarted
-    if ($interval_data =~ m{ $iostat_header_regex }smx) {
-      # Check whether BandWidth Units are in KB or MB
-      if ($+{bwunit} eq "k") {
-        $bw_multiplier = 1024;
-      } elsif ($+{bwunit} eq "M") {
-        $bw_multiplier = 1024 * 1024;
-      }
-    }
-    # - Per device data to be aggregated
-    my ($per_interval_reads,$per_interval_writes,$per_interval_rbw,
-        $per_interval_wbw, $per_interval_actv, $per_interval_wsvc_t,
-        $per_interval_asvc_t, $count_for_avg, $max_actv, $max_wsvc_t,
-        $max_asvc_t) = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    while ($interval_data =~ m/$iostat_dev_regex/gsmx) {
-      #say join(",", values %+);
-      my ($rps,$wps,$rbw,$wbw,$wait,$actv,$wsvc_t,$asvc_t,
-          $pctw,$pctb,$device) =
-        (@+{qw(rps wps rbw wbw wait actv wsvc_t asvc_t pctw pctb device)});
-      # Do something with the data
-      #say "WPS: $wps";
-      $per_interval_reads    += $rps;
-      $per_interval_writes   += $wps;
-      $per_interval_rbw      += $rbw * $bw_multiplier;
-      $per_interval_wbw      += $wbw * $bw_multiplier;
-      # These we need maxes and avgs for
-      $per_interval_actv     += $actv;
-      $max_actv               = max($max_actv, $per_interval_actv);
-      $per_interval_wsvc_t   += $wsvc_t;
-      $max_wsvc_t             = max($max_wsvc_t, $per_interval_wsvc_t);
-      $per_interval_asvc_t   += $asvc_t;
-      $max_asvc_t             = max($max_asvc_t, $per_interval_asvc_t);
-      $count_for_avg++;
-    }
-    # If the interval had no data (completely possible), then skip it
-    if ($count_for_avg == 0) {
-      next;
-    }
-    # Calculate averages for the fields that need it
-    $per_interval_actv   /= $count_for_avg;
-    $per_interval_wsvc_t /= $count_for_avg;
-    $per_interval_asvc_t /= $count_for_avg;
-
-    $line .=
-        "$per_interval_reads,$per_interval_writes," .
-        "$per_interval_rbw,$per_interval_wbw,$per_interval_actv," .
-        "$max_actv,$per_interval_wsvc_t,$max_wsvc_t," .
-        "$per_interval_asvc_t,$max_asvc_t";
-
-    say $line;
-
     $intervals++;
   }
 
   say STDERR "Found $intervals INTERVALS";
 
-  return \%iostat_data;
+  return \%arcstat_data;
 }
 
 =head2 parse_intervals
