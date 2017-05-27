@@ -242,14 +242,14 @@ sub parse_intervals {
           (?<dmiss_pct>\d+)      \s+ (?<pmiss>\d+(?:K|M|G)?) \s+
           (?<pmiss_pct>\d+)      \s+ (?<mmiss>\d+(?:K|M|G)?) \s+
           (?<mmiss_pct>\d+)      \s+ (?<arcsz>\d+(?:K|M|G)?) \s+
-          (?<arctgt>\d+(?:K|M|G)?) \s\s \n  # Lines end with 2 spaces
+          (?<arctgt>\d+(?:K|M|G)?) # \s\s \n  # Lines end with 2 spaces
       }smx;
 
   # Iterate over each stat interval, each on it's own line in the case of
   # arcstat
   while ($remaining_data =~ m{ $interval_regex }gsmx ) {
     my ($interval_data) = $+{interval_data};
-    say "INTERVAL DATA: [$interval_data]";
+    #say "INTERVAL DATA: [$interval_data]";
     # Tear individual intervals into their respective:
     # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
     my $dt = $parser->parse_datetime($+{datetime});
@@ -267,7 +267,7 @@ sub parse_intervals {
       my $captured_stats =
         [ (@+{qw(read miss miss_pct dmiss dmiss_pct pmiss pmiss_pct mmiss
                  mmiss_pct arcsz arctgt)}) ] ;
-      say Dumper($captured_stats);
+      #say Dumper($captured_stats);
       # Do something with the data
       push @$interval_aref, @$captured_stats;
     }
