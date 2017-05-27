@@ -50,6 +50,18 @@ sub test_mock_data_available {
   isa_ok($datastream, 'IO::File', 'Mock data for arcstat.pl available');
 }
 
+sub test_parse_intervals {
+  my ($test) = shift;
+
+  my ($datastream) = $test->_mock_data_filehandle("arcstat.out");
+
+  my $class = $test->class_name;
+  isa_ok my $object = $class->new(datastream => $datastream), $class;
+
+  my $msg = Data::Dumper->Dump($object->parse_intervals);
+  diag $msg;
+}
+#
 #sub test_regexes {
 #  my ($test) = shift;
 #

@@ -214,7 +214,7 @@ sub parse_intervals {
   # If we've previously exhausted the datastream, there's nothing left to do
   return if ($datastream->eof);   # undef
 
-  my $parser     = PA::DateTime::Format::arcstat->new;
+  my $parser         = PA::DateTime::Format::arcstat->new;
   my $remaining_data = $self->remaining_data;
 
   # Read data off 1 MB at a time, parsing and returning the
@@ -229,7 +229,6 @@ sub parse_intervals {
   } else {
     $interval_regex = $self->interval_regex_no_eof();
   }
-  my $time_regex     = $self->chosen_time_regex();
 
   my (@arcstat_data, $intervals);
 
@@ -238,18 +237,19 @@ sub parse_intervals {
   #
 
   my $arcstat_regex =
-    qr{ ^ \s+ (?<read>\d+(?:K|M|G)?) \s+ (?<miss>\d+(?:K|M|G)?) \s+
-              (?<miss_pct>\d+)  \s+ (?<dmiss>\d+(?:K|M|G)?) \s+
-              (?<dmiss_pct>\d+) \s+ (?<pmiss>\d+(?:K|M|G)?) \s+
-              (?<pmiss_pct>\d+) \s+ (?<mmiss>\d+(?:K|M|G)?) \s+
-              (?<mmiss_pct>\d+) \s+ (?<arcsz>\d+(?:K|M|G)?) \s+
-              (?<arctgt>\d+(?:K|M|G)?) \n
+    qr{ ^ (?<read>\d+(?:K|M|G)?) \s+ (?<miss>\d+(?:K|M|G)?)  \s+
+          (?<miss_pct>\d+)       \s+ (?<dmiss>\d+(?:K|M|G)?) \s+
+          (?<dmiss_pct>\d+)      \s+ (?<pmiss>\d+(?:K|M|G)?) \s+
+          (?<pmiss_pct>\d+)      \s+ (?<mmiss>\d+(?:K|M|G)?) \s+
+          (?<mmiss_pct>\d+)      \s+ (?<arcsz>\d+(?:K|M|G)?) \s+
+          (?<arctgt>\d+(?:K|M|G)?) \s\s \n  # Lines end with 2 spaces
       }smx;
 
   # Iterate over each stat interval, each on it's own line in the case of
   # arcstat
   while ($remaining_data =~ m{ $interval_regex }gsmx ) {
     my ($interval_data) = $+{interval_data};
+    say "INTERVAL DATA: [$interval_data]";
     # Tear individual intervals into their respective:
     # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
     my $dt = $parser->parse_datetime($+{datetime});
@@ -257,8 +257,8 @@ sub parse_intervals {
     #$line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
     my $formatted_dt = $dt->strftime("%H:%M:%S");
 
-    push @$intervals_aref, [ $formatted_dt, [] ];
-    my $interval_aref = $intervals_aref->[-1]->[1];
+    push @$intervals_aref, [ $formatted_dt ];
+    my $interval_aref = $intervals_aref->[-1];
 
     # Remove the single interval we just matched
     $remaining_data =~ s{ $interval_regex }{}smx;
@@ -266,9 +266,10 @@ sub parse_intervals {
     while ($interval_data =~ m/$arcstat_regex/gsmx) {
       my $captured_stats =
         [ (@+{qw(read miss miss_pct dmiss dmiss_pct pmiss pmiss_pct mmiss
-                 mmiss_pct arcsz argtgt)}) ] ;
+                 mmiss_pct arcsz arctgt)}) ] ;
+      say Dumper($captured_stats);
       # Do something with the data
-      push @$interval_aref, $captured_stats;
+      push @$interval_aref, @$captured_stats;
     }
   }
 
