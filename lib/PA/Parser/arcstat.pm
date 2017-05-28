@@ -155,7 +155,7 @@ sub _parse_interval {
   my ($self) = @_;
   my ($output);
 
-  my $parser     = PA::DateTime::Format::arcstat->new;
+  my $dtf_parser = PA::DateTime::Format::arcstat->new;
   my $datastream = $self->datastream;
   #$datastream->read($output, 1024 * 1024);
   my ($data) = do { local $/; <$datastream>; };
@@ -186,7 +186,7 @@ sub _parse_interval {
     my ($interval_data) = $+{interval_data};
     # Tear individual intervals into their respective:
     # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
-    my $dt = $parser->parse_datetime($+{datetime});
+    my $dt = $dtf_parser->parse_datetime($+{datetime});
     #$line .= "$+{datetime},";
     #$line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
     $line .= $dt->strftime("%H:%M:%S") . ",";
@@ -214,7 +214,7 @@ sub parse_intervals {
   # If we've previously exhausted the datastream, there's nothing left to do
   return if ($datastream->eof);   # undef
 
-  my $parser         = PA::DateTime::Format::arcstat->new;
+  my $dtf_parser     = PA::DateTime::Format::arcstat->new;
   my $remaining_data = $self->remaining_data;
 
   # Read data off 1 MB at a time, parsing and returning the
@@ -252,7 +252,7 @@ sub parse_intervals {
     #say "INTERVAL DATA: [$interval_data]";
     # Tear individual intervals into their respective:
     # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
-    my $dt = $parser->parse_datetime($+{datetime});
+    my $dt = $dtf_parser->parse_datetime($+{datetime});
     #$line .= "$+{datetime},";
     #$line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
     my $formatted_dt = $dt->strftime("%H:%M:%S");
