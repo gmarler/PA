@@ -1,0 +1,22 @@
+#!/usr/perl5/5.22.0/bin/perl
+
+use warnings;
+use strict;
+use v5.22;
+
+use PA::Parser::arcstat;
+use IO::File;
+use Data::Dumper;
+
+my $data_fh = IO::File->new($ARGV[0]) or
+  die "Unable to open $ARGV[0]";
+
+my $parser = PA::Parser::arcstat->new( datastream => $data_fh );
+
+my (@intervals);
+
+while( my $aref = $parser->parse_intervals()) {
+  push @intervals, @$aref;
+}
+
+say "Found " . scalar(@intervals) . " Intervals in file";

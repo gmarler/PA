@@ -294,6 +294,7 @@ Parse intervals and output as CSV
 =cut
 
 sub parse_to_csv {
+  my ($self) = @_;
 }
 
 __PACKAGE__->meta->make_immutable;
