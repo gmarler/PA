@@ -11,6 +11,12 @@ use Data::Dumper;
 my $data_fh = IO::File->new($ARGV[0]) or
   die "Unable to open $ARGV[0]";
 
+# TODO: 
+# - Usage message
+# - Accept "date" option when reading in an arcstat.pl file from a previous date
+#   earlier than today
+# - Accept option to target parsing output: csv, json, etc
+#
 my $parser = PA::Parser::arcstat->new( datastream => $data_fh );
 
 my (@intervals);
