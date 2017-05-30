@@ -63,7 +63,7 @@ sub test_parse_intervals {
   # diag $msg;
   cmp_ok(scalar(@$intervals), '==', 43,
          "Proper Number of Intervals Found");
-  cmp_deeply($intervals, 
+  cmp_deeply($intervals,
              array_each( [ re(qr/\d{2}:\d{2}:\d{2}/),
                            ignore(),
                            ignore(),
