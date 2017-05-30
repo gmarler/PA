@@ -60,11 +60,11 @@ sub test_parse_intervals {
 
   my $intervals = $object->parse_intervals;
   my $msg = Data::Dumper->Dump($intervals);
-  # diag $msg;
+  #diag $msg;
   cmp_ok(scalar(@$intervals), '==', 43,
          "Proper Number of Intervals Found");
   cmp_deeply($intervals,
-             array_each( [ re(qr/\d{2}:\d{2}:\d{2}/),
+             array_each( [ isa('DateTime'),
                            ignore(),
                            ignore(),
                            ignore(),

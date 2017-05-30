@@ -19,10 +19,4 @@ my $data_fh = IO::File->new($ARGV[0]) or
 #
 my $parser = PA::Parser::arcstat->new( datastream => $data_fh );
 
-my (@intervals);
-
-while( my $aref = $parser->parse_intervals()) {
-  push @intervals, @$aref;
-}
-
-say "Found " . scalar(@intervals) . " Intervals in file";
+$parser->parse_to_csv();

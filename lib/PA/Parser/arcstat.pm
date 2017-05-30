@@ -47,7 +47,7 @@ has 'date' => (
   is         => 'ro',
   isa        => 'DateTime',
   default    => sub {
-    DateTime->today();
+    DateTime->today(time_zone => 'local');
   },
 );
 
@@ -215,6 +215,7 @@ sub parse_intervals {
   return if ($datastream->eof);   # undef
 
   my $dtf_parser     = PA::DateTime::Format::arcstat->new;
+  my $specified_date = $self->date;
   my $remaining_data = $self->remaining_data;
 
   # Read data off 1 MB at a time, parsing and returning the
@@ -253,11 +254,14 @@ sub parse_intervals {
     # Tear individual intervals into their respective:
     # - Timestamp in Excel preferred format of yyyy-MM-dd HH:mm:ss
     my $dt = $dtf_parser->parse_datetime($+{datetime});
+    $dt->set( year => $specified_date->year, month => $specified_date->month,
+              day  => $specified_date->day );
+    #$dt->set_time_zone( 'local' );
     #$line .= "$+{datetime},";
     #$line .= $dt->strftime("%Y-%m-%d %H:%M:%S") . ",";
-    my $formatted_dt = $dt->strftime("%H:%M:%S");
+    my $formatted_dt = $dt->strftime("%Y-%m-%d %H:%M:%S");
 
-    push @$intervals_aref, [ $formatted_dt ];
+    push @$intervals_aref, [ $dt ];
     my $interval_aref = $intervals_aref->[-1];
 
     # Remove the single interval we just matched
@@ -267,7 +271,22 @@ sub parse_intervals {
       my $captured_stats =
         [ (@+{qw(read miss miss_pct dmiss dmiss_pct pmiss pmiss_pct mmiss
                  mmiss_pct arcsz arctgt)}) ] ;
-      #say Dumper($captured_stats);
+      # Convert arcsz, arctgt to bytes
+      my ($arcsz,$arctgt) = @{$captured_stats}[9,10];
+      my ($unit,$multiplier);
+      $arcsz =~ m/(?<unit>[KMG])$/;
+      if    ($+{unit} eq 'K') { $multiplier = 1024; }
+      elsif ($+{unit} eq 'M') { $multiplier = 1024 * 1024; }
+      elsif ($+{unit} eq 'G') { $multiplier = 1024 * 1024 * 1024; }
+      $arcsz =~ s/[KMG]$//;
+      $captured_stats->[9] = $arcsz * $multiplier;
+      $arctgt =~ m/(?<unit>[KMG])$/;
+      if    ($+{unit} eq 'K') { $multiplier = 1024; }
+      elsif ($+{unit} eq 'M') { $multiplier = 1024 * 1024; }
+      elsif ($+{unit} eq 'G') { $multiplier = 1024 * 1024 * 1024; }
+      $arctgt =~ s/[KMG]$//;
+      $captured_stats->[10] = $arctgt * $multiplier;
+
       # Do something with the data
       push @$interval_aref, @$captured_stats;
     }
@@ -295,6 +314,18 @@ Parse intervals and output as CSV
 
 sub parse_to_csv {
   my ($self) = @_;
+  my (@intervals);
+
+  my $header = "DateTime,ARC Miss %,Demand Data Miss %,Prefetch Miss %," .
+               "Metadata Miss %,ARC Size,ARC Target";
+  say $header;
+  while( my $aref = $self->parse_intervals()) {
+    foreach my $interval (@$aref) {
+      my ($line) = $interval->[0]->strftime("%H:%M:%S") . ",";
+      $line .= join ",", @{$interval}[3,5,7,8,9,10,11];
+      say $line;
+    }
+  }
 }
 
 __PACKAGE__->meta->make_immutable;
