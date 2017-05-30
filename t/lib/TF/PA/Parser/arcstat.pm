@@ -58,8 +58,28 @@ sub test_parse_intervals {
   my $class = $test->class_name;
   isa_ok my $object = $class->new(datastream => $datastream), $class;
 
-  my $msg = Data::Dumper->Dump($object->parse_intervals);
-  diag $msg;
+  my $intervals = $object->parse_intervals;
+  my $msg = Data::Dumper->Dump($intervals);
+  # diag $msg;
+  cmp_ok(scalar(@$intervals), '==', 43,
+         "Proper Number of Intervals Found");
+  cmp_deeply($intervals, 
+             array_each( [ re(qr/\d{2}:\d{2}:\d{2}/),
+                           ignore(),
+                           ignore(),
+                           ignore(),
+                           ignore(),
+                           ignore(),
+                           ignore(),
+                           ignore(),
+                           ignore(),
+                           ignore(),
+                           re(qr/^\d+[KMG]$/),
+                           re(qr/^\d+[KMG]$/),
+                         ]
+                       ),
+             "Raw Interval content correct"
+            );
 }
 #
 #sub test_regexes {
