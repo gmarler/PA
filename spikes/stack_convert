@@ -271,5 +271,5 @@ sub raw {
   say $encoder->encode( $res );
 }
 
-raw("/tmp/stacks", undef);
+raw($ARGV[0], undef);
 
