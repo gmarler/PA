@@ -1,0 +1,25 @@
+              unix`deflate_slow+0x3ed
+              unix`z_deflate+0x75a
+              unix`z_compress_level+0x9a
+              zfs`zfs_gzip_compress+0x4e
+              zfs`zfs_compress_data+0x8c
+              zfs`zio_compress+0x9f
+              zfs`zio_write_bp_init+0x2b4
+              zfs`zio_execute+0xc2
+              genunix`taskq_thread+0x3ad
+              unix`thread_start+0x8
+                3
+
+              unix`longest_match+0xbb
+              unix`deflate_slow+0x164
+              unix`z_deflate+0x75a
+              unix`z_compress_level+0x9a
+              zfs`zfs_gzip_compress+0x4e
+              zfs`zfs_compress_data+0x8c
+              zfs`zio_compress+0x9f
+              zfs`zio_write_bp_init+0x2b4
+              zfs`zio_execute+0xc2
+              genunix`taskq_thread+0x3ad
+              unix`thread_start+0x8
+                3
+
